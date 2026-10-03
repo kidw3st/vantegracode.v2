@@ -1,0 +1,65 @@
+---
+/** Ссылка со стрелкой: подчёркивание растёт слева направо, стрелка сдвигается на 4 px */
+import Arrow from './Arrow.astro';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  href: string;
+  label: string;
+  class?: string;
+  external?: boolean;
+}
+
+const { href, label, class: className, external = false } = Astro.props;
+const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+<a class:list={['arrow-link', className]} href={href} {...externalAttrs}>
+  <span class="link arrow-link__text">{t(label)}</span>
+  <Arrow class="arrow-link__icon" />
+</a>
+
+<style>
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--tap);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-button);
+    letter-spacing: var(--ls-button);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .arrow-link__text {
+    font-family: inherit;
+    padding-top: var(--link-offset);
+  }
+
+  .arrow-link :global(.arrow-link__icon) {
+    transition: translate var(--dur-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .arrow-link:hover :global(.arrow-link__icon) {
+      translate: var(--arrow-shift) 0;
+    }
+
+    .arrow-link:hover .link::after {
+      transform: scaleX(1);
+    }
+  }
+
+  .arrow-link:focus-visible :global(.arrow-link__icon) {
+    translate: var(--arrow-shift) 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .arrow-link :global(.arrow-link__icon) {
+      transition: none;
+    }
+  }
+</style>

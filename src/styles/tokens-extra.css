@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Дополнительные числа, прямо указанные в задании.
+   tokens.css не меняется — всё, чего в нём нет, лежит здесь.
+   ========================================================================== */
+
+:root {
+  /* Шапка: 64 px и горизонтальный блок 140 px на телефоне, 80 px и 156 px шире */
+  --header-h: 64px;
+  --header-logo: 140px;
+  --header-bg: rgba(17, 17, 17, 0.95);
+  --header-blur: 12px;
+  --footer-logo: 180px;
+
+  /* Первый экран: вертикальный блок логотипа */
+  --hero-logo: clamp(160px, 18vw, 300px);
+  --measure-lead: 52ch;
+
+  /* Кнопки, теги, поля */
+  --btn-h: 52px;
+  --btn-h-sm: 44px;
+  --btn-px: 28px;
+  --btn-px-sm: 20px;
+  --fs-button: 0.8125rem;     /* 13 px */
+  --fs-nav: 0.75rem;          /* 12 px */
+  --fs-tag: 0.75rem;          /* 12 px */
+  --fs-field: 1.0625rem;      /* 17 px */
+  --fs-error: 0.875rem;       /* 14 px */
+  --tap: 44px;                /* минимальная зона нажатия */
+  --card-pad: clamp(32px, 2.6vw, 40px);
+  --arrow-shift: 4px;
+  --link-offset: 4px;
+
+  /* Контакты: Geologica 300 */
+  --fs-contact: clamp(1.375rem, 1.2rem + 0.75vw, 1.75rem);      /* 22 → 28 px */
+  --fs-contact-xl: clamp(1.75rem, 1.65rem + 0.45vw, 2rem);      /* 28 → 32 px */
+
+  /* Мобильное меню */
+  --fs-menu: clamp(1.875rem, 1.8rem + 0.4vw, 2rem);             /* 30 → 32 px */
+
+  /* Статья */
+  --fs-prose: 1.125rem;       /* 18 px */
+  --lh-prose: 1.7;
+  --fs-prose-h2: 1.75rem;     /* 28 px */
+  --fs-prose-h3: 1.25rem;     /* 20 px */
+  --fs-quote: 1.25rem;        /* 20 px */
+
+  /* Эхо-орбиты */
+  --orbit-stroke: 1.25px;
+
+  /* Движение */
+  --dur-draw: 1600ms;         /* прорисовка орбит */
+  --stagger-orbit: 160ms;
+  --dur-logo: 900ms;
+  --delay-logo: 200ms;
+  --delay-hero: 500ms;
+  --dur-link: 300ms;
+  --dur-accordion: 300ms;
+  --dur-menu: 250ms;
+  --dur-page: 250ms;
+  --shift: 16px;              /* подъём при появлении */
+  --shift-hero: 8px;          /* сдвиг H1 и лида первого экрана */
+  --press: 0.97;              /* нажатие кнопки */
+
+  /* Слои */
+  --z-orbit: 0;
+  --z-content: 1;
+  --z-menu: 40;
+  --z-header: 50;
+  --z-cookie: 60;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-h: 80px;
+    --header-logo: 156px;
+  }
+}

@@ -1,0 +1,111 @@
+---
+/**
+ * Плашка о cookie и Яндекс Метрике. Если номер счётчика не заполнен — не выводится,
+ * и Метрика не подключается. Счётчик загружается только после «Принять»; выбор запоминается.
+ */
+import { site } from '../data/site.ts';
+import { ui } from '../data/ui.ts';
+import { t } from '../lib/typograf.ts';
+
+const id = site.metrikaId;
+---
+
+{
+  id != null && (
+    <aside
+      class="cookie"
+      aria-label={ui.cookie.label}
+      hidden
+      data-cookie
+      data-metrika-id={String(id)}
+      transition:persist="cookie-notice"
+    >
+      <p class="cookie__text">
+        {t(ui.cookie.text)}{' '}
+        <a class="inline-link" href="/politika-konfidencialnosti/">
+          {t(ui.cookie.link)}
+        </a>
+        .
+      </p>
+      <div class="cookie__actions">
+        <button class="cookie__btn cookie__btn--accept" type="button" data-cookie-accept>
+          {ui.cookie.accept}
+        </button>
+        <button class="cookie__btn" type="button" data-cookie-decline>
+          {ui.cookie.decline}
+        </button>
+      </div>
+    </aside>
+  )
+}
+
+<style>
+  .cookie {
+    position: fixed;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: var(--space-5);
+    z-index: var(--z-cookie);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-6);
+    max-width: 720px;
+    padding: var(--space-5) var(--space-6);
+    border: var(--hairline) solid var(--graphite);
+    background: var(--soot);
+    font-size: var(--fs-small);
+    line-height: 1.5;
+  }
+
+  .cookie__text {
+    flex: 1 1 280px;
+    color: var(--ash);
+  }
+
+  .cookie__text .inline-link {
+    color: var(--chalk);
+  }
+
+  .cookie__actions {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  .cookie__btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--btn-h-sm);
+    padding: 0 var(--btn-px-sm);
+    border: var(--hairline) solid var(--ash);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-button);
+    letter-spacing: var(--ls-button);
+    text-transform: uppercase;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .cookie__btn--accept {
+    background: var(--chalk);
+    border-color: var(--chalk);
+    color: var(--soot);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cookie__btn:hover {
+      border-color: var(--chalk);
+    }
+
+    .cookie__btn--accept:hover {
+      background: transparent;
+      color: var(--chalk);
+    }
+  }
+</style>

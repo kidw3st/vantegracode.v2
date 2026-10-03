@@ -1,0 +1,91 @@
+---
+/** Карточка кейса: обложка 16:10, название, клиент или «Под NDA», год, теги услуг. */
+import { Picture } from 'astro:assets';
+import Tag from './Tag.astro';
+import { works as text } from '../data/pages.ts';
+import type { Work } from '../lib/content.ts';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  work: Work;
+  /** названия услуг по слагам */
+  serviceNames: Record<string, string>;
+  size?: 'lg' | 'md';
+  headingLevel?: 'h2' | 'h3';
+  eager?: boolean;
+}
+
+const { work, serviceNames, size = 'md', headingLevel: Heading = 'h3', eager = false } = Astro.props;
+const sizes = size === 'lg' ? '(min-width: 1024px) 58vw, 100vw' : '(min-width: 1024px) 42vw, 100vw';
+---
+
+<article class:list={['work-card', `work-card--${size}`]} data-services={work.services.join(' ')}>
+  <a class="work-card__link" href={`/raboty/${work.id}/`}>
+    <div class="work-card__media">
+      <Picture
+        src={work.cover}
+        alt=""
+        formats={['avif', 'webp']}
+        widths={[480, 800, 1200, 1600]}
+        sizes={sizes}
+        loading={eager ? 'eager' : 'lazy'}
+        class="work-card__img"
+      />
+    </div>
+    <div class="work-card__body">
+      <Heading class="work-card__title h3">{t(work.title)}</Heading>
+      <p class="work-card__meta eyebrow">
+        <span>{t(work.client ?? text.nda)}</span>
+        <span aria-hidden="true">·</span>
+        <span>{work.year}</span>
+      </p>
+      <div class="work-card__tags">
+        {work.services.map((slug) => <Tag label={serviceNames[slug] ?? slug} />)}
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .work-card__link {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .work-card__media {
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .work-card__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale var(--dur) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .work-card__link:hover .work-card__media :global(img) {
+      scale: 1.03;
+    }
+  }
+
+  .work-card__body {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .work-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--ash);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .work-card__media :global(img) {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,354 @@
+/* ==========================================================================
+   Типографика: Tenor Sans — заголовки заглавными, Manrope — текст,
+   Geologica — подписи, цифры, навигация (всегда SHRP 100)
+   ========================================================================== */
+
+h1,
+h2,
+h3,
+.h1,
+.h2,
+.h3,
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  text-wrap: balance;
+  hyphens: manual;
+  overflow-wrap: normal;
+}
+
+.display {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+}
+
+h1,
+.h1 {
+  font-size: var(--fs-h1);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-display);
+}
+
+h2,
+.h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+}
+
+h3,
+.h3 {
+  font-size: var(--fs-h3);
+  line-height: 1.3;
+  letter-spacing: var(--ls-heading);
+}
+
+/* Длинные слова заглавными на узких экранах: меньше кегль и разрядка */
+@media (max-width: 480px) {
+  h1,
+  .h1 {
+    font-size: clamp(1.625rem, 0.9rem + 3.6vw, 2rem);
+    letter-spacing: 0.05em;
+  }
+
+  h2,
+  .h2 {
+    font-size: clamp(1.5rem, 0.95rem + 2.8vw, 1.75rem);
+    letter-spacing: 0.08em;
+  }
+}
+
+p {
+  text-wrap: pretty;
+  max-width: var(--measure);
+}
+
+.lead {
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+  color: var(--text-muted);
+  max-width: var(--measure-lead);
+  text-wrap: pretty;
+}
+
+.small {
+  font-size: var(--fs-small);
+  line-height: 1.55;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* Подпись: «01 — Название» */
+.eyebrow,
+.label {
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 400;
+  font-size: var(--fs-label);
+  line-height: 1.6;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.label {
+  font-size: var(--fs-tag);
+  letter-spacing: var(--ls-button);
+}
+
+/* Крупные цифры: Geologica Light, табличные */
+.num {
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 300;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0;
+}
+
+.num-xl {
+  font-size: var(--fs-num-xl);
+  line-height: 1;
+}
+
+.tech {
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 400;
+}
+
+/* Центрированный текст с разрядкой: компенсируем хвост последней буквы */
+.center-tracked {
+  padding-inline-start: 0.08em;
+}
+
+/* ---------- Текстовая ссылка: линия 1 px, при наведении растёт новая слева направо ---------- */
+
+.link {
+  position: relative;
+  display: inline-block;
+  padding-bottom: var(--link-offset);
+  font-family: var(--font-body);
+  color: inherit;
+}
+
+.link::before,
+.link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--hairline);
+}
+
+/* Палитра без новых цветов: базовая линия — пепел, растущая — цвет текста */
+.link::before {
+  background: var(--text-muted);
+}
+
+.link::after {
+  background: currentColor;
+}
+
+.link::after {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-link) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+.link:focus-visible::after,
+.link.is-hover::after {
+  transform: scaleX(1);
+}
+
+/* Ссылка внутри абзаца может переноситься — меняем только цвет линии */
+.inline-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: var(--hairline);
+  text-underline-offset: var(--link-offset);
+  text-decoration-color: var(--text-muted);
+  transition: text-decoration-color var(--dur-link) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .inline-link:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* ---------- Текст статьи ---------- */
+
+.prose {
+  font-size: var(--fs-prose);
+  line-height: var(--lh-prose);
+  max-width: var(--measure);
+}
+
+.prose > * + * {
+  margin-top: 1.1em;
+}
+
+.prose h2 {
+  font-size: var(--fs-prose-h2);
+  line-height: 1.25;
+  letter-spacing: var(--ls-heading);
+  margin-top: 2.2em;
+  margin-bottom: -0.2em;
+}
+
+.prose h3 {
+  font-size: var(--fs-prose-h3);
+  line-height: 1.35;
+  letter-spacing: var(--ls-heading);
+  margin-top: 1.9em;
+  margin-bottom: -0.3em;
+}
+
+.prose a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: var(--hairline);
+  text-underline-offset: var(--link-offset);
+  text-decoration-color: var(--text-muted);
+  transition: text-decoration-color var(--dur-link) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .prose a:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+.prose ul,
+.prose ol {
+  padding: 0;
+  list-style: none;
+}
+
+.prose li + li {
+  margin-top: 0.5em;
+}
+
+.prose ul > li {
+  position: relative;
+  padding-left: 1.75em;
+}
+
+/* Списки с тире-линиями */
+.prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.85em;
+  width: 1em;
+  border-top: var(--hairline) solid var(--ash);
+}
+
+.prose ol {
+  counter-reset: item;
+}
+
+.prose ol > li {
+  position: relative;
+  padding-left: 2.25em;
+  counter-increment: item;
+}
+
+.prose ol > li::before {
+  content: counter(item, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 400;
+  font-size: var(--fs-label);
+  letter-spacing: 0.08em;
+  color: var(--ash);
+}
+
+.prose blockquote {
+  padding-left: var(--space-5);
+  border-left: var(--hairline) solid var(--chalk);
+  font-size: var(--fs-quote);
+  line-height: 1.55;
+}
+
+.prose strong {
+  font-weight: 500;
+}
+
+.prose em {
+  font-style: normal;
+}
+
+.prose code {
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 400;
+  font-size: 0.9em;
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: var(--space-5);
+  border: var(--hairline) solid var(--graphite);
+}
+
+.prose hr {
+  border: 0;
+  border-top: var(--hairline) solid var(--graphite);
+  margin-block: 2em;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose .table-wrap {
+  overflow-x: auto;
+}
+
+.prose th,
+.prose td {
+  padding: var(--space-3) var(--space-4) var(--space-3) 0;
+  border-bottom: var(--hairline) solid var(--graphite);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 400;
+  font-size: var(--fs-tag);
+  letter-spacing: var(--ls-button);
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.prose figcaption {
+  margin-top: var(--space-3);
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 400;
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ash);
+}

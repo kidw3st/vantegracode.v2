@@ -1,0 +1,225 @@
+/* ==========================================================================
+   База: сброс, сетка, секции, фокус, поверхности браузера
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Меню открыто — страница под ним не прокручивается */
+html.menu-open {
+  overflow: hidden;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--soot);
+  color: var(--chalk);
+  scrollbar-color: var(--graphite) var(--soot);
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--soot);
+  color: var(--chalk);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  caret-color: var(--chalk);
+  overflow-x: clip;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+::selection {
+  background: var(--chalk);
+  color: var(--soot);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+  padding: 0;
+}
+
+img,
+svg,
+picture,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--chalk);
+  outline-offset: 3px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Якоря не прячутся под закреплённой шапкой */
+[id] {
+  scroll-margin-top: calc(var(--header-h) + var(--space-5));
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: calc(var(--z-header) + 10);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-5);
+  background: var(--chalk);
+  color: var(--soot);
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-size: var(--fs-label);
+  font-weight: 400;
+  letter-spacing: var(--ls-button);
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  transform: translateY(calc(-100% - var(--space-5)));
+}
+
+.skip-link:focus-visible {
+  transform: none;
+  outline-color: var(--chalk);
+}
+
+/* ---------- Сетка ---------- */
+
+.container {
+  width: min(100% - 2 * var(--gutter), var(--maxw));
+  margin-inline: auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  column-gap: var(--column-gap);
+}
+
+/* ---------- Секции ---------- */
+
+.section {
+  position: relative;
+  padding-block: var(--section-y);
+}
+
+/* Две тёмные секции подряд не складывают отступы */
+.section:not(.section--chalk) + .section:not(.section--chalk) {
+  padding-top: 0;
+}
+
+.section--rule::before {
+  content: '';
+  display: block;
+  width: min(100% - 2 * var(--gutter), var(--maxw));
+  margin: 0 auto var(--section-y);
+  border-top: var(--hairline) solid var(--graphite);
+}
+
+/* Внутренние страницы начинаются под закреплённой шапкой */
+.page-top {
+  padding-top: calc(var(--header-h) + var(--space-9));
+}
+
+/* Единственная светлая секция страницы: мел, текст сажей */
+.section--chalk {
+  background: var(--chalk);
+  color: var(--soot);
+  --text-muted: var(--ash-on-chalk);
+  --rule: var(--line-on-chalk);
+}
+
+.section--chalk ::selection {
+  background: var(--soot);
+  color: var(--chalk);
+}
+
+.section--chalk :focus-visible {
+  outline-color: var(--soot);
+}
+
+:root {
+  --text-muted: var(--ash);
+  --rule: var(--graphite);
+}
+
+.rule {
+  border: 0;
+  border-top: var(--hairline) solid var(--rule);
+  margin: 0;
+}

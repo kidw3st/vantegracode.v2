@@ -1,0 +1,194 @@
+---
+/**
+ * Эхо-орбиты — единственный декоративный элемент бренда.
+ * mode="logo": кольца вокруг логотипа; компонент кладётся внутрь обёртки логотипа
+ *   (position: relative, ширина = ширина логотипа). Внутреннее кольцо считается в lib/orbit.ts
+ *   и содержит логотип с охранным полем — с учётом покачивания и параллакса.
+ * mode="block": центр колец — центр блока, кольца уходят за края.
+ * Не больше 4 колец, линия 1,25 px, мел 4–20 %, под текстом, aria-hidden.
+ */
+import { clearspace, LOGO, type LogoVariant } from '../lib/logo.ts';
+import { logoRings, ORBIT_ANGLE, ORBIT_RATIO, ringExtent, type Ring } from '../lib/orbit.ts';
+
+interface Props {
+  mode: 'logo' | 'block';
+  logo?: LogoVariant;
+  /** 1–4 кольца (одно — только для сообщения об успехе формы) */
+  rings?: number;
+  /** прозрачность: strong — только если кольца не проходят за текстом */
+  tone?: 'strong' | 'normal' | 'faint';
+  parallax?: boolean;
+  /** auto — прорисовка сразу; manual — по классу .is-drawing; none — без прорисовки */
+  draw?: 'auto' | 'manual' | 'none';
+  /** минимальная ширина логотипа на экране, px — запас под параллакс */
+  minLogoPx?: number;
+  /** начальный радиус кольца в режиме block, доля большей стороны блока */
+  start?: number;
+  /** CSS-длина одной единицы геометрии: ширина логотипа (logo) или 100cqmax (block) */
+  unit?: string;
+  class?: string;
+}
+
+const {
+  mode,
+  logo = 'mark',
+  rings: count = 3,
+  tone = 'normal',
+  parallax = false,
+  draw = 'none',
+  minLogoPx = 160,
+  start = 0.32,
+  unit,
+  class: className,
+} = Astro.props;
+
+if (mode === 'logo' && !unit) throw new Error('OrbitField: для mode="logo" нужна ширина логотипа в unit');
+const unitCss = unit ?? '100cqmax';
+
+/** Длина эллипса (Рамануджан) в единицах геометрии */
+const perimeter = ({ rx, ry }: Ring) => Math.PI * (3 * (rx + ry) - Math.sqrt((3 * rx + ry) * (rx + 3 * ry)));
+
+if (count < 1 || count > 4) throw new Error('OrbitField: от 1 до 4 колец на экран');
+
+const PARALLAX_PX = 8;
+const STEP = 1.42;
+
+let rings: Ring[];
+if (mode === 'logo') {
+  const g = LOGO[logo];
+  const cs = clearspace(logo);
+  const extra = parallax ? PARALLAX_PX / minLogoPx : 0;
+  // единица длины — ширина логотипа
+  rings = logoRings({ hw: 0.5 + cs + extra, hh: (0.5 * g.h) / g.w + cs + extra, rings: count, step: STEP });
+} else {
+  rings = Array.from({ length: count }, (_, i) => {
+    const rx = start * STEP ** i;
+    return { rx, ry: rx * ORBIT_RATIO };
+  });
+}
+
+const TONES = {
+  strong: ['var(--orbit-strong)', 'var(--orbit)', 'var(--orbit-faint)', 'var(--orbit-faint)'],
+  normal: ['var(--orbit)', 'var(--orbit)', 'var(--orbit-faint)', 'var(--orbit-faint)'],
+  faint: ['var(--orbit-faint)', 'var(--orbit-faint)', 'var(--orbit-faint)', 'var(--orbit-faint)'],
+};
+
+// у каждого кольца свой период покачивания (20–28 с) и своя фаза
+const PERIODS = [24, 20, 28, 22];
+const PHASES = [0, 0.37, 0.71, 0.18];
+
+const items = rings.map((ring, i) => {
+  const e = ringExtent(ring, ORBIT_ANGLE);
+  const pad = 0.004 * ring.rx;
+  const w = 2 * (e.x + pad);
+  const h = 2 * (e.y + pad);
+  const period = PERIODS[i] ?? 24;
+  return {
+    ring,
+    viewBox: `${(-w / 2).toFixed(4)} ${(-h / 2).toFixed(4)} ${w.toFixed(4)} ${h.toFixed(4)}`,
+    style: [
+      `--k:${w.toFixed(4)}`,
+      `--ar:${(w / h).toFixed(4)}`,
+      `--n:${i}`,
+      `--p:${perimeter(ring).toFixed(4)}`,
+      `--depth:${((i + 1) / count).toFixed(3)}`,
+      `--sway-dur:${period / 2}s`,
+      `--sway-delay:${(-(PHASES[i] ?? 0) * period).toFixed(2)}s`,
+      `stroke:${TONES[tone][i]}`,
+    ].join(';'),
+  };
+});
+---
+
+<div
+  class:list={['orbits', `orbits--${mode}`, className]}
+  aria-hidden="true"
+  data-orbits
+  data-parallax={parallax ? '' : undefined}
+  data-draw={draw}
+  style={`--unit: ${unitCss}`}
+>
+  {
+    items.map((item) => (
+      <svg class="orbit" viewBox={item.viewBox} style={item.style} focusable="false">
+        <ellipse
+          class="orbit__line"
+          cx="0"
+          cy="0"
+          rx={item.ring.rx.toFixed(4)}
+          ry={item.ring.ry.toFixed(4)}
+          transform={`rotate(${ORBIT_ANGLE})`}
+        />
+      </svg>
+    ))
+  }
+</div>
+
+<style>
+  .orbits {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-orbit);
+    pointer-events: none;
+  }
+
+  .orbits--block {
+    overflow: hidden;
+    container-type: size;
+  }
+
+  .orbit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    overflow: visible;
+    max-width: none;
+    /* центрирование полями, чтобы rotate и translate работали вокруг центра кольца */
+    width: calc(var(--k) * var(--unit));
+    margin-left: calc(var(--k) * var(--unit) * -0.5);
+    margin-top: calc(var(--k) * var(--unit) * -0.5 / var(--ar));
+    animation: orbit-sway var(--sway-dur) var(--ease-in-out) var(--sway-delay) infinite alternate both;
+    will-change: rotate, translate;
+  }
+
+  .orbits.is-paused .orbit {
+    animation-play-state: paused;
+  }
+
+  .orbit__line {
+    /* длина кольца в пикселях экрана: штрихи при non-scaling-stroke считаются в экранных единицах */
+    --len: calc(var(--p) * var(--unit));
+    fill: none;
+    stroke-width: var(--orbit-stroke);
+    vector-effect: non-scaling-stroke;
+  }
+
+  :global(.js) .orbits[data-draw='auto'] .orbit__line {
+    animation: orbit-draw var(--dur-draw) var(--ease-in-out) both;
+    animation-delay: calc(var(--n) * var(--stagger-orbit));
+  }
+
+  :global(.js) .orbits[data-draw='manual'] .orbit__line {
+    stroke-dasharray: var(--len) var(--len);
+    stroke-dashoffset: var(--len);
+  }
+
+  :global(.js) .orbits[data-draw='manual'].is-drawing .orbit__line {
+    animation: orbit-draw var(--dur-draw) var(--ease-in-out) both;
+    animation-delay: calc(var(--n) * var(--stagger-orbit));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orbit {
+      animation: none;
+      will-change: auto;
+    }
+
+    :global(.js) .orbits[data-draw] .orbit__line,
+    :global(.js) .orbits[data-draw='manual'].is-drawing .orbit__line {
+      stroke-dasharray: none;
+      stroke-dashoffset: 0;
+      animation: none;
+    }
+  }
+</style>

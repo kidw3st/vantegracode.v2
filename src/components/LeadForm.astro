@@ -1,0 +1,225 @@
+---
+/**
+ * Форма заявки. Без JS — обычный POST на /api/lead.php с редиректом на /kontakty/spasibo/ или /oshibka/.
+ * С JS — проверка при потере фокуса и при отправке, отправка JSON, успех с прорисовкой орбиты.
+ */
+import Button from './Button.astro';
+import OrbitField from './OrbitField.astro';
+import { site } from '../data/site.ts';
+import { ui } from '../data/ui.ts';
+import { getText } from '../lib/fill.ts';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  id?: string;
+  class?: string;
+}
+
+const { id, class: className } = Astro.props;
+const text = await getText();
+const f = ui.form;
+
+const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) => [key, t(value)]));
+---
+
+<div class:list={['lead', className]} data-lead>
+  <form
+    id={id}
+    class="lead-form"
+    action="/api/lead.php"
+    method="post"
+    novalidate
+    data-lead-form
+    data-messages={JSON.stringify(messages)}
+    data-invalid={t(f.invalid)}
+    data-sending={t(site.cta.sending)}
+  >
+    <div class="field" data-field="name">
+      <label class="field__label eyebrow" for="lf-name">{f.name}</label>
+      <input
+        class="field__input"
+        id="lf-name"
+        name="name"
+        type="text"
+        autocomplete="name"
+        required
+        minlength="2"
+        maxlength="80"
+        aria-describedby="lf-name-error"
+      />
+      <p class="field__error" id="lf-name-error" data-error-for="name"></p>
+    </div>
+
+    <div class="field" data-field="contact">
+      <label class="field__label eyebrow" for="lf-contact">{f.contact}</label>
+      <input
+        class="field__input"
+        id="lf-contact"
+        name="contact"
+        type="text"
+        inputmode="text"
+        autocomplete="on"
+        required
+        maxlength="120"
+        placeholder={t(f.contactHint)}
+        aria-describedby="lf-contact-hint lf-contact-error"
+      />
+      <p class="visually-hidden" id="lf-contact-hint">{t(f.contactHint)}</p>
+      <p class="field__error" id="lf-contact-error" data-error-for="contact"></p>
+    </div>
+
+    <div class="field" data-field="need">
+      <label class="field__label eyebrow" for="lf-need">{f.need}</label>
+      <div class="field__select">
+        <select class="field__input" id="lf-need" name="need" required>
+          {f.needOptions.map((option, i) => <option value={option} selected={i === 0}>{t(option)}</option>)}
+        </select>
+        <svg class="field__chevron" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true" focusable="false">
+          <path d="M1 1.5l5 5 5-5"></path>
+        </svg>
+      </div>
+    </div>
+
+    <div class="field" data-field="message">
+      <label class="field__label eyebrow" for="lf-message">
+        {f.message} <span class="field__optional">· {f.messageHint}</span>
+      </label>
+      <textarea
+        class="field__input field__textarea"
+        id="lf-message"
+        name="message"
+        rows="2"
+        maxlength="2000"
+        aria-describedby="lf-message-error"
+        data-autogrow></textarea>
+      <p class="field__error" id="lf-message-error" data-error-for="message"></p>
+    </div>
+
+    <fieldset class="lead-form__checks">
+      <legend class="visually-hidden">{t(ui.consentDoc)}</legend>
+      <div class="check" data-field="consent_pd">
+        <input
+          class="check__input"
+          id="lf-consent-pd"
+          name="consent_pd"
+          type="checkbox"
+          value="1"
+          required
+          aria-describedby="lf-consent-pd-error"
+        />
+        <label class="check__label" for="lf-consent-pd">
+          {f.consentPd[0]}{' '}<a class="inline-link" href="/soglasie/">{t(f.consentPd[1])}</a>
+        </label>
+        <p class="field__error" id="lf-consent-pd-error" data-error-for="consent_pd"></p>
+      </div>
+      <div class="check" data-field="consent_policy">
+        <input
+          class="check__input"
+          id="lf-consent-policy"
+          name="consent_policy"
+          type="checkbox"
+          value="1"
+          required
+          aria-describedby="lf-consent-policy-error"
+        />
+        <label class="check__label" for="lf-consent-policy">
+          {t(f.consentPolicy[0])}&nbsp;<a class="inline-link" href="/politika-konfidencialnosti/"
+            >{t(f.consentPolicy[1])}</a
+          >
+        </label>
+        <p class="field__error" id="lf-consent-policy-error" data-error-for="consent_policy"></p>
+      </div>
+    </fieldset>
+
+    <div class="lead-form__trap" aria-hidden="true">
+      <label for="lf-company">{f.honeypot}</label>
+      <input id="lf-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+    <input type="hidden" name="ts" value="" data-ts />
+
+    <div class="lead-form__submit">
+      <Button type="submit" variant="primary" label={site.cta.send} data-submit />
+      <div class="lead-form__status" role="status" aria-live="polite" data-status></div>
+    </div>
+
+    <template data-send-error>
+      <p class="lead-form__error">
+        {t(f.error)}
+        <a class="inline-link" href={site.telegram.url} target="_blank" rel="noopener noreferrer">{site.telegram.handle}</a>
+      </p>
+    </template>
+  </form>
+
+  <div class="lead-success" hidden tabindex="-1" data-success>
+    <OrbitField mode="block" rings={1} tone="normal" draw="manual" start={0.42} />
+    <p class="lead-success__text h3">{text(f.success)}</p>
+  </div>
+</div>
+
+<style>
+  .lead {
+    position: relative;
+  }
+
+  .lead-form {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  .lead-form__checks {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  /* Ловушка для ботов: не видна людям и скринридерам */
+  .lead-form__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .lead-form__submit {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: start;
+  }
+
+  .lead-form__status:empty {
+    display: none;
+  }
+
+  .lead-form__status {
+    font-size: var(--fs-small);
+    color: var(--chalk);
+  }
+
+  .lead-form__status :global(.lead-form__error) {
+    font-size: var(--fs-small);
+  }
+
+  .lead-success {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: clamp(280px, 32vw, 420px);
+    padding: var(--space-8) var(--space-5);
+    text-align: center;
+    outline: none;
+  }
+
+  .lead-success__text {
+    position: relative;
+    z-index: var(--z-content);
+    max-width: 18ch;
+  }
+
+  .lead-success:not([hidden]) {
+    animation: fade var(--dur-fast) var(--ease-out) both;
+  }
+</style>

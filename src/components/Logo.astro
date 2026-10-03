@@ -1,0 +1,83 @@
+---
+/**
+ * Логотип — только SVG владельца через <img> (файл кешируется, пути внутри SVG не меняются).
+ * Версия × цвет × ширина. Не поворачивать, не растягивать, не перекрашивать, без эффектов.
+ */
+import markChalk from '../assets/brand/logo/vantegra-mark-chalk.svg';
+import markSoot from '../assets/brand/logo/vantegra-mark-soot.svg';
+import verticalChalk from '../assets/brand/logo/vantegra-lockup-vertical-chalk.svg';
+import verticalSoot from '../assets/brand/logo/vantegra-lockup-vertical-soot.svg';
+import horizontalChalk from '../assets/brand/logo/vantegra-lockup-horizontal-chalk.svg';
+import horizontalSoot from '../assets/brand/logo/vantegra-lockup-horizontal-soot.svg';
+import wordmarkChalk from '../assets/brand/logo/vantegra-wordmark-chalk.svg';
+import wordmarkSoot from '../assets/brand/logo/vantegra-wordmark-soot.svg';
+import { LOGO, type LogoColor, type LogoVariant } from '../lib/logo.ts';
+
+interface Props {
+  variant: LogoVariant;
+  color?: LogoColor;
+  /** ширина в px — атрибут width и проверка минимального размера */
+  width: number;
+  /** адаптивная ширина в CSS, например var(--hero-logo); её минимум тоже проверяется */
+  cssWidth?: string;
+  /** минимальная ширина на экране при адаптивной ширине, px */
+  minWidth?: number;
+  alt?: string;
+  loading?: 'eager' | 'lazy';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  class?: string;
+  [key: `data-${string}`]: string | boolean | undefined;
+}
+
+const {
+  variant,
+  color = 'chalk',
+  width,
+  cssWidth,
+  minWidth,
+  alt = '',
+  loading = 'eager',
+  fetchpriority,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const FILES = {
+  mark: { chalk: markChalk, soot: markSoot },
+  vertical: { chalk: verticalChalk, soot: verticalSoot },
+  horizontal: { chalk: horizontalChalk, soot: horizontalSoot },
+  wordmark: { chalk: wordmarkChalk, soot: wordmarkSoot },
+} as const;
+
+const geometry = LOGO[variant];
+const shown = Math.min(width, minWidth ?? width);
+if (shown < geometry.minPx) {
+  throw new Error(`Logo ${variant}: ширина ${shown}px меньше минимальной ${geometry.minPx}px`);
+}
+
+const file = FILES[variant][color];
+const height = Math.round((width * geometry.h) / geometry.w);
+---
+
+<img
+  class:list={['logo', `logo--${variant}`, className]}
+  src={file.src}
+  width={width}
+  height={height}
+  alt={alt}
+  loading={loading}
+  decoding="async"
+  fetchpriority={fetchpriority}
+  draggable="false"
+  style={`--logo-w: ${cssWidth ?? `${width}px`}`}
+  {...rest}
+/>
+
+<style>
+  .logo {
+    width: var(--logo-w);
+    height: auto;
+    max-width: none;
+    user-select: none;
+  }
+</style>

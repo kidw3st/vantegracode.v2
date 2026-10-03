@@ -1,0 +1,95 @@
+---
+/** Карточка услуги для главной: номер, название, строка short, стрелка. Вся карточка — ссылка. */
+import Arrow from './Arrow.astro';
+import { t } from '../lib/typograf.ts';
+import type { Service } from '../lib/content.ts';
+
+interface Props {
+  service: Service;
+  index: number;
+  class?: string;
+}
+
+const { service, index, class: className } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+---
+
+<a class:list={['service-card', className]} href={`/uslugi/${service.id}/`}>
+  <span class="service-card__num num" aria-hidden="true">{num}</span>
+  <Arrow class="service-card__arrow" />
+  <span class="service-card__body">
+    <h3 class="service-card__title">{t(service.data.title)}</h3>
+    <span class="service-card__short">{t(service.data.short)}</span>
+  </span>
+</a>
+
+<style>
+  .service-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr;
+    align-content: space-between;
+    gap: var(--space-8) var(--space-5);
+    min-height: clamp(240px, 22vw, 320px);
+    height: 100%;
+    padding: var(--card-pad);
+    border: var(--hairline) solid var(--graphite);
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .service-card__num {
+    font-size: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
+    line-height: 1;
+    color: var(--ash);
+  }
+
+  .service-card :global(.service-card__arrow) {
+    align-self: start;
+    font-size: 1.25rem;
+    color: var(--ash);
+    transition:
+      translate var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .service-card__body {
+    grid-column: 1 / -1;
+    align-self: end;
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .service-card__short {
+    color: var(--ash);
+    font-size: var(--fs-small);
+    line-height: 1.55;
+    max-width: 34ch;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .service-card:hover {
+      border-color: var(--ash);
+    }
+
+    .service-card:hover :global(.service-card__arrow) {
+      translate: var(--arrow-shift) 0;
+      color: var(--chalk);
+    }
+  }
+
+  .service-card.is-hover {
+    border-color: var(--ash);
+  }
+
+  .service-card.is-hover :global(.service-card__arrow) {
+    translate: var(--arrow-shift) 0;
+    color: var(--chalk);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .service-card :global(.service-card__arrow) {
+      transition: color var(--dur-fast) linear;
+    }
+  }
+</style>

@@ -1,0 +1,82 @@
+---
+/**
+ * Заголовок секции: подпись «02 — Услуги» сверху слева, крупный заголовок,
+ * поясняющий текст и ссылка «Все …» — в правой части сетки (колонки 8–12).
+ */
+import ArrowLink from './ArrowLink.astro';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  text?: string;
+  link?: { href: string; label: string };
+  as?: 'h1' | 'h2';
+  id?: string;
+  class?: string;
+}
+
+const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className } = Astro.props;
+---
+
+<header class:list={['sh grid', className]} data-reveal="stagger">
+  <p class="eyebrow sh__eyebrow">{t(eyebrow)}</p>
+  <Heading class="sh__title" id={id}>{t(title)}</Heading>
+  {
+    (text || link) && (
+      <div class="sh__aside">
+        {text && <p class="sh__text">{t(text)}</p>}
+        {link && <ArrowLink class="sh__link" href={link.href} label={link.label} />}
+      </div>
+    )
+  }
+</header>
+
+<style>
+  .sh {
+    row-gap: var(--space-5);
+    padding-top: var(--space-6);
+    border-top: var(--hairline) solid var(--rule);
+    margin-bottom: clamp(var(--space-8), 6vw, var(--space-9));
+  }
+
+  .sh__eyebrow,
+  .sh__title,
+  .sh__aside {
+    grid-column: 1 / -1;
+  }
+
+  .sh__eyebrow {
+    margin-bottom: var(--space-2);
+  }
+
+  .sh__aside {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: start;
+    align-content: end;
+  }
+
+  .sh__text {
+    color: var(--text-muted);
+    max-width: 44ch;
+  }
+
+  @media (min-width: 1024px) {
+    .sh__title {
+      grid-column: 1 / span 7;
+    }
+
+    .sh__aside {
+      grid-column: 8 / -1;
+      grid-row: 2;
+      justify-items: end;
+      text-align: right;
+    }
+
+    .sh__aside:has(.sh__text) {
+      justify-items: start;
+      text-align: left;
+    }
+  }
+</style>

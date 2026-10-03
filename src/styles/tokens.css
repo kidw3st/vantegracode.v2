@@ -1,0 +1,160 @@
+/* ==========================================================================
+   VANTEGRA — дизайн-токены сайта
+   Источник: брендбук Vantegra.
+   Это единственный источник цветов, шрифтов, отступов и движения.
+   Новые цвета, шрифты и тени не добавлять.
+   ========================================================================== */
+
+/* --- Шрифты ---------------------------------------------------------------
+   Сконвертируй файлы шрифтов из материалов в WOFF2
+   и положи в public/fonts/ под этими именами:
+     TenorSans-Regular.woff2, Manrope-Variable.woff2, Geologica-Variable.woff2
+   ------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Tenor Sans';
+  src: url('/fonts/TenorSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/Manrope-Variable.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geologica';
+  src: url('/fonts/Geologica-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* --- Палитра «Сажа и мел» (брендбук, стр. 10) --- */
+  --soot: #111111;      /* основной фон сайта, знак на светлом */
+  --chalk: #F4F2EE;     /* текст и знак на тёмном, фон светлых секций */
+  --graphite: #2A2A2A;  /* поверхности, рамки и линии на тёмном */
+  --ash: #8C8984;       /* подписи и второстепенный текст на тёмном */
+
+  /* Производные — только для светлых (chalk) секций, ради контраста AA */
+  --ash-on-chalk: #6E6B66;   /* второстепенный текст на меле */
+  --line-on-chalk: #DCD8D1;  /* линии и рамки на меле */
+
+  /* Эхо-орбиты: мел с прозрачностью 4–20 % (брендбук, стр. 13) */
+  --orbit-strong: rgba(244, 242, 238, 0.20);
+  --orbit: rgba(244, 242, 238, 0.12);
+  --orbit-faint: rgba(244, 242, 238, 0.04);
+  --orbit-angle: -12deg;     /* наклон орбиты в знаке — для всех эллипсов */
+  --orbit-ratio: 0.306;      /* ry / rx орбиты в знаке */
+
+  /* Пропорция цветов на сайте: 80 % сажа · 15 % мел · 5 % графит и пепел */
+
+  /* --- Шрифты (брендбук, стр. 11) --- */
+  --font-display: 'Tenor Sans', 'Manrope', sans-serif;  /* заголовки: только ЗАГЛАВНЫЕ */
+  --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif; /* текст: 400 и 500 */
+  --font-tech: 'Geologica', 'Manrope', sans-serif;      /* подписи, номера, цифры, коды */
+  --tech-variation: 'SHRP' 100;                          /* острые срезы Geologica — всегда */
+
+  /* Кегли (mobile → desktop) */
+  --fs-display: clamp(2.25rem, 1.35rem + 4.2vw, 5.25rem);  /* 36 → 84 px */
+  --fs-h1: clamp(2rem, 1.4rem + 2.8vw, 4rem);              /* 32 → 64 px */
+  --fs-h2: clamp(1.75rem, 1.3rem + 2vw, 3.5rem);           /* 28 → 56 px */
+  --fs-h3: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);          /* 18 → 24 px */
+  --fs-lead: clamp(1.125rem, 1.02rem + 0.45vw, 1.375rem);  /* 18 → 22 px */
+  --fs-body: 1.0625rem;                                    /* 17 px */
+  --fs-small: 0.9375rem;                                   /* 15 px */
+  --fs-label: 0.8125rem;                                   /* 13 px */
+  --fs-num-xl: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);      /* крупные цифры Geologica Light */
+
+  --ls-display: 0.08em;   /* разрядка крупных заголовков */
+  --ls-heading: 0.12em;   /* разрядка H2–H3 (брендбук: +10–16 %) */
+  --ls-label: 0.3em;      /* разрядка подписей Geologica в заглавных */
+  --ls-button: 0.24em;
+
+  --lh-display: 1.05;
+  --lh-heading: 1.12;
+  --lh-body: 1.6;
+  --measure: 68ch;        /* максимальная длина строки текста */
+
+  /* --- Сетка и отступы --- */
+  --maxw: 1728px;                              /* 1920 − 2 × 96 */
+  --gutter: clamp(20px, 5vw, 96px);            /* боковые поля; на 1920 = 96 px как в брендбуке */
+  --columns: 12;
+  --column-gap: clamp(16px, 2vw, 32px);
+  --section-y: clamp(88px, 10vw, 192px);       /* вертикальный ритм секций */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+  --space-11: 160px;
+
+  /* --- Форма --- */
+  --hairline: 1px;
+  --radius: 0;            /* карточки, изображения, поля — прямые углы */
+  --radius-pill: 999px;   /* только кнопки и теги (отсылка к орбите) */
+
+  /* --- Движение --- */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 200ms;
+  --dur: 600ms;
+  --dur-slow: 1400ms;
+  --stagger: 70ms;
+
+  /* --- Логотип (брендбук, стр. 9) --- */
+  --logo-clearspace: 0.15;        /* охранное поле = 15 % ширины знака */
+  --logo-min-mark: 24px;          /* минимальная ширина знака */
+  --logo-min-horizontal: 140px;   /* минимальная ширина горизонтального блока */
+
+  color-scheme: dark;
+}
+
+/* --- Базовые текстовые стили (пример применения токенов) ----------------- */
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+}
+.t-h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  text-transform: uppercase;
+}
+.t-label {
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 400;
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ash);
+}
+.t-num {
+  font-family: var(--font-tech);
+  font-variation-settings: var(--tech-variation);
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+.t-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  max-width: var(--measure);
+}

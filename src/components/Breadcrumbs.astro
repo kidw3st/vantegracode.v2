@@ -1,0 +1,90 @@
+---
+/** Хлебные крошки: Geologica, мелко. Последний пункт — текущая страница. */
+import { ui } from '../data/ui.ts';
+import { t } from '../lib/typograf.ts';
+import type { Crumb } from '../lib/seo.ts';
+
+interface Props {
+  items: Crumb[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="crumbs" aria-label={ui.breadcrumbsLabel}>
+  <ol role="list">
+    {
+      items.map((item, i) =>
+        i < items.length - 1 ? (
+          <li>
+            <a class="crumbs__link" href={item.href}>
+              {t(item.label)}
+            </a>
+          </li>
+        ) : (
+          <li>
+            <span class="crumbs__current" aria-current="page">
+              {t(item.label)}
+            </span>
+          </li>
+        ),
+      )
+    }
+  </ol>
+</nav>
+
+<style>
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) 0;
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-tag);
+    letter-spacing: var(--ls-button);
+    text-transform: uppercase;
+    color: var(--ash);
+  }
+
+  .crumbs li {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .crumbs li + li::before {
+    content: '/';
+    margin-inline: var(--space-3);
+    color: var(--graphite);
+  }
+
+  .crumbs__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .crumbs__link:hover {
+      color: var(--chalk);
+    }
+  }
+
+  .crumbs__current {
+    display: inline-block;
+    max-width: 40ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--chalk);
+  }
+
+  @media (max-width: 767px) {
+    .crumbs__current {
+      max-width: 24ch;
+    }
+  }
+</style>

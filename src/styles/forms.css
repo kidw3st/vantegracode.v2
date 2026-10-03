@@ -1,0 +1,167 @@
+/* ==========================================================================
+   Поля формы: подложки нет, только нижняя линия 1 px пепла, при фокусе — мел.
+   Подпись — eyebrow над полем, текст Manrope 17 px, ошибка — текстом под полем
+   (Manrope 14 px, мел, с маркером «—»). Красного нет.
+   ========================================================================== */
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.field__optional {
+  letter-spacing: var(--ls-button);
+}
+
+.field__input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-3) 0;
+  border: 0;
+  border-bottom: var(--hairline) solid var(--ash);
+  border-radius: 0;
+  background: transparent;
+  color: var(--chalk);
+  font-family: var(--font-body);
+  font-size: var(--fs-field);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  appearance: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.field__input::placeholder {
+  color: var(--ash);
+  opacity: 1;
+}
+
+.field__input:focus,
+.field__input.is-focus {
+  border-bottom-color: var(--chalk);
+}
+
+.field__input:-webkit-autofill {
+  -webkit-text-fill-color: var(--chalk);
+  transition:
+    background-color 600000s 0s,
+    color 600000s 0s;
+}
+
+.field__textarea {
+  resize: none;
+  min-height: 80px;
+  field-sizing: content;
+  max-height: 320px;
+}
+
+.field__select {
+  position: relative;
+}
+
+.field__select .field__input {
+  padding-right: var(--space-7);
+  cursor: pointer;
+}
+
+.field__select option {
+  background: var(--soot);
+  color: var(--chalk);
+}
+
+.field__chevron {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  translate: 0 -50%;
+  width: 12px;
+  height: 8px;
+  fill: none;
+  stroke: var(--ash);
+  stroke-width: 1.25;
+  pointer-events: none;
+}
+
+.field__error {
+  font-size: var(--fs-error);
+  line-height: 1.45;
+  color: var(--chalk);
+}
+
+.field__error:empty {
+  display: none;
+}
+
+.field__error::before {
+  content: '— ';
+}
+
+.field.is-invalid .field__input {
+  border-bottom-color: var(--chalk);
+}
+
+.check {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  column-gap: var(--space-4);
+  align-items: start;
+}
+
+.check__input {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 12px 0 0;
+  border: var(--hairline) solid var(--ash);
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.check__input::before {
+  content: '';
+  width: 10px;
+  height: 5px;
+  border-left: 1.25px solid var(--soot);
+  border-bottom: 1.25px solid var(--soot);
+  rotate: -45deg;
+  translate: 0 -1px;
+  opacity: 0;
+}
+
+.check__input:checked {
+  background: var(--chalk);
+  border-color: var(--chalk);
+}
+
+.check__input:checked::before {
+  opacity: 1;
+}
+
+.check.is-invalid .check__input {
+  border-color: var(--chalk);
+}
+
+.check__label {
+  display: block;
+  min-height: var(--tap);
+  padding-block: 10px;
+  font-size: var(--fs-small);
+  line-height: 1.6;
+  color: var(--ash);
+  cursor: pointer;
+}
+
+.check__label .inline-link {
+  color: var(--chalk);
+}
+
+.check .field__error {
+  grid-column: 2;
+}

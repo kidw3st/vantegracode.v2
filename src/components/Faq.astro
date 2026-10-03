@@ -1,0 +1,155 @@
+---
+/**
+ * Аккордеон вопросов. Высота — grid-template-rows 0fr → 1fr, 300 мс; плюс поворотом становится минусом.
+ * Без JS все ответы открыты. Принимает готовый список (вопросы уже отфильтрованы и заполнены).
+ */
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  items: { id: string; q: string; a: string }[];
+  headingLevel?: 'h2' | 'h3';
+  idPrefix?: string;
+}
+
+const { items, headingLevel: Heading = 'h3', idPrefix = 'faq' } = Astro.props;
+---
+
+<div class="faq" data-accordion>
+  {
+    items.map((item) => {
+      const qId = `${idPrefix}-${item.id}-q`;
+      const aId = `${idPrefix}-${item.id}-a`;
+      return (
+        <div class="faq__item">
+          <Heading class="faq__heading">
+            <button class="faq__q" type="button" id={qId} aria-controls={aId} data-accordion-trigger>
+              <span class="faq__question">{t(item.q)}</span>
+              <span class="faq__icon" aria-hidden="true" />
+            </button>
+          </Heading>
+          <div class="faq__a" id={aId} role="region" aria-labelledby={qId} data-accordion-panel>
+            <div class="faq__inner">
+              <p class="faq__answer">{t(item.a)}</p>
+            </div>
+          </div>
+        </div>
+      );
+    })
+  }
+</div>
+
+<style>
+  .faq {
+    border-bottom: var(--hairline) solid var(--rule);
+  }
+
+  .faq__item {
+    border-top: var(--hairline) solid var(--rule);
+  }
+
+  .faq__heading {
+    font-family: var(--font-body);
+    font-size: inherit;
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 400;
+  }
+
+  .faq__q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    width: 100%;
+    min-height: var(--tap);
+    padding: var(--space-6) 0;
+    text-align: left;
+    font-family: var(--font-body);
+    font-size: var(--fs-lead);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .faq__question {
+    max-width: 52ch;
+    text-wrap: pretty;
+  }
+
+  /* Плюс из двух линий; вертикальная поворачивается и превращает его в минус */
+  .faq__icon {
+    position: relative;
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  .faq__icon::before,
+  .faq__icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    border-top: var(--hairline) solid currentColor;
+  }
+
+  .faq__icon::after {
+    rotate: 90deg;
+    transition: rotate var(--dur-accordion) var(--ease-out);
+  }
+
+  .faq__q[aria-expanded='true'] .faq__icon::after {
+    rotate: 0deg;
+  }
+
+  .faq__a {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+
+  .faq__inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .faq__answer {
+    padding: 0 var(--space-9) var(--space-6) 0;
+    color: var(--text-muted);
+    max-width: 68ch;
+  }
+
+  :global(.js) .faq__a {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition:
+      grid-template-rows var(--dur-accordion) var(--ease-out),
+      visibility 0s linear var(--dur-accordion);
+  }
+
+  :global(.js) .faq__a.is-open {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition:
+      grid-template-rows var(--dur-accordion) var(--ease-out),
+      visibility 0s linear 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .faq__a,
+    :global(.js) .faq__a.is-open {
+      transition: none;
+    }
+
+    .faq__icon::after {
+      transition: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .faq__answer {
+      padding-right: 0;
+    }
+  }
+</style>

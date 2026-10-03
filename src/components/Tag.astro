@@ -1,0 +1,95 @@
+---
+/** Тег / чип: Geologica 12 px, заглавные, рамка графит, pill. Активный — мел, текст сажей. */
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  label: string;
+  as?: 'span' | 'button' | 'a';
+  href?: string;
+  active?: boolean;
+  class?: string;
+  [key: `data-${string}`]: string | boolean | undefined;
+}
+
+const { label, as = 'span', href, active = false, class: className, ...rest } = Astro.props;
+const classes = ['tag', { 'tag--interactive': as !== 'span', 'is-active': active }, className];
+const text = t(label);
+---
+
+{
+  as === 'a' ? (
+    <a class:list={classes} href={href} aria-current={active ? 'true' : undefined} {...rest}>
+      {text}
+    </a>
+  ) : as === 'button' ? (
+    <button class:list={classes} type="button" aria-pressed={active ? 'true' : 'false'} {...rest}>
+      {text}
+    </button>
+  ) : (
+    <span class:list={classes} {...rest}>
+      {text}
+    </span>
+  )
+}
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 var(--space-4);
+    border: var(--hairline) solid var(--rule);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-tag);
+    line-height: 1;
+    letter-spacing: var(--ls-button);
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: inherit;
+  }
+
+  /* Длинный пункт на узком экране переносится внутри тега, а не раздвигает страницу */
+  .tag:not(.tag--interactive) {
+    max-width: 100%;
+    padding-block: var(--space-2);
+    line-height: 1.3;
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  @media (max-width: 479px) {
+    .tag {
+      letter-spacing: 0.12em;
+    }
+  }
+
+  .tag--interactive {
+    min-height: var(--tap);
+    padding: 0 var(--space-5);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tag--interactive:hover {
+      border-color: var(--ash);
+    }
+  }
+
+  .tag--interactive.is-hover {
+    border-color: var(--ash);
+  }
+
+  .tag.is-active,
+  .tag[aria-pressed='true'] {
+    background: var(--chalk);
+    border-color: var(--chalk);
+    color: var(--soot);
+  }
+</style>

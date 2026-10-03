@@ -11,11 +11,13 @@
     "check": "astro check",
     "test": "playwright test",
     "shots": "node tests/screenshots.mjs",
-    "links": "node tests/check-links.mjs"
+    "links": "node tests/check-links.mjs",
+    "todo": "node tests/todo.mjs"
   },
   "type": "module",
   "private": "true",
   "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.3.5",

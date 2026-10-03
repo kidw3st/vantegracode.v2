@@ -1,0 +1,52 @@
+---
+/** title, description, canonical, Open Graph, Twitter, JSON-LD, служебные meta */
+import { site } from '../data/site.ts';
+import { absolute, breadcrumbList, graph, organization, type Crumb, type JsonLdNode } from '../lib/seo.ts';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+  type?: 'website' | 'article';
+  crumbs?: Crumb[];
+  jsonLd?: JsonLdNode[];
+  publishedTime?: Date;
+}
+
+const { title, description, noindex = false, type = 'website', crumbs, jsonLd = [], publishedTime } = Astro.props;
+
+const canonical = absolute(Astro.url.pathname);
+const ogImage = absolute('/og/og-default.png');
+const metaTitle = t(title);
+const metaDescription = t(description);
+
+const nodes: JsonLdNode[] = noindex
+  ? []
+  : [organization(), ...(crumbs && crumbs.length > 1 ? [breadcrumbList(crumbs)] : []), ...jsonLd];
+---
+
+<title>{metaTitle}</title>
+<meta name="description" content={metaDescription} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, follow" />}
+
+<meta property="og:type" content={type} />
+<meta property="og:locale" content="ru_RU" />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:title" content={metaTitle} />
+<meta property="og:description" content={metaDescription} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={site.name} />
+{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={metaTitle} />
+<meta name="twitter:description" content={metaDescription} />
+<meta name="twitter:image" content={ogImage} />
+
+{site.webmasterCode && <meta name="yandex-verification" content={site.webmasterCode} />}
+
+{nodes.length > 0 && <script is:inline type="application/ld+json" set:html={graph(nodes)} />}

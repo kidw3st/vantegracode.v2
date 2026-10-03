@@ -1,0 +1,104 @@
+---
+/** Четыре шага процесса, соединённые одной линией 1 px с точками на шагах. Номер — Geologica 300. */
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  /** шаги с уже подставленными значениями */
+  steps: { title: string; text: string }[];
+  /** уровень заголовка шага */
+  headingLevel?: 'h3' | 'h4';
+}
+
+const { steps, headingLevel: Heading = 'h3' } = Astro.props;
+---
+
+<ol class="steps" role="list" data-reveal="stagger">
+  {
+    steps.map((step, i) => (
+      <li class="step">
+        <span class="step__num num" aria-hidden="true">
+          {String(i + 1).padStart(2, '0')}
+        </span>
+        <span class="step__dot" aria-hidden="true" />
+        <Heading class="step__title h3">{t(step.title)}</Heading>
+        <p class="step__text">{t(step.text)}</p>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .steps {
+    --dot: 7px;
+    --rail: 0;
+
+    position: relative;
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  /* Вертикальная линия на телефоне и планшете */
+  .steps::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--dot) / 2);
+    top: calc(var(--dot) / 2);
+    bottom: calc(var(--dot) / 2);
+    border-left: var(--hairline) solid var(--rule);
+  }
+
+  .step {
+    position: relative;
+    display: grid;
+    gap: var(--space-4);
+    padding-left: calc(var(--dot) + var(--space-6));
+  }
+
+  .step__dot {
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: var(--dot);
+    height: var(--dot);
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .step__num {
+    font-size: var(--fs-num-xl);
+    line-height: 1;
+  }
+
+  .step__text {
+    color: var(--text-muted);
+    max-width: 34ch;
+  }
+
+  @media (min-width: 1024px) {
+    .steps {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--column-gap);
+      padding-top: calc(var(--dot) + var(--space-7));
+    }
+
+    /* Одна горизонтальная линия через точки */
+    .steps::before {
+      left: 0;
+      right: 0;
+      top: calc(var(--dot) / 2);
+      bottom: auto;
+      border-left: 0;
+      border-top: var(--hairline) solid var(--rule);
+    }
+
+    .step {
+      padding-left: 0;
+      padding-right: var(--space-5);
+      align-content: start;
+    }
+
+    .step__dot {
+      top: calc((var(--dot) + var(--space-7)) * -1);
+    }
+  }
+</style>

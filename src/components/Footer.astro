@@ -1,0 +1,231 @@
+---
+/**
+ * Подвал: крупная строка «Обсудим проект →», колонки — логотип и подпись, разделы, услуги, контакты;
+ * нижняя строка — ©, политика, реквизиты (если заполнены). Подписи — Geologica, пепел.
+ */
+import Arrow from './Arrow.astro';
+import Logo from './Logo.astro';
+import { nav, site } from '../data/site.ts';
+import { ui } from '../data/ui.ts';
+import { getServices } from '../lib/content.ts';
+import { getText } from '../lib/fill.ts';
+import { t } from '../lib/typograf.ts';
+
+const services = await getServices();
+const text = await getText();
+---
+
+<footer class="footer">
+  <div class="container">
+    <a class="footer__cta" href={site.cta.footerHref}>
+      <span class="footer__cta-text h2">{t(site.cta.footer)}</span>
+      <Arrow class="footer__cta-arrow" />
+    </a>
+
+    <div class="footer__grid grid">
+      <div class="footer__brand">
+        <a class="footer__logo" href="/" aria-label={ui.homeLabel}>
+          <Logo variant="horizontal" width={180} loading="lazy" />
+        </a>
+        <p class="footer__tagline">{t(site.tagline)}</p>
+      </div>
+
+      <nav class="footer__col footer__col--nav" id="footer-nav" aria-labelledby="footer-sections">
+        <p class="eyebrow footer__heading" id="footer-sections">{ui.footerSections}</p>
+        <ul role="list">
+          {
+            nav.map((item) => (
+              <li>
+                <a class="footer__link" href={item.href}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <nav class="footer__col footer__col--services" aria-labelledby="footer-services">
+        <p class="eyebrow footer__heading" id="footer-services">{ui.footerServices}</p>
+        <ul role="list">
+          {
+            services.map((service) => (
+              <li>
+                <a class="footer__link" href={`/uslugi/${service.id}/`}>
+                  {t(service.data.title)}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="footer__col footer__col--contacts">
+        <p class="eyebrow footer__heading">{ui.footerContacts}</p>
+        <ul role="list">
+          <li>
+            <a class="footer__link" href={site.telegram.url} target="_blank" rel="noopener noreferrer">
+              {ui.contacts.telegram} {site.telegram.handle}
+            </a>
+          </li>
+          <li><a class="footer__link" href={`mailto:${site.email}`}>{site.email}</a></li>
+          <li><a class="footer__link footer__nowrap" href={`tel:${site.phone.tel}`}>{site.phone.display}</a></li>
+          {site.hours && <li class="footer__note">{t(site.hours)}</li>}
+          {
+            site.socials.map((social) => (
+              <li>
+                <a class="footer__link" href={social.url} target="_blank" rel="noopener noreferrer">
+                  {social.name}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom label">
+      <span>{text(ui.copyright)}</span>
+      <a class="footer__link footer__link--small" href="/politika-konfidencialnosti/">{t(ui.privacy)}</a>
+      {site.requisites && <span>{t(site.requisites)}</span>}
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding-block: var(--section-y) var(--space-7);
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .footer__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-5);
+    margin-bottom: clamp(var(--space-8), 8vw, var(--space-10));
+  }
+
+  .footer__cta-text {
+    position: relative;
+  }
+
+  .footer__cta :global(.footer__cta-arrow) {
+    font-size: var(--fs-h2);
+    width: 0.8em;
+    height: 0.8em;
+    stroke-width: 1.25;
+    transition: translate var(--dur-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .footer__cta:hover :global(.footer__cta-arrow) {
+      translate: var(--arrow-shift) 0;
+    }
+  }
+
+  .footer__grid {
+    row-gap: var(--space-8);
+    padding-bottom: var(--space-9);
+  }
+
+  .footer__brand,
+  .footer__col {
+    grid-column: 1 / -1;
+  }
+
+  .footer__brand {
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+  }
+
+  .footer__logo {
+    display: inline-flex;
+    width: fit-content;
+    min-height: var(--tap);
+    align-items: center;
+  }
+
+  .footer__tagline {
+    color: var(--ash);
+    font-size: var(--fs-small);
+    max-width: 30ch;
+  }
+
+  .footer__heading {
+    margin-bottom: var(--space-4);
+  }
+
+  .footer__col ul {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .footer__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    font-size: var(--fs-small);
+    color: var(--ash);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .footer__nowrap {
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .footer__link:hover {
+      color: var(--chalk);
+    }
+  }
+
+  .footer__note {
+    font-size: var(--fs-small);
+    color: var(--ash);
+    padding-top: var(--space-2);
+  }
+
+  .footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-7);
+    padding-top: var(--space-6);
+    border-top: var(--hairline) solid var(--graphite);
+    color: var(--ash);
+  }
+
+  .footer__link--small {
+    min-height: var(--tap);
+    font-size: inherit;
+  }
+
+  @media (min-width: 768px) {
+    .footer__brand {
+      grid-column: 1 / -1;
+    }
+
+    .footer__col {
+      grid-column: span 4;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .footer__brand {
+      grid-column: 1 / span 4;
+    }
+
+    .footer__col--nav {
+      grid-column: 5 / span 2;
+    }
+
+    .footer__col--services {
+      grid-column: 7 / span 3;
+    }
+
+    .footer__col--contacts {
+      grid-column: 10 / -1;
+    }
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+import '../styles/tokens.css';
+import '../styles/tokens-extra.css';
+import '../styles/base.css';
+import '../styles/typography.css';
+import '../styles/forms.css';
+import '../styles/motion.css';
+import { ClientRouter, fade } from 'astro:transitions';
+import CookieNotice from '../components/CookieNotice.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import MobileMenu from '../components/MobileMenu.astro';
+import Seo from '../components/Seo.astro';
+import { blog } from '../data/pages.ts';
+import { ui } from '../data/ui.ts';
+import type { Crumb, JsonLdNode } from '../lib/seo.ts';
+
+export interface SeoProps {
+  title: string;
+  description: string;
+  noindex?: boolean;
+  type?: 'website' | 'article';
+  jsonLd?: JsonLdNode[];
+  publishedTime?: Date;
+}
+
+interface Props {
+  seo: SeoProps;
+  crumbs?: Crumb[];
+}
+
+const { seo, crumbs } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ru" transition:animate={fade({ duration: '250ms' })}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    <link rel="preload" href="/fonts/TenorSans-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Manrope-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <Seo {...seo} crumbs={crumbs} />
+    <meta name="theme-color" content="#111111" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="alternate" type="application/rss+xml" title={blog.rssTitle} href="/rss.xml" />
+    <ClientRouter />
+  </head>
+  <body>
+    <Fragment
+      set:html={`<!--
+THESIS: The brandbook's own page carried onto the web: one centred mark inside its echo orbits, wide-tracked caps, air. Refuses the agency-template hero: mockups, gradient blobs, logo walls, stat counters.
+OWN-WORLD: Soot #111111 ground, chalk #F4F2EE type, graphite hairlines, ash captions; Tenor Sans caps, Manrope text, Geologica SHRP labels and light numerals; square hairline cards, pill buttons; tilted -12deg echo ellipses as the only ornament.
+STORY: The visitor sees what Vantegra builds and how it works, gets honest price anchors, then writes in Telegram or leaves a request.
+FIRST VIEWPORT: Vertical lockup centred (clamp 160-300px) inside four computed echo orbits; eyebrow, two-line caps H1, ash lead, primary and secondary buttons; scroll cue and geography pinned to the bottom edge.
+FORM: brief-pinned brandbook world (p.19 Digital environment), no roll; seed: none.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->`}
+    />
+    <a class="skip-link" href="#main">{ui.skipLink}</a>
+    <Header />
+    <MobileMenu />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    <CookieNotice />
+    <script>
+      import '../scripts/main.ts';
+    </script>
+  </body>
+</html>

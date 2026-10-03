@@ -1,0 +1,80 @@
+---
+/** Финальный блок: слева подпись, заголовок, текст и контакты; справа форма. Бледные орбиты на фоне. */
+import ContactList from './ContactList.astro';
+import LeadForm from './LeadForm.astro';
+import OrbitField from './OrbitField.astro';
+import { contactBlock } from '../data/pages.ts';
+import { getText } from '../lib/fill.ts';
+
+interface Props {
+  /** номер секции на странице: «06 — Контакт» */
+  num?: number;
+}
+
+const { num } = Astro.props;
+const text = await getText();
+const eyebrow = num ? `${String(num).padStart(2, '0')} — ${contactBlock.label}` : contactBlock.label;
+---
+
+<section class="section cta" aria-labelledby="cta-title">
+  <OrbitField mode="block" rings={3} tone="faint" start={0.3} />
+  <div class="container grid cta__grid">
+    <div class="cta__info" data-reveal="stagger">
+      <p class="eyebrow">{text(eyebrow)}</p>
+      <h2 id="cta-title" class="cta__title">{text(contactBlock.title)}</h2>
+      <p class="cta__text">{text(contactBlock.text)}</p>
+      <ContactList class="cta__contacts" />
+    </div>
+    <div class="cta__form" data-reveal>
+      <LeadForm />
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    overflow: hidden;
+  }
+
+  .cta__grid {
+    position: relative;
+    z-index: var(--z-content);
+    row-gap: var(--space-9);
+    padding-top: var(--space-6);
+    border-top: var(--hairline) solid var(--rule);
+  }
+
+  .cta__info,
+  .cta__form {
+    grid-column: 1 / -1;
+  }
+
+  .cta__info {
+    display: grid;
+    align-content: start;
+    gap: var(--space-5);
+  }
+
+  .cta__title {
+    margin-top: var(--space-2);
+  }
+
+  .cta__text {
+    color: var(--ash);
+    max-width: 40ch;
+  }
+
+  .cta__info :global(.cta__contacts) {
+    margin-top: var(--space-6);
+  }
+
+  @media (min-width: 1024px) {
+    .cta__info {
+      grid-column: 1 / span 5;
+    }
+
+    .cta__form {
+      grid-column: 7 / -1;
+    }
+  }
+</style>

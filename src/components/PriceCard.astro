@@ -1,0 +1,122 @@
+---
+/**
+ * Позиция прайса. Цена — Geologica 300, --fs-num-xl. Незаполненная цена — «от [ ] ₽».
+ * compact — главная (название, цена, срок); full — /ceny/ (ещё состав и ссылка на услугу).
+ */
+import ArrowLink from './ArrowLink.astro';
+import { formatNumber, PLACEHOLDER } from '../lib/fill.ts';
+import { t } from '../lib/typograf.ts';
+import { prices as text } from '../data/pages.ts';
+
+interface Props {
+  title: string;
+  price: number | null;
+  term: string | null;
+  perMonth?: boolean;
+  items?: string[];
+  serviceHref?: string;
+  variant?: 'compact' | 'full';
+}
+
+const { title, price, term, perMonth = false, items = [], serviceHref, variant = 'compact' } = Astro.props;
+const value = price == null ? PLACEHOLDER : formatNumber(price);
+const termText = perMonth ? null : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
+---
+
+<article class:list={['price-card', `price-card--${variant}`]}>
+  <h3 class="price-card__title">{t(title)}</h3>
+  <p class="price-card__price num">
+    <span class="price-card__from">от</span>
+    <span class="price-card__value">{value}</span>
+    <span class="price-card__currency">₽</span>
+    {perMonth && <span class="price-card__unit tech">{text.perMonth}</span>}
+  </p>
+  {termText && <p class="price-card__term tech">{t(termText)}</p>}
+  {
+    variant === 'full' && items.length > 0 && (
+      <ul class="price-card__items" role="list">
+        {items.map((item) => (
+          <li>{t(item)}</li>
+        ))}
+      </ul>
+    )
+  }
+  {
+    variant === 'full' && serviceHref && (
+      <ArrowLink class="price-card__link" href={serviceHref} label={text.serviceLink} />
+    )
+  }
+</article>
+
+<style>
+  .price-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    height: 100%;
+    padding: var(--card-pad);
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .price-card__title {
+    margin-bottom: var(--space-6);
+  }
+
+  .price-card__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.25em;
+    font-size: var(--fs-num-xl);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .price-card__from,
+  .price-card__currency {
+    font-size: 0.5em;
+    color: var(--ash);
+  }
+
+  .price-card__unit {
+    flex-basis: 100%;
+    margin-top: var(--space-3);
+    font-size: var(--fs-small);
+    color: var(--ash);
+  }
+
+  .price-card__term {
+    font-size: var(--fs-small);
+    color: var(--ash);
+  }
+
+  .price-card__items {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: var(--hairline) solid var(--graphite);
+    font-size: var(--fs-small);
+    line-height: 1.5;
+  }
+
+  .price-card__items li {
+    position: relative;
+    padding-left: 1.5em;
+  }
+
+  .price-card__items li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.75em;
+    width: 0.875em;
+    border-top: var(--hairline) solid var(--ash);
+  }
+
+  .price-card :global(.price-card__link) {
+    margin-top: auto;
+    padding-top: var(--space-5);
+    align-self: flex-start;
+  }
+</style>

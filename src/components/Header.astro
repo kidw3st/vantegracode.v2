@@ -1,0 +1,259 @@
+---
+/**
+ * Шапка: закреплена, 80 px (64 px на телефоне). Над первым экраном прозрачная,
+ * после прокрутки на 24 px — подложка сажи 95 % с размытием и нижняя линия.
+ * От 1200 px — 7 ссылок и малая кнопка; ниже — бургер из двух линий.
+ * Сохраняется между переходами (transition:persist), активную ссылку обновляет menu.ts.
+ */
+import Button from './Button.astro';
+import Logo from './Logo.astro';
+import { nav, site } from '../data/site.ts';
+import { ui } from '../data/ui.ts';
+
+const path = Astro.url.pathname;
+const current = (href: string) => (path === href ? 'page' : path.startsWith(href) ? 'true' : undefined);
+---
+
+<header class="header" data-header transition:persist="site-header">
+  <div class="header__bg" aria-hidden="true"></div>
+  <div class="header__bar container">
+    <a class="header__logo" href="/" aria-label={ui.homeLabel} data-header-logo>
+      <Logo
+        variant="horizontal"
+        width={156}
+        cssWidth="var(--header-logo)"
+        minWidth={140}
+        class="header__lockup"
+        fetchpriority="high"
+      />
+      <span class="header__mark" data-header-mark></span>
+      <template data-mark-template>
+        <Logo variant="mark" width={57} class="header__mark-img" loading="lazy" />
+      </template>
+    </a>
+
+    <nav class="header__nav" aria-label={ui.navLabel}>
+      <ul role="list">
+        {
+          nav.map((item) => (
+            <li>
+              <a class="header__link" href={item.href} data-nav-link aria-current={current(item.href)}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <Button class="header__cta" href={site.cta.discussHref} variant="secondary" size="sm" label={site.cta.discuss} />
+
+    <button
+      class="header__burger"
+      type="button"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+      aria-label={ui.menuOpen}
+      data-menu-toggle
+      data-label-open={ui.menuOpen}
+      data-label-close={ui.menuClose}
+    >
+      <span class="header__burger-line"></span>
+      <span class="header__burger-line"></span>
+    </button>
+    <a class="header__fallback" href="#footer-nav">{ui.menuLabel}</a>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: var(--z-header);
+    height: var(--header-h);
+  }
+
+  .header__bg {
+    position: absolute;
+    inset: 0;
+    background: var(--header-bg);
+    backdrop-filter: blur(var(--header-blur));
+    -webkit-backdrop-filter: blur(var(--header-blur));
+    border-bottom: var(--hairline) solid var(--graphite);
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .header.is-scrolled .header__bg {
+    opacity: 1;
+  }
+
+  :global(.menu-open) .header__bg {
+    opacity: 0;
+  }
+
+  .header__bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    height: 100%;
+  }
+
+  .header__logo {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    margin-right: auto;
+  }
+
+  .header__logo :global(.header__lockup) {
+    transition: opacity var(--dur-menu) var(--ease-out);
+  }
+
+  /* Пока открыто меню, вместо горизонтального блока — знак той же высоты */
+  .header__mark {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    height: calc(var(--header-logo) * 733.04 / 2632.63);
+    aspect-ratio: 962.81 / 733.04;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-menu) var(--ease-out);
+  }
+
+  .header__mark :global(img) {
+    width: 100%;
+    height: 100%;
+  }
+
+  :global(.menu-open) .header__logo :global(.header__lockup) {
+    opacity: 0;
+  }
+
+  :global(.menu-open) .header__mark {
+    opacity: 1;
+  }
+
+  .header__nav {
+    display: none;
+  }
+
+  .header__nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(var(--space-5), 2.2vw, var(--space-7));
+  }
+
+  .header__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-nav);
+    letter-spacing: var(--ls-button);
+    text-transform: uppercase;
+    color: var(--ash);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .header__link[aria-current] {
+    color: var(--chalk);
+  }
+
+  .header__link[aria-current]::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: var(--ls-button);
+    bottom: 10px;
+    border-top: var(--hairline) solid currentColor;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .header__link:hover {
+      color: var(--chalk);
+    }
+  }
+
+  .header__bar :global(.header__cta) {
+    display: none;
+  }
+
+  .header__burger {
+    display: none;
+    place-content: center;
+    gap: 7px;
+    width: var(--tap);
+    height: var(--tap);
+    margin-right: -10px;
+  }
+
+  :global(.js) .header__burger {
+    display: grid;
+  }
+
+  .header__burger-line {
+    display: block;
+    width: 26px;
+    border-top: var(--hairline) solid var(--chalk);
+    transition:
+      translate var(--dur-menu) var(--ease-out),
+      rotate var(--dur-menu) var(--ease-out);
+  }
+
+  .header__burger[aria-expanded='true'] .header__burger-line:first-child {
+    translate: 0 4px;
+    rotate: 45deg;
+  }
+
+  .header__burger[aria-expanded='true'] .header__burger-line:last-child {
+    translate: 0 -4px;
+    rotate: -45deg;
+  }
+
+  /* Без JS бургер не работает — ссылка ведёт к навигации в подвале */
+  .header__fallback {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-nav);
+    letter-spacing: var(--ls-button);
+    text-transform: uppercase;
+  }
+
+  :global(.js) .header__fallback {
+    display: none;
+  }
+
+  @media (min-width: 1200px) {
+    .header__nav {
+      display: block;
+    }
+
+    .header__bar :global(.header__cta) {
+      display: inline-flex;
+    }
+
+    :global(.js) .header__burger,
+    .header__fallback {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .header__burger-line {
+      transition: none;
+    }
+  }
+</style>

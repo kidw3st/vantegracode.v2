@@ -1,0 +1,85 @@
+---
+/** Карточка статьи: дата · время чтения · тег, заголовок, описание. Вся карточка — ссылка. */
+import Arrow from './Arrow.astro';
+import { blog as text } from '../data/pages.ts';
+import { formatDate, readingTime, type Post } from '../lib/content.ts';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  post: Post;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { post, headingLevel: Heading = 'h2' } = Astro.props;
+const minutes = readingTime(post.body);
+---
+
+<article class="post-card" data-tag={post.data.tag}>
+  <a class="post-card__link" href={`/blog/${post.id}/`}>
+    <p class="post-card__meta eyebrow">
+      <time datetime={post.data.date.toISOString().slice(0, 10)}>{formatDate(post.data.date)}</time>
+      <span aria-hidden="true">·</span>
+      <span>{minutes}&nbsp;{text.readingTime}</span>
+      <span aria-hidden="true">·</span>
+      <span>{t(post.data.tag)}</span>
+    </p>
+    <Heading class="post-card__title h3">{t(post.data.title)}</Heading>
+    <p class="post-card__desc">{t(post.data.description)}</p>
+    <Arrow class="post-card__arrow" />
+  </a>
+</article>
+
+<style>
+  .post-card {
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .post-card__link {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-4) var(--space-6);
+    padding-block: var(--space-7);
+  }
+
+  .post-card__meta {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .post-card__title {
+    grid-column: 1;
+    font-size: clamp(1.25rem, 1rem + 0.9vw, 1.75rem);
+    max-width: 30ch;
+  }
+
+  .post-card__desc {
+    grid-column: 1;
+    color: var(--ash);
+    max-width: 60ch;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .post-card__link :global(.post-card__arrow) {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    font-size: 1.25rem;
+    color: var(--ash);
+    transition:
+      translate var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .post-card__link:hover :global(.post-card__arrow) {
+      translate: var(--arrow-shift) 0;
+      color: var(--chalk);
+    }
+  }
+</style>

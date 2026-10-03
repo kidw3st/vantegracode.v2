@@ -1,0 +1,176 @@
+---
+/**
+ * Кнопка: основная — мел на саже, вторичная — прозрачная с рамкой пепла.
+ * Geologica 13 px, заглавные, разрядка 0,24em, высота 52 px (малая — 44 px), скругление pill.
+ */
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary';
+  size?: 'md' | 'sm';
+  type?: 'button' | 'submit' | 'reset';
+  label?: string;
+  class?: string;
+  external?: boolean;
+  [key: `data-${string}`]: string | boolean | undefined;
+  [key: `aria-${string}`]: string | boolean | undefined;
+  id?: string;
+  disabled?: boolean;
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  type = 'button',
+  label,
+  class: className,
+  external = false,
+  ...rest
+} = Astro.props;
+
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, className];
+const text = label ? t(label) : undefined;
+const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+{
+  href ? (
+    <a class:list={classes} href={href} {...externalAttrs} {...rest}>
+      <span class="btn__label">
+        {text}
+        <slot />
+      </span>
+    </a>
+  ) : (
+    <button class:list={classes} type={type} {...rest}>
+      <span class="btn__label">
+        {text}
+        <slot />
+      </span>
+    </button>
+  )
+}
+
+<style>
+  .btn {
+    --btn-fg: var(--soot);
+    --btn-bg: var(--chalk);
+    --btn-line: var(--chalk);
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    min-height: var(--btn-h);
+    padding: 0 var(--btn-px);
+    border: var(--hairline) solid var(--btn-line);
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-button);
+    line-height: 1;
+    letter-spacing: var(--ls-button);
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+  }
+
+  /* компенсация разрядки после последней буквы */
+  .btn__label {
+    margin-right: calc(var(--ls-button) * -1);
+  }
+
+  .btn--sm {
+    min-height: var(--btn-h-sm);
+    padding: 0 var(--btn-px-sm);
+  }
+
+  .btn--secondary {
+    --btn-fg: var(--chalk);
+    --btn-bg: transparent;
+    --btn-line: var(--ash);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn--primary:hover {
+      --btn-bg: transparent;
+      --btn-fg: var(--chalk);
+      --btn-line: var(--chalk);
+    }
+
+    .btn--secondary:hover {
+      --btn-line: var(--chalk);
+    }
+  }
+
+  .btn:active {
+    transform: scale(var(--press));
+  }
+
+  /* Состояния для /styleguide/ */
+  .btn--primary.is-hover {
+    --btn-bg: transparent;
+    --btn-fg: var(--chalk);
+    --btn-line: var(--chalk);
+  }
+
+  .btn--secondary.is-hover {
+    --btn-line: var(--chalk);
+  }
+
+  .btn.is-focus {
+    outline: 2px solid var(--chalk);
+    outline-offset: 3px;
+  }
+
+  .btn:disabled {
+    cursor: default;
+    --btn-bg: transparent;
+    --btn-fg: var(--ash);
+    --btn-line: var(--graphite);
+    transform: none;
+  }
+
+  /* На светлой секции цвета наоборот */
+  :global(.section--chalk) .btn--primary {
+    --btn-fg: var(--chalk);
+    --btn-bg: var(--soot);
+    --btn-line: var(--soot);
+  }
+
+  :global(.section--chalk) .btn--secondary {
+    --btn-fg: var(--soot);
+    --btn-line: var(--ash-on-chalk);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :global(.section--chalk) .btn--primary:hover {
+      --btn-bg: transparent;
+      --btn-fg: var(--soot);
+      --btn-line: var(--soot);
+    }
+
+    :global(.section--chalk) .btn--secondary:hover {
+      --btn-line: var(--soot);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn:active {
+      transform: none;
+    }
+  }
+</style>

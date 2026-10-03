@@ -1,0 +1,131 @@
+/* ==========================================================================
+   Движение: только transform, opacity и stroke-dashoffset.
+   Скрытые начальные состояния — только под html.js: без JS всё видно сразу.
+   ========================================================================== */
+
+/* ---------- Появление при прокрутке ---------- */
+
+.js [data-reveal]:not([data-reveal='stagger']),
+.js [data-reveal='stagger'] > * {
+  opacity: 0;
+  transform: translateY(var(--shift));
+  transition:
+    opacity var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+.js [data-reveal].is-in:not([data-reveal='stagger']),
+.js [data-reveal='stagger'].is-in > * {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal='stagger'] > :nth-child(2) { --i: 1; }
+[data-reveal='stagger'] > :nth-child(3) { --i: 2; }
+[data-reveal='stagger'] > :nth-child(4) { --i: 3; }
+[data-reveal='stagger'] > :nth-child(5) { --i: 4; }
+[data-reveal='stagger'] > :nth-child(6) { --i: 5; }
+[data-reveal='stagger'] > :nth-child(7) { --i: 6; }
+[data-reveal='stagger'] > :nth-child(8) { --i: 7; }
+
+/* ---------- Первый экран ---------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--shift));
+  }
+}
+
+/* H1 и лид не начинают с нулевой прозрачности — только сдвиг, чтобы не портить LCP */
+@keyframes settle {
+  from {
+    transform: translateY(var(--shift-hero));
+  }
+}
+
+@keyframes logo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* Прорисовка кольца: --len — длина в пикселях экрана; в конце штрих снимается, линия остаётся сплошной */
+@keyframes orbit-draw {
+  0% {
+    stroke-dasharray: var(--len) var(--len);
+    stroke-dashoffset: var(--len);
+  }
+  99.9% {
+    stroke-dasharray: var(--len) var(--len);
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes orbit-sway {
+  from {
+    rotate: calc(var(--orbit-sway, 0.8deg) * -1);
+  }
+  to {
+    rotate: var(--orbit-sway, 0.8deg);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.js [data-hero-logo] {
+  animation: logo-in var(--dur-logo) var(--ease-out) var(--delay-logo) both;
+}
+
+.js [data-hero='rise'] {
+  animation: rise var(--dur) var(--ease-out) both;
+  animation-delay: calc(var(--delay-hero) + var(--i, 0) * var(--stagger));
+}
+
+.js [data-hero='settle'] {
+  animation: settle var(--dur) var(--ease-out) both;
+  animation-delay: calc(var(--delay-hero) + var(--i, 0) * var(--stagger));
+}
+
+/* ---------- Сниженное движение: только короткие смены прозрачности ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal]:not([data-reveal='stagger']),
+  .js [data-reveal='stagger'] > * {
+    transform: none;
+    transition: opacity var(--dur-fast) linear;
+    transition-delay: 0ms;
+  }
+
+  .js [data-hero-logo],
+  .js [data-hero='rise'] {
+    animation: fade var(--dur-fast) linear both;
+  }
+
+  .js [data-hero='settle'] {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Переходы между страницами: перекрёстное проявление ---------- */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-page);
+}

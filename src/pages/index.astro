@@ -1,0 +1,354 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/Button.astro';
+import CtaSection from '../components/CtaSection.astro';
+import Logo from '../components/Logo.astro';
+import OrbitField from '../components/OrbitField.astro';
+import PriceCard from '../components/PriceCard.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import Steps from '../components/Steps.astro';
+import WorkCard from '../components/WorkCard.astro';
+import { home, steps } from '../data/pages.ts';
+import { site } from '../data/site.ts';
+import { getPrices, getServices, getWorks } from '../lib/content.ts';
+import { getText } from '../lib/fill.ts';
+import { website } from '../lib/seo.ts';
+import { t } from '../lib/typograf.ts';
+
+const [services, prices, works, text] = await Promise.all([getServices(), getPrices(), getWorks(), getText()]);
+
+// До 3 кейсов с featured: true; если отмеченных нет — последние. Нет кейсов — блока нет.
+const featured = works.filter((work) => work.featured);
+const homeWorks = (featured.length ? featured : works).slice(0, 3);
+const showWorks = homeWorks.length > 0;
+const serviceNames = Object.fromEntries(services.map((service) => [service.id, service.data.title]));
+
+// Номера в подписях идут подряд по блокам, которые реально выводятся
+const order = ['idea', 'services', ...(showWorks ? ['works'] : []), 'process', 'prices', 'contact'];
+const num = (key: string) => order.indexOf(key) + 1;
+const eyebrow = (key: string, label: string) => `${String(num(key)).padStart(2, '0')} — ${label}`;
+
+const priceById = new Map(prices.map((price) => [price.id, price]));
+const priceCards = home.prices.cards.map((card) => {
+  const price = priceById.get(card.price);
+  if (!price) throw new Error(`Главная: нет позиции «${card.price}» в prices.yaml`);
+  return { title: card.title, price: price.data.price, term: price.data.term };
+});
+
+const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text) }));
+const secondary = showWorks
+  ? { href: site.cta.worksHref, label: site.cta.works }
+  : { href: site.cta.servicesHref, label: site.cta.services };
+---
+
+<BaseLayout seo={{ ...home.seo, jsonLd: [website()] }}>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero__inner container">
+      <div class="hero__logo">
+        <OrbitField mode="logo" logo="vertical" unit="var(--hero-logo)" rings={4} tone="normal" parallax draw="auto" minLogoPx={160} />
+        <Logo
+          variant="vertical"
+          width={300}
+          cssWidth="100%"
+          minWidth={160}
+          alt="Vantegra"
+          fetchpriority="high"
+          class="hero__logo-img"
+          data-hero-logo
+        />
+      </div>
+      <div class="hero__copy">
+        <p class="eyebrow center-tracked" data-hero="rise" style="--i: 0">{t(home.hero.eyebrow)}</p>
+        <h1 id="hero-title" class="hero__title" data-hero="settle" style="--i: 1">
+          {
+            home.hero.title.map((line, i) => (
+              <Fragment>
+                {i > 0 && <br />}
+                {t(line)}
+              </Fragment>
+            ))
+          }
+        </h1>
+        <p class="lead hero__lead" data-hero="settle" style="--i: 2">{t(home.hero.lead)}</p>
+        <div class="hero__actions" data-hero="rise" style="--i: 3">
+          <Button href={site.cta.discussHref} label={site.cta.discuss} />
+          <Button href={secondary.href} variant="secondary" label={secondary.label} />
+        </div>
+      </div>
+    </div>
+    <div class="hero__bottom container" data-hero="rise" style="--i: 4">
+      <p class="eyebrow hero__scroll"><span class="hero__line" aria-hidden="true"></span>{t(home.hero.scroll)}</p>
+      <p class="eyebrow hero__geo">{t(site.geography)}</p>
+    </div>
+  </section>
+
+  <section class="section idea" aria-labelledby="idea-title">
+    <div class="container grid idea__grid" data-reveal="stagger">
+      <p class="eyebrow idea__eyebrow">{t(eyebrow('idea', home.idea.label))}</p>
+      <h2 id="idea-title" class="idea__title">{t(home.idea.title)}</h2>
+      <div class="idea__text">
+        {home.idea.text.map((paragraph) => <p>{t(paragraph)}</p>)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="services-title">
+    <div class="container">
+      <SectionHeader
+        id="services-title"
+        eyebrow={eyebrow('services', home.services.label)}
+        title={home.services.title}
+        link={{ href: '/uslugi/', label: home.services.link }}
+      />
+      <ul class="cards cards--3" role="list" data-reveal="stagger">
+        {
+          services.map((service, i) => (
+            <li>
+              <ServiceCard service={service} index={i} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {
+    showWorks && (
+      <section class="section" aria-labelledby="works-title">
+        <div class="container">
+          <SectionHeader
+            id="works-title"
+            eyebrow={eyebrow('works', home.works.label)}
+            title={home.works.title}
+            link={{ href: '/raboty/', label: home.works.link }}
+          />
+          <div class="home-works" data-reveal="stagger">
+            {homeWorks.map((work, i) => (
+              <WorkCard work={work} serviceNames={serviceNames} size={i === 0 ? 'lg' : 'md'} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section section--chalk" aria-labelledby="process-title">
+    <div class="container">
+      <SectionHeader id="process-title" eyebrow={eyebrow('process', home.process.label)} title={home.process.title} />
+      <Steps steps={filledSteps} />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="prices-title">
+    <div class="container">
+      <SectionHeader
+        id="prices-title"
+        eyebrow={eyebrow('prices', home.prices.label)}
+        title={home.prices.title}
+        link={{ href: '/ceny/', label: home.prices.link }}
+      />
+      <ul class="cards cards--3" role="list" data-reveal="stagger">
+        {
+          priceCards.map((card) => (
+            <li>
+              <PriceCard title={card.title} price={card.price} term={card.term} />
+            </li>
+          ))
+        }
+      </ul>
+      <p class="prices-note" data-reveal>{t(home.prices.note)}</p>
+    </div>
+  </section>
+
+  <CtaSection num={num('contact')} />
+</BaseLayout>
+
+<style>
+  /* ---------- Первый экран ---------- */
+
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 100svh;
+    padding-top: var(--header-h);
+    overflow: clip;
+  }
+
+  .hero__inner {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    text-align: center;
+    padding-block: var(--space-5);
+  }
+
+  .hero__logo {
+    position: relative;
+    width: var(--hero-logo);
+    margin-bottom: clamp(var(--space-6), 4.6vh, var(--space-7));
+  }
+
+  .hero__logo :global(.hero__logo-img) {
+    position: relative;
+    z-index: var(--z-content);
+    width: 100%;
+  }
+
+  .hero__copy {
+    position: relative;
+    z-index: var(--z-content);
+    display: grid;
+    justify-items: center;
+  }
+
+  .hero__title {
+    margin-top: clamp(var(--space-3), 1.8vh, var(--space-4));
+    padding-inline-start: var(--ls-display);
+  }
+
+  .hero__lead {
+    margin-top: clamp(var(--space-4), 2.4vh, var(--space-5));
+    margin-inline: auto;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: clamp(var(--space-6), 4.4vh, var(--space-7));
+  }
+
+  .hero__bottom {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+
+  .hero__scroll {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .hero__line {
+    display: block;
+    height: var(--space-6);
+    border-left: var(--hairline) solid var(--ash);
+  }
+
+  @media (max-width: 479px) {
+    .hero__actions {
+      flex-direction: column;
+      align-items: stretch;
+      width: min(100%, 320px);
+    }
+
+    .hero__bottom .eyebrow {
+      font-size: var(--fs-tag);
+      letter-spacing: var(--ls-button);
+    }
+
+    .hero__geo {
+      max-width: 55%;
+      text-align: right;
+    }
+  }
+
+  /* ---------- Идея ---------- */
+
+  .idea__grid {
+    row-gap: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: var(--hairline) solid var(--rule);
+  }
+
+  .idea__eyebrow,
+  .idea__title,
+  .idea__text {
+    grid-column: 1 / -1;
+  }
+
+  .idea__text {
+    display: grid;
+    gap: var(--space-5);
+    color: var(--ash);
+    font-size: var(--fs-lead);
+    line-height: 1.55;
+  }
+
+  .idea__text p:first-child {
+    color: var(--chalk);
+  }
+
+  @media (min-width: 768px) {
+    .idea__title {
+      grid-column: 1 / span 6;
+    }
+
+    .idea__text {
+      grid-column: 7 / -1;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .idea__eyebrow {
+      grid-column: 1 / span 3;
+    }
+
+    .idea__title {
+      grid-column: 4 / span 4;
+    }
+
+    .idea__text {
+      grid-column: 8 / -1;
+    }
+  }
+
+  /* ---------- Сетки карточек ---------- */
+
+  .cards {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 768px) {
+    .cards--3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .cards--3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .prices-note {
+    margin-top: var(--space-6);
+    color: var(--ash);
+  }
+
+  /* ---------- Работы ---------- */
+
+  .home-works {
+    display: grid;
+    gap: var(--space-7) var(--column-gap);
+  }
+
+  @media (min-width: 1024px) {
+    .home-works {
+      grid-template-columns: 7fr 5fr;
+    }
+
+    .home-works > :first-child {
+      grid-row: span 2;
+    }
+  }
+</style>

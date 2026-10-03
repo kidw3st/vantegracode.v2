@@ -1,0 +1,180 @@
+---
+/**
+ * Полноэкранное меню ниже 1200 px: сажа, бледные эхо-орбиты по центру блока,
+ * ссылки Tenor Sans 30–32 px с номерами Geologica, внизу контакты и «Обсудить проект».
+ * Esc и клик по ссылке закрывают, фокус остаётся внутри, прокрутка страницы заблокирована.
+ */
+import Button from './Button.astro';
+import OrbitField from './OrbitField.astro';
+import { nav, site } from '../data/site.ts';
+import { ui } from '../data/ui.ts';
+---
+
+<div class="menu" id="mobile-menu" hidden data-menu>
+  <OrbitField mode="block" rings={3} tone="faint" start={0.34} />
+  <div class="menu__inner container">
+    <nav class="menu__nav" aria-label={ui.menuLabel}>
+      <ol class="menu__list" role="list">
+        {
+          nav.map((item, i) => (
+            <li class="menu__item" style={`--i:${i}`}>
+              <a class="menu__link" href={item.href} data-nav-link>
+                <span class="menu__num num" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span class="menu__label">{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+    <div class="menu__footer">
+      <ul class="menu__contacts" role="list">
+        <li>
+          <a class="menu__contact" href={site.telegram.url} target="_blank" rel="noopener noreferrer">
+            <span class="eyebrow">{ui.contacts.telegram}</span>
+            <span class="num">{site.telegram.handle}</span>
+          </a>
+        </li>
+        <li>
+          <a class="menu__contact" href={`mailto:${site.email}`}>
+            <span class="eyebrow">{ui.contacts.email}</span>
+            <span class="num">{site.email}</span>
+          </a>
+        </li>
+        <li>
+          <a class="menu__contact" href={`tel:${site.phone.tel}`}>
+            <span class="eyebrow">{ui.contacts.phone}</span>
+            <span class="num">{site.phone.display}</span>
+          </a>
+        </li>
+      </ul>
+      <Button href={site.cta.discussHref} variant="primary" label={site.cta.discuss} class="menu__cta" />
+    </div>
+  </div>
+</div>
+
+<style>
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-menu);
+    display: block;
+    background: var(--soot);
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity var(--dur-menu) var(--ease-out);
+  }
+
+  .menu.is-open {
+    opacity: 1;
+  }
+
+  .menu__inner {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-7);
+    height: 100%;
+    padding-top: calc(var(--header-h) + var(--space-5));
+    padding-bottom: max(var(--space-7), env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .menu__list {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .menu__item {
+    opacity: 0;
+    transform: translateY(var(--shift));
+    transition:
+      opacity var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-out);
+    transition-delay: calc(var(--i) * var(--stagger) * 0.6);
+  }
+
+  .menu.is-open .menu__item {
+    opacity: 1;
+    transform: none;
+  }
+
+  .menu__link {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    min-height: var(--tap);
+    padding-block: var(--space-2);
+  }
+
+  .menu__num {
+    flex: none;
+    width: 2.25em;
+    font-size: var(--fs-label);
+    color: var(--ash);
+    translate: 0 -0.35em;
+  }
+
+  .menu__label {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--fs-menu);
+    line-height: 1.15;
+    letter-spacing: var(--ls-heading);
+    text-transform: uppercase;
+  }
+
+  .menu__link[aria-current] .menu__label {
+    text-decoration: underline;
+    text-decoration-thickness: var(--hairline);
+    text-underline-offset: 0.2em;
+  }
+
+  .menu__footer {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: start;
+  }
+
+  .menu__contacts {
+    display: grid;
+    width: 100%;
+  }
+
+  .menu__contact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: var(--tap);
+    border-bottom: var(--hairline) solid var(--graphite);
+  }
+
+  .menu__contact .num {
+    font-size: var(--fs-body);
+    white-space: nowrap;
+  }
+
+  @media (min-width: 1200px) {
+    .menu {
+      display: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu {
+      transition-duration: var(--dur-fast);
+    }
+
+    .menu__item {
+      transform: none;
+      transition: opacity var(--dur-fast) linear;
+      transition-delay: 0ms;
+    }
+  }
+</style>

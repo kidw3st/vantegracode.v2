@@ -1,0 +1,115 @@
+---
+/** Строка услуги для /uslugi/: номер | название | short | чипы | «от … · от …» | стрелка. Строка — ссылка. */
+import Arrow from './Arrow.astro';
+import Tag from './Tag.astro';
+import { t } from '../lib/typograf.ts';
+import type { Service } from '../lib/content.ts';
+
+interface Props {
+  service: Service;
+  index: number;
+  /** готовая строка цены и срока */
+  meta: string;
+}
+
+const { service, index, meta } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+const chips = service.data.includes.slice(0, 4).map((item) => item.split(':')[0] ?? item);
+---
+
+<a class="service-row" href={`/uslugi/${service.id}/`}>
+  <span class="service-row__num num" aria-hidden="true">{num}</span>
+  <span class="service-row__main">
+    <h2 class="service-row__title h3">{t(service.data.title)}</h2>
+    <span class="service-row__short">{t(service.data.short)}</span>
+  </span>
+  <span class="service-row__tags">
+    {chips.map((chip) => <Tag label={chip} />)}
+  </span>
+  <span class="service-row__meta tech">{t(meta)}</span>
+  <Arrow class="service-row__arrow" />
+</a>
+
+<style>
+  .service-row {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    gap: var(--space-4) var(--space-5);
+    align-items: start;
+    padding-block: var(--space-7);
+    border-top: var(--hairline) solid var(--graphite);
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .service-row__num {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: var(--ash);
+  }
+
+  .service-row__main {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .service-row__short {
+    color: var(--ash);
+    max-width: 40ch;
+  }
+
+  .service-row__tags {
+    grid-column: 2 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--ash);
+  }
+
+  .service-row__meta {
+    grid-column: 2 / -1;
+    font-size: var(--fs-small);
+    letter-spacing: 0.02em;
+    color: var(--chalk);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .service-row :global(.service-row__arrow) {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 1.25rem;
+    color: var(--ash);
+    transition:
+      translate var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  @media (min-width: 1024px) {
+    .service-row {
+      grid-template-columns: 4rem minmax(0, 4fr) minmax(0, 4fr) minmax(0, 2fr) auto;
+      align-items: center;
+      gap: var(--space-6);
+      padding-block: var(--space-8);
+    }
+
+    .service-row__tags,
+    .service-row__meta {
+      grid-column: auto;
+    }
+
+    .service-row :global(.service-row__arrow) {
+      grid-column: auto;
+      grid-row: auto;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .service-row:hover {
+      border-color: var(--ash);
+    }
+
+    .service-row:hover :global(.service-row__arrow) {
+      translate: var(--arrow-shift) 0;
+      color: var(--chalk);
+    }
+  }
+</style>

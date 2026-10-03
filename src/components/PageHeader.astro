@@ -1,0 +1,88 @@
+---
+/**
+ * Первый экран внутренней страницы: крошки, подпись, H1 крупно, лид — в правой части сетки.
+ * Слот actions — кнопки под лидом; слот aside — картинка справа (если есть).
+ */
+import Breadcrumbs from './Breadcrumbs.astro';
+import { t } from '../lib/typograf.ts';
+import type { Crumb } from '../lib/seo.ts';
+
+interface Props {
+  crumbs?: Crumb[];
+  eyebrow: string;
+  title: string;
+  /** H1 с мягким переносом длинного слова, например «КОНФИДЕН&shy;ЦИАЛЬНОСТИ» */
+  titleHtml?: string;
+  lead?: string;
+  class?: string;
+}
+
+const { crumbs, eyebrow, title, titleHtml, lead, class: className } = Astro.props;
+const hasActions = Astro.slots.has('actions');
+---
+
+<section class:list={['page-header page-top', className]}>
+  <div class="container">
+    {crumbs && crumbs.length > 1 && <Breadcrumbs items={crumbs} />}
+    <div class="page-header__grid grid" data-reveal="stagger">
+      <p class="eyebrow page-header__eyebrow">{t(eyebrow)}</p>
+      {titleHtml ? <h1 class="page-header__title" set:html={titleHtml} /> : <h1 class="page-header__title">{t(title)}</h1>}
+      {
+        (lead || hasActions) && (
+          <div class="page-header__aside">
+            {lead && <p class="lead page-header__lead">{t(lead)}</p>}
+            {hasActions && (
+              <div class="page-header__actions">
+                <slot name="actions" />
+              </div>
+            )}
+          </div>
+        )
+      }
+    </div>
+    <slot />
+  </div>
+</section>
+
+<style>
+  .page-header {
+    padding-bottom: var(--section-y);
+  }
+
+  .page-header__grid {
+    row-gap: var(--space-5);
+    margin-top: var(--space-8);
+  }
+
+  .page-header__eyebrow,
+  .page-header__title,
+  .page-header__aside {
+    grid-column: 1 / -1;
+  }
+
+  .page-header__aside {
+    display: grid;
+    gap: var(--space-6);
+    align-content: end;
+    justify-items: start;
+    margin-top: var(--space-3);
+  }
+
+  .page-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 1024px) {
+    .page-header__title {
+      grid-column: 1 / span 7;
+    }
+
+    .page-header__aside {
+      grid-column: 8 / -1;
+      grid-row: 2;
+      margin-top: 0;
+    }
+  }
+</style>

@@ -1,0 +1,517 @@
+---
+/** Служебная страница: все токены и компоненты во всех состояниях. noindex, не в sitemap. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArrowLink from '../components/ArrowLink.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Button from '../components/Button.astro';
+import ContactList from '../components/ContactList.astro';
+import Faq from '../components/Faq.astro';
+import LeadForm from '../components/LeadForm.astro';
+import Logo from '../components/Logo.astro';
+import OrbitField from '../components/OrbitField.astro';
+import PriceCard from '../components/PriceCard.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import ServiceRow from '../components/ServiceRow.astro';
+import Steps from '../components/Steps.astro';
+import Tag from '../components/Tag.astro';
+import { steps } from '../data/pages.ts';
+import { ui } from '../data/ui.ts';
+import { getFaq, getPrices, getServices } from '../lib/content.ts';
+import { getText } from '../lib/fill.ts';
+import { t } from '../lib/typograf.ts';
+
+const [services, prices, faq, text] = await Promise.all([getServices(), getPrices(), getFaq(), getText()]);
+const firstService = services[0];
+const firstPrice = prices[0];
+const supportPrice = prices.find((price) => price.data.perMonth);
+if (!firstService || !firstPrice || !supportPrice) throw new Error('styleguide: нет данных услуг или цен');
+
+const colors = [
+  { token: '--soot', hex: '#111111', role: 'Основной фон сайта' },
+  { token: '--chalk', hex: '#F4F2EE', role: 'Текст и логотип на тёмном, фон светлой секции' },
+  { token: '--graphite', hex: '#2A2A2A', role: 'Рамки, линии, поверхности' },
+  { token: '--ash', hex: '#8C8984', role: 'Подписи и второстепенный текст' },
+  { token: '--ash-on-chalk', hex: '#6E6B66', role: 'Второстепенный текст на меле' },
+  { token: '--line-on-chalk', hex: '#DCD8D1', role: 'Линии на меле' },
+];
+const orbits = [
+  { token: '--orbit-strong', value: 'мел 20 %' },
+  { token: '--orbit', value: 'мел 12 %' },
+  { token: '--orbit-faint', value: 'мел 4 %' },
+];
+const spaces = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+const faqItems = faq.slice(0, 3).map((item) => ({ id: item.id, q: item.data.q, a: text(item.data.a) }));
+const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text) }));
+const priceMeta = (price: (typeof prices)[number]) =>
+  `от ${text(`{price:${price.id}}`)} ₽ · от ${text(`{term:${price.id}}`)}`;
+---
+
+<BaseLayout seo={{ title: 'Styleguide — Vantegra', description: 'Токены и компоненты сайта Vantegra.', noindex: true }}>
+  <section class="page-top">
+    <div class="container sg">
+      <p class="eyebrow">Служебная страница · noindex</p>
+      <h1>Styleguide</h1>
+      <p class="lead">Все токены и компоненты сайта во всех состояниях. Источник — tokens.css и брендбук Vantegra.</p>
+
+      <!-- Цвета -->
+      <section class="sg__block" aria-labelledby="sg-colors">
+        <h2 class="eyebrow" id="sg-colors">01 — Палитра «Сажа и мел»</h2>
+        <ul class="sg__swatches" role="list">
+          {
+            colors.map((color) => (
+              <li class="swatch">
+                <span class="swatch__chip" style={`background: var(${color.token})`} />
+                <span class="swatch__token tech">{color.token}</span>
+                <span class="swatch__hex num">{color.hex}</span>
+                <span class="swatch__role">{t(color.role)}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <ul class="sg__swatches" role="list">
+          {
+            orbits.map((orbit) => (
+              <li class="swatch">
+                <span class="swatch__chip swatch__chip--orbit" style={`border-color: var(${orbit.token})`} />
+                <span class="swatch__token tech">{orbit.token}</span>
+                <span class="swatch__role">{orbit.value} · наклон −12° · ry / rx 0,306</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <!-- Шрифты -->
+      <section class="sg__block" aria-labelledby="sg-type">
+        <h2 class="eyebrow" id="sg-type">02 — Типографика</h2>
+        <div class="sg__type">
+          <div>
+            <p class="sg__caption">Tenor Sans · display · --fs-display</p>
+            <p class="display">Вектор и орбита</p>
+          </div>
+          <div>
+            <p class="sg__caption">Tenor Sans · H1 · --fs-h1</p>
+            <p class="h1">Продукт в центре</p>
+          </div>
+          <div>
+            <p class="sg__caption">Tenor Sans · H2 · --fs-h2</p>
+            <p class="h2">Как работаем</p>
+          </div>
+          <div>
+            <p class="sg__caption">Tenor Sans · H3 · --fs-h3</p>
+            <p class="h3">Дизайн и разработка</p>
+          </div>
+          <div>
+            <p class="sg__caption">Manrope 400 · лид · --fs-lead</p>
+            <p class="lead">{t('Ведём продукт от задачи и прототипа до запуска и поддержки.')}</p>
+          </div>
+          <div>
+            <p class="sg__caption">Manrope 400 / 500 · текст · --fs-body</p>
+            <p>
+              {t('Орбита — технологии и ИИ, которые работают вокруг ядра продукта. Продукт задаёт курс, технологии его держат.')}
+            </p>
+            <p><strong class="sg__medium">{t('Manrope 500 — акцент внутри текста.')}</strong></p>
+          </div>
+          <div>
+            <p class="sg__caption">Geologica 400 · SHRP 100 · подпись</p>
+            <p class="eyebrow">02 — Услуги</p>
+          </div>
+          <div>
+            <p class="sg__caption">Geologica 300 · SHRP 100 · крупные цифры · --fs-num-xl</p>
+            <p class="num num-xl">350 000 ₽ · 03.10.2026</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Логотип -->
+      <section class="sg__block" aria-labelledby="sg-logo">
+        <h2 class="eyebrow" id="sg-logo">03 — Логотип</h2>
+        <div class="sg__logos">
+          <figure class="sg__logo">
+            <Logo variant="mark" width={120} loading="lazy" alt="Знак Vantegra" />
+            <figcaption class="eyebrow">Знак · мин. 24 px</figcaption>
+          </figure>
+          <figure class="sg__logo">
+            <Logo variant="vertical" width={160} loading="lazy" alt="Вертикальный блок Vantegra" />
+            <figcaption class="eyebrow">Вертикальный блок</figcaption>
+          </figure>
+          <figure class="sg__logo">
+            <Logo variant="horizontal" width={240} loading="lazy" alt="Горизонтальный блок Vantegra" />
+            <figcaption class="eyebrow">Горизонтальный блок · мин. 140 px</figcaption>
+          </figure>
+          <figure class="sg__logo">
+            <Logo variant="wordmark" width={220} loading="lazy" alt="Надпись Vantegra" />
+            <figcaption class="eyebrow">Надпись</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- Кнопки и ссылки -->
+      <section class="sg__block" aria-labelledby="sg-buttons">
+        <h2 class="eyebrow" id="sg-buttons">04 — Кнопки и ссылки</h2>
+        <div class="sg__row">
+          <Button label="Обсудить проект" />
+          <Button label="Обсудить проект" class="is-hover" />
+          <Button label="Обсудить проект" class="is-focus" />
+          <Button label="Отправляем…" disabled />
+        </div>
+        <p class="sg__caption">Основная: обычная · наведение · фокус · неактивна</p>
+        <div class="sg__row">
+          <Button label="Все услуги" variant="secondary" />
+          <Button label="Все услуги" variant="secondary" class="is-hover" />
+          <Button label="Обсудить проект" variant="secondary" size="sm" />
+          <Button label="Обсудить проект" variant="secondary" size="sm" class="is-hover" />
+        </div>
+        <p class="sg__caption">Вторичная 52 px и малая 44 px: обычная · наведение</p>
+        <div class="sg__row">
+          <a class="link" href="#sg-buttons">Текстовая ссылка</a>
+          <a class="link is-hover" href="#sg-buttons">Наведение</a>
+          <ArrowLink href="#sg-buttons" label="Все услуги" />
+          <span>Ссылка <a class="inline-link" href="#sg-buttons">внутри абзаца</a> может переноситься</span>
+        </div>
+      </section>
+
+      <!-- Теги -->
+      <section class="sg__block" aria-labelledby="sg-tags">
+        <h2 class="eyebrow" id="sg-tags">05 — Теги и чипы</h2>
+        <div class="sg__row">
+          <Tag label="Интеграции" />
+          <Tag label="Все" as="button" active />
+          <Tag label="Сайты" as="button" />
+          <Tag label="Telegram-боты" as="button" class="is-hover" />
+        </div>
+        <p class="sg__caption">Тег · активный чип · чип · наведение</p>
+      </section>
+
+      <!-- Поля -->
+      <section class="sg__block" aria-labelledby="sg-fields">
+        <h2 class="eyebrow" id="sg-fields">06 — Поля формы</h2>
+        <div class="sg__fields">
+          <div class="field">
+            <label class="field__label eyebrow" for="sg-f1">{ui.form.name}</label>
+            <input class="field__input" id="sg-f1" type="text" />
+            <p class="sg__caption">Пустое</p>
+          </div>
+          <div class="field">
+            <label class="field__label eyebrow" for="sg-f2">{ui.form.contact}</label>
+            <input class="field__input is-focus" id="sg-f2" type="text" placeholder={t(ui.form.contactHint)} />
+            <p class="sg__caption">Фокус · подсказка</p>
+          </div>
+          <div class="field">
+            <label class="field__label eyebrow" for="sg-f3">{ui.form.name}</label>
+            <input class="field__input" id="sg-f3" type="text" value="Анна" />
+            <p class="sg__caption">Заполнено</p>
+          </div>
+          <div class="field is-invalid">
+            <label class="field__label eyebrow" for="sg-f4">{ui.form.contact}</label>
+            <input class="field__input" id="sg-f4" type="text" value="12345" aria-invalid="true" aria-describedby="sg-f4-e" />
+            <p class="field__error" id="sg-f4-e">{t(ui.form.errors.contactInvalid)}</p>
+          </div>
+          <div class="check">
+            <input class="check__input" id="sg-c1" type="checkbox" />
+            <label class="check__label" for="sg-c1">Чекбокс · не отмечен</label>
+          </div>
+          <div class="check">
+            <input class="check__input" id="sg-c2" type="checkbox" checked />
+            <label class="check__label" for="sg-c2">Чекбокс · отмечен</label>
+          </div>
+          <div class="check is-invalid">
+            <input class="check__input" id="sg-c3" type="checkbox" aria-invalid="true" aria-describedby="sg-c3-e" />
+            <label class="check__label" for="sg-c3">Чекбокс · ошибка</label>
+            <p class="field__error" id="sg-c3-e">{t(ui.form.errors.consentPd)}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Карточки -->
+      <section class="sg__block" aria-labelledby="sg-cards">
+        <h2 class="eyebrow" id="sg-cards">07 — Карточки</h2>
+        <div class="sg__cards">
+          <ServiceCard service={firstService} index={0} />
+          <ServiceCard service={firstService} index={0} class="is-hover" />
+          <PriceCard title={firstPrice.data.title} price={firstPrice.data.price} term={firstPrice.data.term} />
+        </div>
+        <p class="sg__caption">Услуга · услуга при наведении · цена (незаполненная — [ ])</p>
+        <div class="sg__cards">
+          <PriceCard
+            variant="full"
+            title={firstPrice.data.title}
+            price={firstPrice.data.price}
+            term={firstPrice.data.term}
+            items={firstPrice.data.items}
+            serviceHref="/uslugi/sajty/"
+          />
+          <PriceCard
+            variant="full"
+            title={supportPrice.data.title}
+            price={supportPrice.data.price}
+            term={null}
+            perMonth
+            items={supportPrice.data.items}
+            serviceHref="/uslugi/podderzhka/"
+          />
+        </div>
+        <p class="sg__caption">Прайс: позиция · «в месяц» без срока</p>
+        <div class="sg__rows">
+          <ServiceRow service={firstService} index={0} meta={priceMeta(firstPrice)} />
+        </div>
+      </section>
+
+      <!-- Секция и шаги -->
+      <section class="sg__block" aria-labelledby="sg-section">
+        <h2 class="eyebrow" id="sg-section">08 — Заголовок секции</h2>
+        <SectionHeader eyebrow="02 — Услуги" title="Что делаем" link={{ href: '/uslugi/', label: 'Все услуги' }} />
+        <SectionHeader
+          eyebrow="01 — Идея"
+          title="Вектор и орбита"
+          text="Поясняющий текст — в правой части сетки, колонки 8–12."
+        />
+        <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'Услуги', href: '/uslugi/' }, { label: 'Сайты', href: '/uslugi/sajty/' }]} />
+      </section>
+    </div>
+  </section>
+
+  <section class="section section--chalk" aria-labelledby="sg-chalk">
+    <div class="container sg">
+      <SectionHeader id="sg-chalk" eyebrow="09 — Светлая секция" title="Как работаем" />
+      <Steps steps={filledSteps} />
+      <div class="sg__row sg__row--chalk">
+        <Button label="Обсудить проект" />
+        <Button label="Все услуги" variant="secondary" />
+        <Logo variant="horizontal" color="soot" width={180} loading="lazy" alt="Горизонтальный блок, сажа" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="sg-orbits">
+    <div class="container sg">
+      <h2 class="eyebrow" id="sg-orbits">10 — Эхо-орбиты</h2>
+      <div class="sg__orbits">
+        <div class="sg__orbit-stage">
+          <div class="sg__mark">
+            <OrbitField mode="logo" logo="mark" unit="96px" rings={3} tone="strong" minLogoPx={96} />
+            <Logo variant="mark" width={96} loading="lazy" alt="" />
+          </div>
+          <p class="sg__caption sg__orbit-caption">Вокруг логотипа: внутреннее кольцо содержит знак с охранным полем</p>
+        </div>
+        <div class="sg__orbit-stage">
+          <OrbitField mode="block" rings={3} tone="normal" />
+          <p class="sg__caption sg__orbit-caption">По центру блока: кольца уходят за края</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="sg-faq">
+    <div class="container sg">
+      <h2 class="eyebrow" id="sg-faq">11 — Аккордеон, контакты, форма</h2>
+      <Faq items={faqItems} idPrefix="sg-faq" />
+      <div class="sg__split">
+        <ContactList size="xl" copy />
+        <LeadForm />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="sg-space">
+    <div class="container sg">
+      <h2 class="eyebrow" id="sg-space">12 — Отступы и сетка</h2>
+      <ul class="sg__spaces" role="list">
+        {
+          spaces.map((n) => (
+            <li>
+              <span class="sg__space" style={`width: var(--space-${n})`} />
+              <span class="tech">--space-{n}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="grid sg__grid" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, i) => <span class="tech">{i + 1}</span>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .sg {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-7);
+  }
+
+  .sg__block {
+    display: grid;
+    gap: var(--space-5);
+    padding-top: var(--space-8);
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .sg__caption {
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: var(--fs-tag);
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .sg__medium {
+    font-weight: 500;
+  }
+
+  .sg__swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .swatch {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: var(--hairline) solid var(--graphite);
+    font-size: var(--fs-small);
+  }
+
+  .swatch__chip {
+    height: 96px;
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .swatch__chip--orbit {
+    border-radius: 50%;
+    border-width: 1.25px;
+    height: 48px;
+    transform: rotate(-12deg);
+  }
+
+  .swatch__role {
+    color: var(--ash);
+  }
+
+  .sg__type {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  .sg__type > div {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .sg__logos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .sg__logo {
+    display: grid;
+    place-items: center;
+    gap: var(--space-6);
+    min-height: 260px;
+    padding: var(--space-7);
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .sg__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-5);
+  }
+
+  .sg__row--chalk {
+    margin-top: var(--space-9);
+  }
+
+  .sg__fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-7) var(--space-6);
+    align-items: start;
+  }
+
+  .sg__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .sg__orbits {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .sg__orbit-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 420px;
+    overflow: hidden;
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .sg__mark {
+    position: relative;
+    width: 96px;
+  }
+
+  .sg__mark :global(img) {
+    position: relative;
+    z-index: var(--z-content);
+    width: 100%;
+  }
+
+  .sg__orbit-caption {
+    position: absolute;
+    left: var(--space-5);
+    bottom: var(--space-4);
+    z-index: var(--z-content);
+  }
+
+  .sg__split {
+    display: grid;
+    gap: var(--space-9);
+    margin-top: var(--space-8);
+  }
+
+  .sg__spaces {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .sg__spaces li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: var(--fs-tag);
+    color: var(--ash);
+  }
+
+  .sg__space {
+    display: block;
+    height: 12px;
+    background: var(--graphite);
+  }
+
+  .sg__grid > span {
+    padding-block: var(--space-6);
+    border-inline: var(--hairline) solid var(--graphite);
+    text-align: center;
+    font-size: var(--fs-tag);
+    color: var(--ash);
+  }
+
+  @media (min-width: 1024px) {
+    .sg__orbits {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .sg__split {
+      grid-template-columns: 5fr 6fr;
+    }
+  }
+</style>

@@ -1,0 +1,102 @@
+# Цены и сроки — ориентиры «от».
+# price — число без «₽» и пробелов (350000) или null, если ещё не заполнено.
+# term — срок в родительном падеже («2 недель», «1 месяца») или null.
+# items — 3–4 пункта состава, только из includes услуги (проверяется при сборке).
+
+- id: landing
+  title: Лендинг
+  order: 1
+  price: null
+  term: null
+  service: sajty
+  items:
+    - Прототип ключевых страниц
+    - Дизайн и адаптивная вёрстка
+    - Скорость и базовое SEO
+    - Запуск и обучение
+
+- id: corporate
+  title: Корпоративный сайт
+  order: 2
+  price: null
+  term: null
+  service: sajty
+  items:
+    - Аналитика и структура
+    - Разработка и система управления
+    - "Интеграции: CRM, оплата, аналитика"
+    - Запуск и обучение
+
+- id: shop
+  title: Интернет-магазин
+  order: 3
+  price: null
+  term: null
+  service: sajty
+  items:
+    - Аналитика и структура
+    - Разработка и система управления
+    - "Интеграции: CRM, оплата, аналитика"
+    - Скорость и базовое SEO
+
+- id: webapp
+  title: Веб-приложение / личный кабинет
+  order: 4
+  price: null
+  term: null
+  service: veb-prilozheniya
+  items:
+    - Логика, роли и данные
+    - UX и интерфейсы
+    - Фронтенд и бэкенд
+    - Личный кабинет и админ-панель
+
+- id: bot
+  title: Telegram-бот
+  order: 5
+  price: null
+  term: null
+  service: telegram-boty
+  items:
+    - Сценарии диалогов
+    - Каталог, запись или приём заявок
+    - Оплата в боте
+    - Интеграции с CRM и таблицами
+
+- id: game
+  title: Мобильная игра
+  order: 6
+  price: null
+  term: null
+  service: mobilnye-igry
+  items:
+    - Прототип и проверка механики
+    - Геймдизайн и баланс
+    - Разработка
+    - Публикация в App Store, Google Play и RuStore
+
+- id: audit
+  title: Аудит сайта
+  order: 7
+  price: null
+  term: null
+  service: audit-sajta
+  items:
+    - "Техника: индексация, ошибки, редиректы"
+    - "Скорость: Core Web Vitals, вес страниц"
+    - "SEO: мета-теги, структура, дубли"
+    - Отчёт и план исправлений
+
+# Поддержка — цена в месяц, срока нет
+- id: support
+  title: Поддержка и развитие
+  order: 8
+  price: null
+  term: null
+  perMonth: true
+  service: podderzhka
+  items:
+    - Обновления системы и модулей
+    - Доработки по задачам
+    - Мониторинг доступности
+    - Ежемесячный отчёт с метриками
