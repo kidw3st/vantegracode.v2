@@ -38,7 +38,7 @@ function resolveFile(urlPath) {
 }
 
 export function serve(port = 4329, base = '/') {
-  const prefix = base.replace(//$/, '');
+  const prefix = base.replace(/\/$/, '');
   const server = createServer((req, res) => {
     let url = req.url ?? '/';
     if (prefix) {
@@ -51,7 +51,7 @@ export function serve(port = 4329, base = '/') {
     }
     // как на хостинге: адрес без слеша в конце → редирект на адрес со слешем
     if (!url.split('?')[0].endsWith('/') && !path.extname(url.split('?')[0]) && resolveFile(url + '/')) {
-      res.writeHead(301, { Location: url.replace(/(\?|$)/, '/$1') });
+      res.writeHead(301, { Location: prefix + url.replace(/(\?|$)/, '/$1') });
       res.end();
       return;
     }
