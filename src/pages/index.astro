@@ -1,5 +1,7 @@
 ---
+import { getImage } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import heroPoster from '../assets/hero/hero-mark-poster.png';
 import Button from '../components/Button.astro';
 import CtaSection from '../components/CtaSection.astro';
 import Logo from '../components/Logo.astro';
@@ -36,6 +38,9 @@ const priceCards = home.prices.cards.map((card) => {
   return { title: card.title, price: price.data.price, term: price.data.term };
 });
 
+// Первый кадр рендера (анфас) — заставка видео и кадр для reduced motion
+const poster = await getImage({ src: heroPoster, format: 'avif', width: 720, quality: 72 });
+
 const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text) }));
 const secondary = showWorks
   ? { href: site.cta.worksHref, label: site.cta.works }
@@ -47,16 +52,34 @@ const secondary = showWorks
     <div class="hero__inner container">
       <div class="hero__logo">
         <OrbitField mode="logo" logo="vertical" unit="var(--hero-logo)" rings={4} tone="normal" parallax draw="auto" minLogoPx={160} />
-        <Logo
-          variant="vertical"
-          width={300}
-          cssWidth="100%"
-          minWidth={160}
-          alt="Vantegra"
-          fetchpriority="high"
-          class="hero__logo-img"
-          data-hero-logo
-        />
+        <div class="hero__art" data-hero-logo>
+          {/* Знак: рендер из Blender (tools/hero-mark.py), вращение вокруг вертикальной оси */}
+          <video
+            class="hero__video"
+            width="720"
+            height="560"
+            muted
+            loop
+            playsinline
+            preload="none"
+            poster={poster.src}
+            aria-hidden="true"
+            disablepictureinpicture
+            disableremoteplayback
+            data-hero-video
+          >
+            <source src="/media/hero-mark.webm" type="video/webm" />
+            <source src="/media/hero-mark.mp4" type="video/mp4" />
+          </video>
+          <Logo
+            variant="wordmark"
+            width={297}
+            cssWidth="calc(var(--hero-logo) * 0.99009)"
+            minWidth={158}
+            alt="Vantegra"
+            class="hero__wordmark"
+          />
+        </div>
       </div>
       <div class="hero__copy">
         <p class="eyebrow center-tracked" data-hero="rise" style="--i: 0">{t(home.hero.eyebrow)}</p>
@@ -179,16 +202,44 @@ const secondary = showWorks
     padding-block: var(--space-5);
   }
 
+  /* Блок повторяет вертикальный логотип: viewBox 962.81 × 939.71, все размеры — доли его ширины */
   .hero__logo {
     position: relative;
     width: var(--hero-logo);
+    aspect-ratio: 962.81 / 939.71;
     margin-bottom: clamp(var(--space-6), 4.6vh, var(--space-7));
   }
 
-  .hero__logo :global(.hero__logo-img) {
-    position: relative;
+  .hero__art {
+    position: absolute;
+    inset: 0;
     z-index: var(--z-content);
-    width: 100%;
+  }
+
+  /* Кадр рендера 720 × 560 = 2,25 × 1,75 ед., знак (viewBox 962.81) — 2 ед.; центр — центр знака */
+  .hero__video {
+    position: absolute;
+    left: calc(var(--hero-logo) * -0.0625);
+    top: calc(var(--hero-logo) * -0.05683);
+    width: calc(var(--hero-logo) * 1.125);
+    height: calc(var(--hero-logo) * 0.875);
+    max-width: none;
+    object-fit: cover;
+    background: var(--soot);
+    /* мягкие края кадра: фон видео сливается с сажей без видимого прямоугольника */
+    mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent),
+      linear-gradient(to bottom, transparent, #000 4%, #000 96%, transparent);
+    mask-composite: intersect;
+    -webkit-mask-composite: source-in;
+    pointer-events: none;
+  }
+
+  /* Надпись — на том же месте, что в вертикальном блоке */
+  .hero__art :global(.hero__wordmark) {
+    position: absolute;
+    left: calc(var(--hero-logo) * 0.004955);
+    top: calc(var(--hero-logo) * 0.75985);
+    z-index: 1;
   }
 
   .hero__copy {

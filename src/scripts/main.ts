@@ -3,6 +3,7 @@ import './menu.ts';
 import './header.ts';
 import './reveal.ts';
 import './orbits.ts';
+import './hero.ts';
 import './accordion.ts';
 import './form.ts';
 import './filters.ts';
