@@ -4,16 +4,19 @@
  * Под стиль Vantegra:
  * - геометрия эхо-орбит: окружность диска видна эллипсом ry / rx = 0,306, наклон −12°;
  *   центр — центр логотипа, внутренний край — первая эхо-орбита: пыль не заходит на знак;
- * - мел и пепел, наложение без «перекала», без свечения; ближняя (нижняя) сторона приглушена;
- * - 12 000 частиц (6000 на телефоне), вся анимация в вершинном шейдере, плотность пикселей ≤ 1,5;
+ * - мел и пепел, наложение без «перекала», без свечения; диск заполняет первый экран сверху и снизу;
+ * - 15 000 частиц (7500 на телефоне), вся анимация в вершинном шейдере, плотность пикселей ≤ 1,5;
  * - ровное медленное вращение без реакции на курсор; вне экрана — пауза;
  *   при prefers-reduced-motion — неподвижный кадр.
  */
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
 const DPR_CAP = 1.5;
-const COUNT_DESKTOP = 12000;
-const COUNT_MOBILE = 6000;
+const COUNT_DESKTOP = 15000;
+const COUNT_MOBILE = 7500;
+/** Внешний радиус диска: на узком экране диск — полоса, шире радиус, чтобы пыль дошла до кнопок */
+const ROUT_DESKTOP = 3.1;
+const ROUT_MOBILE = 4.2;
 /** Размер точки, CSS px */
 const DOT = 2.4;
 /** Время для неподвижного кадра (reduced motion) — рукава уже красиво закручены */
@@ -30,10 +33,10 @@ uniform float uTime;
 uniform vec2 uCenter;
 uniform vec2 uScale;
 uniform float uDot;
+uniform float uRout;         // внешний радиус в радиусах внутренней орбиты
 varying float vAlpha;
 varying float vMix;
 
-const float ROUT = 2.5;      // внешний радиус в радиусах внутренней орбиты
 const float TILT = 0.306;    // ry / rx эхо-орбит
 const float ROLL = 0.2094395;// наклон −12° (в координатах с осью y вверх — против часовой)
 const float ARMS = 4.0;
@@ -44,8 +47,8 @@ const float ORBIT = 0.15;    // рад/с у внутреннего края; д
 const float SPIN = 0.012;    // скорость узора рукавов
 
 void main() {
-  float r = 1.0 + (ROUT - 1.0) * pow(aSeed.x, 1.5);
-  float f = (r - 1.0) / (ROUT - 1.0);
+  float r = 1.0 + (uRout - 1.0) * pow(aSeed.x, 1.25);
+  float f = (r - 1.0) / (uRout - 1.0);
   float th = aSeed.y + ORBIT * pow(r, -1.5) * uTime;
   float armAngle = ARMS * (th - WIND * log(r)) - SPIN * uTime;
   th -= PULL * sin(armAngle) / ARMS;
@@ -57,11 +60,11 @@ void main() {
   vec2 screen = vec2(c * disc.x - s * disc.y, s * disc.x + c * disc.y);
   gl_Position = vec4(uCenter + screen * uScale, 0.0, 1.0);
 
-  // дальняя сторона диска — сверху; ближняя (снизу, за заголовком) приглушена
+  // дальняя сторона диска — сверху, ближняя — снизу: лёгкая разница яркости только для глубины
   float far = 0.5 + 0.5 * sin(th);
-  float rim = smoothstep(0.0, 0.035, f);
-  float radial = rim * exp(-f * 2.2);
-  vAlpha = radial * (0.25 + 0.75 * arm) * mix(0.3, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95;
+  float rim = smoothstep(0.0, 0.03, f);
+  float radial = rim * exp(-f * 1.5);
+  vAlpha = radial * (0.25 + 0.75 * arm) * mix(0.78, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95;
   vMix = clamp(arm * 0.9 + (1.0 - f) * 0.25, 0.0, 1.0);
   gl_PointSize = uDot * (0.65 + 0.7 * aSeed.w) * mix(1.15, 0.9, far);
 }`;
@@ -134,7 +137,8 @@ onPage(() => {
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
   gl.useProgram(program);
 
-  const count = window.matchMedia('(max-width: 767px)').matches ? COUNT_MOBILE : COUNT_DESKTOP;
+  const narrow = window.matchMedia('(max-width: 767px)').matches;
+  const count = narrow ? COUNT_MOBILE : COUNT_DESKTOP;
   const buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, buildSeeds(count), gl.STATIC_DRAW);
@@ -148,6 +152,7 @@ onPage(() => {
     scale: gl.getUniformLocation(program, 'uScale'),
     dot: gl.getUniformLocation(program, 'uDot'),
   };
+  gl.uniform1f(gl.getUniformLocation(program, 'uRout'), narrow ? ROUT_MOBILE : ROUT_DESKTOP);
   gl.uniform3fv(gl.getUniformLocation(program, 'uBase'), ASH);
   gl.uniform3fv(gl.getUniformLocation(program, 'uAccent'), CHALK);
   gl.disable(gl.DEPTH_TEST);
