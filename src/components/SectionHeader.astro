@@ -35,10 +35,7 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className, ne
   }
   {
     neon && (
-      <span class="sh__neon" aria-hidden="true">
-        <span class="sh__pulse" />
-        <span class="sh__pulse sh__pulse--back" />
-      </span>
+      <canvas class="sh__neon" aria-hidden="true" data-neon />
     )
   }
 </header>
@@ -113,17 +110,16 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className, ne
   }
 
   /* ---------- Неон на линии (решение владельца, по мотивам Neon Border) ----------
-     Два светящихся отрезка мелом скользят по линии навстречу друг другу: разгон и торможение у концов.
-     Свечение — две размытые копии отрезка; исключение из правила «без свечений» — только здесь. */
+     Два светящихся импульса мелом скользят по линии навстречу друг другу; рисует scripts/neon.ts
+     на canvas в плотности пикселей экрана. Исключение из правила «без свечений» — только здесь.
+     Холст 80 px по высоте, линия — ровно посередине. */
   .sh__neon {
     position: absolute;
-    top: 0;
+    top: -40px;
     left: 0;
-    right: 0;
-    height: 1px;
+    width: 100%;
+    height: 80px;
     pointer-events: none;
-    /* свечение вверх и вниз, по краям линии обрезаем */
-    clip-path: inset(-40px 0);
   }
 
   :global(.js) .sh__neon {
@@ -134,57 +130,6 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className, ne
 
   .sh:global(.is-in) .sh__neon {
     opacity: 1;
-  }
-
-  .sh__pulse {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 34%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--chalk) 50%, transparent);
-    mix-blend-mode: plus-lighter;
-    animation: neon-glide 5.6s var(--ease-in-out) infinite;
-  }
-
-  .sh__pulse::before,
-  .sh__pulse::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    background: inherit;
-    translate: 0 -50%;
-  }
-
-  .sh__pulse::before {
-    height: 6px;
-    filter: blur(4px);
-    opacity: 0.7;
-  }
-
-  .sh__pulse::after {
-    height: 24px;
-    filter: blur(14px);
-    opacity: 0.35;
-  }
-
-  /* второй импульс — зеркально, навстречу первому */
-  .sh__pulse--back {
-    animation-delay: -2.8s;
-  }
-
-  /* отрезок шириной 34 % ходит от левого края линии до правого и обратно */
-  @keyframes neon-glide {
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-
-    50% {
-      transform: translateX(194.12%);
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

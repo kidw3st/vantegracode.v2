@@ -7,6 +7,7 @@ import './hero.ts';
 import './hero-scroll.ts';
 import './disc.ts';
 import './brand.ts';
+import './neon.ts';
 import './rails.ts';
 import './accordion.ts';
 import './form.ts';
