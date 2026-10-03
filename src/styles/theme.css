@@ -45,3 +45,8 @@
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* Слой снимков не забирает касания: тумблер можно нажать ещё раз, пока круг растёт */
+:root.theme-switching::view-transition {
+  pointer-events: none;
+}
