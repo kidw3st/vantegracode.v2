@@ -1,0 +1,22 @@
+# зависимости и сборка
+node_modules/
+dist/
+.astro/
+test-results/
+playwright-report/
+
+# секреты формы
+config.php
+public/api/config.php
+
+# материалы владельца: тяжёлые исходники и маскот в репозиторий не кладём
+/logo/
+/fonts/
+/mascot/
+/docs/*.pdf
+/docs/*.pptx
+
+# служебное
+.DS_Store
+Thumbs.db
+*.log
