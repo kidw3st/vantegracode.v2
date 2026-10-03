@@ -6,6 +6,7 @@ import Logo from '../components/Logo.astro';
 import OrbitField from '../components/OrbitField.astro';
 import PriceCard from '../components/PriceCard.astro';
 import SectionHeader from '../components/SectionHeader.astro';
+import ApproachCard from '../components/ApproachCard.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import Steps from '../components/Steps.astro';
 import WorkCard from '../components/WorkCard.astro';
@@ -100,13 +101,17 @@ const secondary = showWorks
     </div>
   </section>
 
-  <section class="section idea" aria-labelledby="idea-title">
-    <div class="container grid idea__grid" data-reveal="stagger">
-      <p class="eyebrow idea__eyebrow">{t(eyebrow('idea', home.idea.label))}</p>
-      <h2 id="idea-title" class="idea__title">{t(home.idea.title)}</h2>
-      <div class="idea__text">
-        {home.idea.text.map((paragraph) => <p>{t(paragraph)}</p>)}
-      </div>
+  <section class="section" aria-labelledby="idea-title">
+    <div class="container">
+      <SectionHeader
+        id="idea-title"
+        eyebrow={eyebrow('idea', home.idea.label)}
+        title={home.idea.title}
+        text={home.idea.text}
+      />
+      <ul class="approach" role="list" data-reveal="stagger">
+        {home.idea.items.map((item) => <ApproachCard {...item} resultLabel={home.idea.resultLabel} />)}
+      </ul>
     </div>
   </section>
 
@@ -311,53 +316,17 @@ const secondary = showWorks
     }
   }
 
-  /* ---------- Идея ---------- */
+  /* ---------- Подход ---------- */
 
-  .idea__grid {
-    row-gap: var(--space-6);
-    padding-top: var(--space-6);
-    border-top: var(--hairline) solid var(--rule);
-  }
-
-  .idea__eyebrow,
-  .idea__title,
-  .idea__text {
-    grid-column: 1 / -1;
-  }
-
-  .idea__text {
+  /* Две колонки карточек; ряды карточек — подсетка (ApproachCard) */
+  .approach {
     display: grid;
-    gap: var(--space-5);
-    color: var(--ash);
-    font-size: var(--fs-lead);
-    line-height: 1.55;
-  }
-
-  .idea__text p:first-child {
-    color: var(--chalk);
+    gap: var(--space-3);
   }
 
   @media (min-width: 768px) {
-    .idea__title {
-      grid-column: 1 / span 6;
-    }
-
-    .idea__text {
-      grid-column: 7 / -1;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .idea__eyebrow {
-      grid-column: 1 / span 3;
-    }
-
-    .idea__title {
-      grid-column: 4 / span 4;
-    }
-
-    .idea__text {
-      grid-column: 8 / -1;
+    .approach {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 

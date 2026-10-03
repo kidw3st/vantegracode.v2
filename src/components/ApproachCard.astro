@@ -1,0 +1,123 @@
+---
+/**
+ * Карточка подхода: что делаем (иконка, название, текст) и что это даёт клиенту (результат).
+ * Рамка 1 px графитом с уголками; ряды карточки — подсетка списка,
+ * поэтому названия, тексты и результаты соседних карточек стоят на одних линиях.
+ */
+import Icon, { type IconName } from './Icon.astro';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  icon: IconName;
+  title: string;
+  text: string;
+  result: string;
+  resultLabel: string;
+}
+
+const { icon, title, text, result, resultLabel } = Astro.props;
+---
+
+<li class="approach-card">
+  <span class="approach-card__corner approach-card__corner--tl" aria-hidden="true"></span>
+  <span class="approach-card__corner approach-card__corner--tr" aria-hidden="true"></span>
+  <span class="approach-card__corner approach-card__corner--bl" aria-hidden="true"></span>
+  <span class="approach-card__corner approach-card__corner--br" aria-hidden="true"></span>
+  <Icon name={icon} size={32} class="approach-card__icon" />
+  <h3 class="approach-card__title">{t(title)}</h3>
+  <p class="approach-card__text">{t(text)}</p>
+  <div class="approach-card__result">
+    <p class="eyebrow approach-card__label">
+      <Icon name="arrow-right" size={16} />
+      {t(resultLabel)}
+    </p>
+    <p class="approach-card__outcome">{t(result)}</p>
+  </div>
+</li>
+
+<style>
+  /* Четыре ряда карточки — подсетка: иконка, название, текст, результат */
+  .approach-card {
+    position: relative;
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    padding: var(--card-pad);
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  /* Уголки рамки — мелом поверх графитовой линии, как метки на чертеже */
+  .approach-card__corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 0 solid var(--chalk);
+    pointer-events: none;
+  }
+
+  .approach-card__corner--tl {
+    top: -1px;
+    left: -1px;
+    border-top-width: var(--hairline);
+    border-left-width: var(--hairline);
+  }
+
+  .approach-card__corner--tr {
+    top: -1px;
+    right: -1px;
+    border-top-width: var(--hairline);
+    border-right-width: var(--hairline);
+  }
+
+  .approach-card__corner--bl {
+    bottom: -1px;
+    left: -1px;
+    border-bottom-width: var(--hairline);
+    border-left-width: var(--hairline);
+  }
+
+  .approach-card__corner--br {
+    bottom: -1px;
+    right: -1px;
+    border-bottom-width: var(--hairline);
+    border-right-width: var(--hairline);
+  }
+
+  .approach-card :global(.approach-card__icon) {
+    color: var(--ash);
+  }
+
+  .approach-card__title {
+    margin-top: var(--space-7);
+  }
+
+  .approach-card__text {
+    margin-top: var(--space-3);
+    color: var(--ash);
+    max-width: 44ch;
+  }
+
+  /* Результат — под линией, у всех карточек ряда на одной высоте */
+  .approach-card__result {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    margin-top: var(--space-7);
+    padding-top: var(--space-5);
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .approach-card__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .approach-card__outcome {
+    color: var(--chalk);
+    font-size: var(--fs-lead);
+    line-height: 1.45;
+    max-width: 34ch;
+  }
+</style>
