@@ -1,7 +1,5 @@
 ---
-import { getImage } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import heroPoster from '../assets/hero/hero-mark-poster.png';
 import Button from '../components/Button.astro';
 import CtaSection from '../components/CtaSection.astro';
 import Logo from '../components/Logo.astro';
@@ -38,9 +36,6 @@ const priceCards = home.prices.cards.map((card) => {
   return { title: card.title, price: price.data.price, term: price.data.term };
 });
 
-// Первый кадр рендера (анфас) — заставка видео и кадр для reduced motion
-const poster = await getImage({ src: heroPoster, format: 'avif', width: 720, quality: 72 });
-
 const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text) }));
 const secondary = showWorks
   ? { href: site.cta.worksHref, label: site.cta.works }
@@ -53,24 +48,11 @@ const secondary = showWorks
       <div class="hero__logo">
         <OrbitField mode="logo" logo="vertical" unit="var(--hero-logo)" rings={4} tone="normal" parallax draw="auto" minLogoPx={160} />
         <div class="hero__art" data-hero-logo>
-          {/* Знак: рендер из Blender (tools/hero-mark.py), вращение вокруг вертикальной оси */}
-          <video
-            class="hero__video"
-            width="720"
-            height="560"
-            muted
-            loop
-            playsinline
-            preload="none"
-            poster={poster.src}
-            aria-hidden="true"
-            disablepictureinpicture
-            disableremoteplayback
-            data-hero-video
-          >
-            <source src="/media/hero-mark.webm" type="video/webm" />
-            <source src="/media/hero-mark.mp4" type="video/mp4" />
-          </video>
+          {/* Знак: модель из Blender (tools/hero-mark.py), вращается в реальном времени (scripts/hero.ts).
+              До первого кадра и без WebGL — плоский SVG; в анфас они совпадают */}
+          <Logo variant="mark" width={300} cssWidth="var(--hero-logo)" minWidth={160} class="hero__mark" fetchpriority="high" />
+          <canvas class="hero__canvas" width="720" height="560" aria-hidden="true" data-hero-canvas data-src="/media/hero-mark.bin"
+          ></canvas>
           <Logo
             variant="wordmark"
             width={297}
@@ -216,22 +198,28 @@ const secondary = showWorks
     z-index: var(--z-content);
   }
 
-  /* Кадр рендера 720 × 560 = 2,25 × 1,75 ед., знак (viewBox 962.81) — 2 ед.; центр — центр знака */
-  .hero__video {
+  /* Плоский знак — на месте знака в вертикальном блоке (верхняя часть, viewBox 962.81 × 733.04) */
+  .hero__art :global(.hero__mark) {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  /* Холст: кадр камеры 2,25 × 1,75 ед. при ширине знака 2 ед., центр — центр знака. Фон прозрачный */
+  .hero__canvas {
     position: absolute;
     left: calc(var(--hero-logo) * -0.0625);
     top: calc(var(--hero-logo) * -0.05683);
     width: calc(var(--hero-logo) * 1.125);
     height: calc(var(--hero-logo) * 0.875);
     max-width: none;
-    object-fit: cover;
-    background: var(--soot);
-    /* мягкие края кадра: фон видео сливается с сажей без видимого прямоугольника */
-    mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent),
-      linear-gradient(to bottom, transparent, #000 4%, #000 96%, transparent);
-    mask-composite: intersect;
-    -webkit-mask-composite: source-in;
     pointer-events: none;
+  }
+
+  /* Пока 3D не нарисовал первый кадр — виден SVG; потом наоборот */
+  .hero__art:not(.is-3d) .hero__canvas,
+  .hero__art.is-3d :global(.hero__mark) {
+    visibility: hidden;
   }
 
   /* Надпись — на том же месте, что в вертикальном блоке */
