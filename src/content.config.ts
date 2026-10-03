@@ -92,7 +92,7 @@ const works = defineCollection({
     year: z.number().int(),
     /** Слаги услуг из src/content/services */
     services: z.array(z.string()).min(1),
-    url: z.string().url().nullable().optional(),
+    url: z.url().nullable().optional(),
     duration: z.string().nullable().optional(),
     featured: z.boolean().default(false),
   }),

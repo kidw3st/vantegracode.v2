@@ -7,7 +7,7 @@
  * mode="block": центр колец — центр блока, кольца уходят за края.
  * Не больше 4 колец, линия 1,25 px, мел 4–20 %, под текстом, aria-hidden.
  */
-import { clearspace, LOGO, type LogoVariant } from '../lib/logo.ts';
+import { protectedBox, type LogoVariant } from '../lib/logo.ts';
 import { logoRings, ORBIT_ANGLE, ORBIT_RATIO, ringExtent, type Ring } from '../lib/orbit.ts';
 
 interface Props {
@@ -55,11 +55,10 @@ const STEP = 1.42;
 
 let rings: Ring[];
 if (mode === 'logo') {
-  const g = LOGO[logo];
-  const cs = clearspace(logo);
+  const box = protectedBox(logo);
   const extra = parallax ? PARALLAX_PX / minLogoPx : 0;
-  // единица длины — ширина логотипа
-  rings = logoRings({ hw: 0.5 + cs + extra, hh: (0.5 * g.h) / g.w + cs + extra, rings: count, step: STEP });
+  // единица длины — ширина логотипа (viewBox)
+  rings = logoRings({ hw: box.hw + extra, hh: box.hh + extra, rings: count, step: STEP });
 } else {
   rings = Array.from({ length: count }, (_, i) => {
     const rx = start * STEP ** i;

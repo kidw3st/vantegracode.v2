@@ -13,6 +13,8 @@ import { home, steps } from '../data/pages.ts';
 import { site } from '../data/site.ts';
 import { getPrices, getServices, getWorks } from '../lib/content.ts';
 import { getText } from '../lib/fill.ts';
+import { protectedBox } from '../lib/logo.ts';
+import { logoRings } from '../lib/orbit.ts';
 import { website } from '../lib/seo.ts';
 import { t } from '../lib/typograf.ts';
 
@@ -36,6 +38,11 @@ const priceCards = home.prices.cards.map((card) => {
   return { title: card.title, price: price.data.price, term: price.data.term };
 });
 
+// Внутренний край пылевого диска = первая эхо-орбита вокруг вертикального блока (в ширинах логотипа)
+const verticalBox = protectedBox('vertical');
+const [innerOrbit] = logoRings({ hw: verticalBox.hw, hh: verticalBox.hh, rings: 1 });
+const discRim = innerOrbit?.rx ?? 2.6;
+
 const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text) }));
 const secondary = showWorks
   ? { href: site.cta.worksHref, label: site.cta.works }
@@ -44,9 +51,10 @@ const secondary = showWorks
 
 <BaseLayout seo={{ ...home.seo, jsonLd: [website()] }}>
   <section class="hero" aria-labelledby="hero-title">
+    <canvas class="hero__disc" aria-hidden="true" data-hero-disc data-rim={discRim.toFixed(4)}></canvas>
     <div class="hero__inner container">
       <div class="hero__logo">
-        <OrbitField mode="logo" logo="vertical" unit="var(--hero-logo)" rings={4} tone="normal" parallax draw="auto" minLogoPx={160} />
+        <OrbitField mode="logo" logo="vertical" unit="var(--hero-logo)" rings={4} tone="normal" draw="auto" />
         <div class="hero__art" data-hero-logo>
           {/* Знак: модель из Blender (tools/hero-mark.py), вращается в реальном времени (scripts/hero.ts).
               До первого кадра и без WebGL — плоский SVG; в анфас они совпадают */}
@@ -174,6 +182,27 @@ const secondary = showWorks
     min-height: 100svh;
     padding-top: var(--header-h);
     overflow: clip;
+  }
+
+  /* Пылевой диск: под кольцами и текстом, проявляется после первого кадра */
+  .hero__disc {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  .hero__disc.is-ready {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__disc {
+      transition-duration: var(--dur-fast);
+    }
   }
 
   .hero__inner {
