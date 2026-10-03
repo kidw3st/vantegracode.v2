@@ -17,6 +17,8 @@ interface Props {
 const { title, description, noindex = false, type = 'website', crumbs, jsonLd = [], publishedTime } = Astro.props;
 
 const canonical = absolute(Astro.url.pathname);
+/** Превью на GitHub Pages закрыто от поисковиков — канонический адрес остаётся vantegracode.ru */
+const preview = import.meta.env.PUBLIC_PREVIEW === '1';
 const ogImage = absolute('/og/og-default.png');
 const metaTitle = t(title);
 const metaDescription = t(description);
@@ -29,7 +31,7 @@ const nodes: JsonLdNode[] = noindex
 <title>{metaTitle}</title>
 <meta name="description" content={metaDescription} />
 <link rel="canonical" href={canonical} />
-{noindex && <meta name="robots" content="noindex, follow" />}
+{(noindex || preview) && <meta name="robots" content={preview ? 'noindex, nofollow' : 'noindex, follow'} />}
 
 <meta property="og:type" content={type} />
 <meta property="og:locale" content="ru_RU" />

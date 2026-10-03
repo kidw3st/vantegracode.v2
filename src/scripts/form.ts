@@ -1,6 +1,7 @@
 /**
  * Форма заявки: проверка при потере фокуса и при отправке, ошибки через aria-describedby,
- * общий статус — aria-live. В npm run dev отправка имитируется: успех через 800 мс, ошибка — ?mock=error.
+ * общий статус — aria-live. В npm run dev и в превью на GitHub Pages (PUBLIC_PREVIEW=1, там нет PHP)
+ * отправка имитируется: успех через 800 мс, ошибка — ?mock=error.
  */
 import { onPage } from './lifecycle.ts';
 
@@ -29,7 +30,7 @@ declare global {
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 async function send(data: Record<string, string>): Promise<boolean> {
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV || import.meta.env.PUBLIC_PREVIEW === '1') {
     await wait(800);
     return new URLSearchParams(window.location.search).get('mock') !== 'error';
   }

@@ -37,9 +37,18 @@ function resolveFile(urlPath) {
   return null;
 }
 
-export function serve(port = 4329) {
+export function serve(port = 4329, base = '/') {
+  const prefix = base.replace(//$/, '');
   const server = createServer((req, res) => {
-    const url = req.url ?? '/';
+    let url = req.url ?? '/';
+    if (prefix) {
+      if (!url.startsWith(prefix + '/') && url !== prefix) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('404');
+        return;
+      }
+      url = url.slice(prefix.length) || '/';
+    }
     // как на хостинге: адрес без слеша в конце → редирект на адрес со слешем
     if (!url.split('?')[0].endsWith('/') && !path.extname(url.split('?')[0]) && resolveFile(url + '/')) {
       res.writeHead(301, { Location: url.replace(/(\?|$)/, '/$1') });
@@ -64,6 +73,7 @@ export function serve(port = 4329) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const port = Number(process.argv[2] ?? 4329);
-  await serve(port);
-  console.log(`dist/ → http://localhost:${port}`);
+  const base = process.argv[3] ?? '/';
+  await serve(port, base);
+  console.log(`dist/ → http://localhost:${port}${base}`);
 }
