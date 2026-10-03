@@ -1,6 +1,6 @@
 /**
  * Надпись VANTEGRA после первого экрана (BrandWordmark.astro). Прорисовку ведёт прокрутка:
- * - в момент остановки линия выстреливает из скопления пыли (взрыв рисует disc.ts);
+ * - в момент остановки линия выстреливает из вспышки (взрыв вихря пыли рисует disc.ts);
  * - во время остановки в центре экрана (доля q): контуры букв обводятся от середины слова к краям,
  *   буквы заливаются мелом, контур и линия гаснут.
  * Толщина контура и линии — 1 px экрана при любой ширине надписи (--sw в единицах viewBox).
@@ -45,11 +45,9 @@ onPage(() => {
     raf = 0;
     const q = clamp((window.scrollY - landingScroll()) / pin);
     if (line) {
-      // линия выстреливает из скопления пыли вместе со взрывом и гаснет, когда буквы залиты
-      const reach = q > 0 ? 1 - Math.pow(1 - clamp(q / 0.18), 3) : 0;
-      const vanish = ease((q - 0.7) / 0.25);
-      line.style.transform = `scaleX(${reach.toFixed(4)})`;
-      line.style.opacity = (q > 0 ? 0.5 * (1 - vanish) : 0).toFixed(3);
+      // линия выстреливает из вспышки, как только надпись встала (взрыв — disc.ts), и гаснет, когда буквы залиты
+      line.classList.toggle('is-on', window.scrollY >= landingScroll());
+      line.style.setProperty('--line-fade', (1 - ease((q - 0.7) / 0.25)).toFixed(3));
     }
     for (const letter of letters) {
       const shift = 0.09 * letter.order;

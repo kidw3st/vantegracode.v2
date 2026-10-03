@@ -1,10 +1,9 @@
 /**
- * Переход от первого экрана к надписи VANTEGRA: «орбита ложится в линию».
- * При прокрутке пылевой диск (disc.ts) сначала выпрямляется из −12° в горизонталь, затем
- * сплющивается в тонкую линию и ровно съезжает в центр экрана — туда, где остановится надпись.
- * Эхо-орбиты вокруг знака идут вместе с пылью (так же выпрямляются, сплющиваются, съезжают)
- * и гаснут одновременно с текстом. Знак гаснет на месте; текст гаснет и чуть уменьшается,
- * не сдвигаясь вниз — край первого экрана его не обрезает.
+ * Переход от первого экрана к надписи VANTEGRA: пыль стягивается в вихрь и взрывается.
+ * При прокрутке пылевой диск (disc.ts) закручивается и стягивается в плотный вихрь, который
+ * съезжает в центр экрана — туда, где остановится надпись; там вихрь взрывается.
+ * Эхо-орбиты вокруг знака стягиваются к центру вместе с пылью и гаснут одновременно с текстом.
+ * Знак гаснет на месте; текст гаснет и чуть уменьшается, не сдвигаясь вниз — край экрана его не обрезает.
  * Двигаем только transform и opacity; при prefers-reduced-motion перехода нет.
  */
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
@@ -38,9 +37,8 @@ export function heroProgress(): number {
 }
 
 export const smooth = (p: number) => p * p * (3 - 2 * p);
-/** Сначала выпрямляется (к 0,45 перехода), потом сплющивается (к 0,6) — уходит ровной линией */
-export const straightOf = (p: number) => smooth(Math.min(1, p / 0.45));
-export const squashOf = (p: number) => smooth(Math.min(1, p / 0.6));
+/** Стягивание пыли в вихрь: начинается сразу и заканчивается к остановке надписи */
+export const collapseOf = (p: number) => smooth(Math.min(1, Math.max(0, (p - 0.05) / 0.95)));
 /** Текст первого экрана гаснет к 0,77 перехода; кольца гаснут так же */
 export const fadeOf = (eased: number) => Math.max(0, 1 - 1.3 * eased);
 
@@ -78,7 +76,7 @@ onPage(() => {
       const drift = (targetCenter() - logoY) * e;
       orbits.style.transform = reset
         ? ''
-        : `translate3d(0, ${drift.toFixed(1)}px, 0) rotate(${(12 * straightOf(p)).toFixed(3)}deg) scaleY(${(1 - 0.97 * squashOf(p)).toFixed(4)})`;
+        : `translate3d(0, ${drift.toFixed(1)}px, 0) scale(${(1 - 0.9 * collapseOf(p)).toFixed(4)})`;
       orbits.style.opacity = reset ? '' : fade.toFixed(4);
     }
     if (art) art.style.opacity = reset ? '' : Math.max(0, 1 - 1.4 * e).toFixed(4);
