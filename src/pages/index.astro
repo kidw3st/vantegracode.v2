@@ -79,7 +79,12 @@ const secondary = showWorks
           {
             home.hero.title.map((line, i) => (
               <Fragment>
-                {i > 0 && <br />}
+                {i > 0 && (
+                  <Fragment>
+                    {' '}
+                    <br />
+                  </Fragment>
+                )}
                 {t(line)}
               </Fragment>
             ))
@@ -89,7 +94,12 @@ const secondary = showWorks
           {
             home.hero.lead.map((sentence, i) => (
               <Fragment>
-                {i > 0 && <br />}
+                {i > 0 && (
+                  <Fragment>
+                    {' '}
+                    <br />
+                  </Fragment>
+                )}
                 {t(sentence)}
               </Fragment>
             ))
