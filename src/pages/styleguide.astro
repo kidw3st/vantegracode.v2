@@ -272,15 +272,10 @@ const priceMeta = (price: (typeof prices)[number]) =>
     </div>
   </section>
 
-  <section class="section section--chalk" aria-labelledby="sg-chalk">
+  <section class="section" aria-labelledby="sg-steps">
     <div class="container sg">
-      <SectionHeader id="sg-chalk" eyebrow="09 — Светлая секция" title="Как работаем" />
+      <SectionHeader id="sg-steps" eyebrow="09 — Шаги процесса" title="Как работаем" />
       <Steps steps={filledSteps} />
-      <div class="sg__row sg__row--chalk">
-        <Button label="Обсудить проект" />
-        <Button label="Все услуги" variant="secondary" />
-        <Logo variant="horizontal" color="soot" width={180} loading="lazy" alt="Горизонтальный блок, сажа" />
-      </div>
     </div>
   </section>
 
@@ -421,10 +416,6 @@ const priceMeta = (price: (typeof prices)[number]) =>
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-5);
-  }
-
-  .sg__row--chalk {
-    margin-top: var(--space-9);
   }
 
   .sg__fields {
