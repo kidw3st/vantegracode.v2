@@ -78,7 +78,6 @@ const secondary = showWorks
       </div>
     </div>
     <div class="hero__bottom container" data-hero="rise" style="--i: 4">
-      <p class="eyebrow hero__scroll"><span class="hero__line" aria-hidden="true"></span>{t(home.hero.scroll)}</p>
       <p class="eyebrow hero__geo">{t(site.geography)}</p>
     </div>
   </section>
@@ -225,22 +224,8 @@ const secondary = showWorks
     position: relative;
     z-index: var(--z-content);
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-5);
+    justify-content: flex-end;
     padding-bottom: var(--space-5);
-  }
-
-  .hero__scroll {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  .hero__line {
-    display: block;
-    height: var(--space-6);
-    border-left: var(--hairline) solid var(--ash);
   }
 
   @media (max-width: 479px) {
@@ -253,11 +238,6 @@ const secondary = showWorks
     .hero__bottom .eyebrow {
       font-size: var(--fs-tag);
       letter-spacing: var(--ls-button);
-    }
-
-    .hero__geo {
-      max-width: 55%;
-      text-align: right;
     }
   }
 
