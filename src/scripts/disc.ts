@@ -9,10 +9,13 @@
  *   текст стоит на ровной саже и не сливается с пылью;
  * - 15 000 частиц (7500 на телефоне), вся анимация в вершинном шейдере, плотность пикселей ≤ 1,5;
  * - ровное медленное вращение без реакции на курсор; вне экрана — пауза;
- * - при прокрутке диск сплющивается до тонкой полосы — «орбита ложится в линию» (hero-scroll.ts);
+ * - при прокрутке диск сплющивается до тонкой полосы — «орбита ложится в линию» (hero-scroll.ts),
+ *   на подлёте к надписи VANTEGRA линия стягивается в плотное скопление, а когда надпись встаёт
+ *   в центр — взрыв: пыль разлетается вокруг надписи, осколки гаснут, часть пылинок остаётся
+ *   кружить рядом с надписью и уходит вместе с ней;
  *   при prefers-reduced-motion — неподвижный кадр.
  */
-import { fadeOf, heroProgress, resetTarget, smooth, squashOf, straightOf, targetCenter } from './hero-scroll.ts';
+import { fadeOf, heroProgress, landingScroll, resetTarget, smooth, squashOf, straightOf, targetCenter } from './hero-scroll.ts';
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
 const DPR_CAP = 1.5;
@@ -45,6 +48,11 @@ uniform float uFeather;      // ширина растворения, px
 uniform float uFlat;         // 0 — диск как есть, 1 — сплющен в линию (прокрутка первого экрана)
 uniform float uClearMix;     // сила чистой зоны: гаснет вместе с текстом первого экрана
 uniform float uStraight;     // 0 — наклон −12°, 1 — горизонталь (выпрямляется раньше, чем сплющивается)
+uniform float uGather;       // 0…1 — на подлёте линия стягивается в плотное скопление в центре надписи
+uniform float uCloud;        // 0 — пыль первого экрана, 1 — облако у надписи (надпись остановилась)
+uniform float uBurst;        // 0…1 — взрыв: из скопления наружу и на орбиту облака
+uniform vec2 uCloudCenter;   // центр надписи, NDC
+uniform vec2 uCloudSize;     // полуоси облака, NDC
 varying float vAlpha;
 varying float vMix;
 
@@ -56,6 +64,7 @@ const float SHARP = 2.6;
 const float PULL = 0.42;
 const float ORBIT = 0.15;    // рад/с у внутреннего края; дальше — медленнее (r^-1.5)
 const float SPIN = 0.012;    // скорость узора рукавов
+const float KEEP = 0.16;     // доля пылинок, которые остаются кружить у надписи; остальные — осколки взрыва
 
 void main() {
   float r = 1.0 + (uRout - 1.0) * pow(aSeed.x, 1.25);
@@ -73,7 +82,26 @@ void main() {
   float c = cos(roll);
   float s = sin(roll);
   vec2 screen = vec2(c * disc.x - s * disc.y, s * disc.x + c * disc.y);
+  // на подлёте линия стягивается к центру в плотное скопление: взрыв начнётся из одной точки
+  screen *= vec2(mix(1.0, 0.03, uGather), mix(1.0, 0.4, uGather));
   vec2 ndc = uCenter + screen * uScale;
+
+  // облако у надписи: пылинки кружат по эллипсу вокруг неё, осколки разлетаются дальше и гаснут
+  float keep = step(aSeed.z, KEEP);
+  float e = uBurst;
+  if (uCloud > 0.0) {
+    float turn = (0.05 + 0.06 * aSeed.w) * (aSeed.x > 0.5 ? 1.0 : -1.0);
+    float phi = aSeed.y + uTime * turn;
+    // облако неровное: разный радиус и высота у каждой пылинки, лёгкое «дыхание»
+    float rho = mix(0.28, 1.1, pow(aSeed.w, 0.7)) * mix(2.5, 1.0, keep);
+    rho *= 1.0 + 0.07 * sin(uTime * 0.5 + aSeed.z * 23.0);
+    vec2 dir = vec2(cos(phi), sin(phi) * mix(0.7, 1.2, fract(aSeed.x * 7.13)));
+    vec2 drift = vec2(sin(uTime * 0.6 + aSeed.x * 37.0), cos(uTime * 0.45 + aSeed.z * 53.0)) * 0.05;
+    vec2 cloud = uCloudCenter + (dir * rho + drift) * uCloudSize;
+    // выброс наружу с перелётом и мягким возвратом на орбиту облака
+    vec2 puff = dir * uCloudSize * 0.7 * sin(3.14159265 * min(e * 1.15, 1.0));
+    ndc = mix(ndc, mix(ndc, cloud, e) + puff * (1.0 - 0.35 * e), uCloud);
+  }
   gl_Position = vec4(ndc, 0.0, 1.0);
 
   // расстояние до скруглённого прямоугольника текста (SDF): внутри — 0, дальше плавно до 1
@@ -89,9 +117,15 @@ void main() {
   float far = 0.5 + 0.5 * sin(th);
   float rim = smoothstep(0.0, 0.03, f);
   float radial = rim * exp(-f * 1.5);
-  vAlpha = radial * (0.25 + 0.75 * arm) * mix(0.78, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95 * clearFade * (1.0 - 0.45 * uFlat);
+  float discAlpha = radial * (0.25 + 0.75 * arm) * mix(0.78, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95 * clearFade
+    * (1.0 - 0.45 * uFlat) * mix(1.0, 0.5, uGather);
+  float debris = 1.0 - smoothstep(0.35, 0.95, e);
+  float mote = (0.3 + 0.45 * aSeed.w) * clearFade;
+  float cloudAlpha = mix(discAlpha * debris, mix(discAlpha, mote, smoothstep(0.2, 0.8, e)), keep);
+  vAlpha = mix(discAlpha, cloudAlpha, uCloud);
   vMix = clamp(arm * 0.9 + (1.0 - f) * 0.25, 0.0, 1.0);
-  gl_PointSize = uDot * (0.65 + 0.7 * aSeed.w) * mix(1.15, 0.9, far);
+  gl_PointSize = uDot * (0.65 + 0.7 * aSeed.w) * mix(1.15, 0.9, far)
+    * (1.0 + 0.3 * uCloud * (1.0 - keep) * sin(3.14159265 * e));
 }`;
 
 const FRAGMENT = `
@@ -184,6 +218,11 @@ onPage(() => {
     flat: gl.getUniformLocation(program, 'uFlat'),
     clearMix: gl.getUniformLocation(program, 'uClearMix'),
     straight: gl.getUniformLocation(program, 'uStraight'),
+    gather: gl.getUniformLocation(program, 'uGather'),
+    cloud: gl.getUniformLocation(program, 'uCloud'),
+    burst: gl.getUniformLocation(program, 'uBurst'),
+    cloudCenter: gl.getUniformLocation(program, 'uCloudCenter'),
+    cloudSize: gl.getUniformLocation(program, 'uCloudSize'),
   };
   gl.uniform1f(gl.getUniformLocation(program, 'uRout'), narrow ? ROUT_MOBILE : ROUT_DESKTOP);
   gl.uniform3fv(gl.getUniformLocation(program, 'uBase'), ASH);
@@ -193,6 +232,13 @@ onPage(() => {
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const hero = canvas.closest<HTMLElement>('.hero');
+  /** Надпись VANTEGRA: сцена (останавливается в центре), SVG и рамка букв в единицах viewBox */
+  const track = document.querySelector<HTMLElement>('[data-brand-track]');
+  const stage = track?.querySelector<HTMLElement>('[data-brand-stage]') ?? null;
+  const wordmark = stage?.querySelector<SVGSVGElement>('svg') ?? null;
+  const lettersBox = (wordmark?.dataset.letters ?? '').split(' ').map(Number);
+  const viewWidth = Number(wordmark?.viewBox.baseVal.width) || 1;
+  const viewHeight = Number(wordmark?.viewBox.baseVal.height) || 1;
   const still = prefersReducedMotion();
   // Переход к блокам: холст закреплён на экране, диск ведём к линии сами (без reduced motion)
   const follow = Boolean(hero) && !still;
@@ -205,6 +251,8 @@ onPage(() => {
   let boxW = 1;
   let boxH = 1;
   let ratio = 1;
+  /** Длина остановки надписи, px — на неё приходится взрыв */
+  let pin = 1;
 
   /** Центр диска — центр логотипа, единица длины — радиус внутренней эхо-орбиты */
   const layout = () => {
@@ -232,6 +280,47 @@ onPage(() => {
     gl.uniform2f(uniforms.viewport, boxW, boxH);
     gl.uniform1f(uniforms.clearRadius, narrow ? 40 : 72);
     gl.uniform1f(uniforms.feather, narrow ? 64 : 110);
+    pin = track ? Math.max(1, parseFloat(getComputedStyle(track, '::after').height) || 1) : 1;
+  };
+
+  /** Облако у надписи: центр и полуоси в NDC, чистая зона — над буквами (пылинки там реже) */
+  let cloudVisible = false;
+  const placeCloud = (scroll: number) => {
+    if (!stage || !wordmark) {
+      gl.uniform1f(uniforms.cloud, 0);
+      return;
+    }
+    const landing = landingScroll();
+    const q = Math.min(1, Math.max(0, (scroll - landing) / pin));
+    const inCloud = scroll >= landing ? 1 : 0;
+    const svgBox = wordmark.getBoundingClientRect();
+    const box = canvas.getBoundingClientRect();
+    const cx = svgBox.left + svgBox.width / 2 - box.left;
+    const cy = svgBox.top + svgBox.height / 2 - box.top;
+    const halfW = svgBox.width * 0.62;
+    const halfH = Math.max(svgBox.height * 0.78, narrow ? 70 : 110);
+    cloudVisible = cy + halfH * 2.2 > 0 && cy - halfH * 2.2 < boxH;
+    gl.uniform1f(uniforms.cloud, inCloud);
+    // взрыв — в первой трети остановки: резкий старт, мягкое торможение
+    const burst = Math.min(1, q / 0.32);
+    gl.uniform1f(uniforms.burst, 1 - Math.pow(1 - burst, 3));
+    gl.uniform2f(uniforms.cloudCenter, (cx / boxW) * 2 - 1, 1 - (cy / boxH) * 2);
+    gl.uniform2f(uniforms.cloudSize, (halfW / boxW) * 2, (halfH / boxH) * 2);
+    if (inCloud && lettersBox.length === 4) {
+      const [x0 = 0, y0 = 0, x1 = 0, y1 = 0] = lettersBox;
+      const sx = svgBox.width / viewWidth;
+      const sy = svgBox.height / viewHeight;
+      gl.uniform4f(
+        uniforms.clear,
+        svgBox.left - box.left + ((x0 + x1) / 2) * sx,
+        svgBox.top - box.top + ((y0 + y1) / 2) * sy,
+        ((x1 - x0) / 2) * sx + 8,
+        ((y1 - y0) / 2) * sy + 8,
+      );
+      gl.uniform1f(uniforms.clearMix, 0.85);
+      gl.uniform1f(uniforms.clearRadius, 16);
+      gl.uniform1f(uniforms.feather, 36);
+    }
   };
 
   /** Доля перехода 0…1 и сглаженная доля */
@@ -246,8 +335,12 @@ onPage(() => {
     // сплющивается раньше, чем доезжает: последние доли перехода на линию скользит уже тонкая полоса
     gl.uniform1f(uniforms.flat, squashOf(progress));
     gl.uniform1f(uniforms.straight, straightOf(progress));
+    // на подлёте к надписи линия стягивается в плотное скопление
+    gl.uniform1f(uniforms.gather, smooth(Math.min(1, Math.max(0, (progress - 0.62) / 0.38))));
     // чистая зона гаснет вместе с текстом первого экрана
     gl.uniform1f(uniforms.clearMix, fadeOf(eased));
+    gl.uniform1f(uniforms.clearRadius, narrow ? 40 : 72);
+    gl.uniform1f(uniforms.feather, narrow ? 64 : 110);
     // чистая зона за текстом идёт за текстом (он уходит с параллаксом)
     if (copy) {
       const text = copy.getBoundingClientRect();
@@ -263,11 +356,9 @@ onPage(() => {
     } else {
       gl.uniform4f(uniforms.clear, 0, 0, 0, 0);
     }
-    // у линии диск растворяется
-    if (follow && canvas.classList.contains('is-ready')) {
-      const fade = Math.min(1, Math.max(0, (progress - 0.84) / 0.16));
-      canvas.style.opacity = progress > 0 ? (1 - smooth(fade)).toFixed(3) : '';
-    }
+    // после остановки надписи — облако вокруг неё (чистая зона переезжает на буквы)
+    if (follow) placeCloud(scroll);
+    else gl.uniform1f(uniforms.cloud, 0);
   };
 
   let time = 0;
@@ -285,8 +376,13 @@ onPage(() => {
     last = now;
     time += dt;
     draw();
-    // диск лёг в линию и погас — дальше не рисуем, пока не вернутся наверх
-    raf = follow && progress >= 1 ? 0 : requestAnimationFrame(frame);
+    // облако ушло за край экрана вместе с надписью — не рисуем, пока не вернутся
+    if (follow && progress >= 1 && !cloudVisible) {
+      raf = 0;
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      return;
+    }
+    raf = requestAnimationFrame(frame);
   };
   const run = () => {
     if (still || raf) return;
@@ -317,10 +413,11 @@ onPage(() => {
 
   let cleanupVisibility: () => void;
   if (follow && hero) {
-    // закреплённый холст всегда «на экране»: паузу даёт доля прокрутки первого экрана
+    // закреплённый холст всегда «на экране»: рисуем, пока виден первый экран или облако у надписи
     const onScroll = () => {
-      if (heroProgress() < 1) run();
-      else if (!raf) draw();
+      if (raf) return;
+      draw();
+      if (heroProgress() < 1 || cloudVisible) run();
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     run();

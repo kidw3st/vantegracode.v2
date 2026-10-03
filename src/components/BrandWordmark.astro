@@ -47,13 +47,21 @@ const top = Math.min(...parts.map((part) => part.y0));
 const bottom = Math.max(...parts.map((part) => part.y1));
 const mid = (top + bottom) / 2; // средняя линия букв: сюда ложится пыль
 const center = (letters.length - 1) / 2;
+const left = letters[0]?.x0 ?? 0;
+const right = letters.at(-1)?.x1 ?? 0;
 const ratio = ((vbHeight ?? 1) / (vbWidth ?? 1)).toFixed(5);
 ---
 
 <div class="brand-track" data-brand-track style={`--ratio: ${ratio}`}>
   <div class="brand-stage" data-brand-stage>
     <div class="brand-mark" data-brand data-vb-width={vbWidth}>
-      <svg viewBox={viewBox} role="img" aria-label="Vantegra" focusable="false">
+      <svg
+        viewBox={viewBox}
+        role="img"
+        aria-label="Vantegra"
+        focusable="false"
+        data-letters={`${left} ${top} ${right} ${bottom}`}
+      >
         <line class="brand-mark__line" x1="0" x2={vbWidth} y1={mid} y2={mid} data-brand-line />
         {
           letters.map((letter, i) => (
@@ -118,6 +126,8 @@ const ratio = ((vbHeight ?? 1) / (vbWidth ?? 1)).toFixed(5);
     stroke: var(--chalk);
     stroke-width: var(--sw, 2);
     opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   /* ---------- Остановка в центре и прорисовка (только с JS и без reduced motion) ---------- */

@@ -1,12 +1,12 @@
 /**
  * Надпись VANTEGRA после первого экрана (BrandWordmark.astro). Прорисовку ведёт прокрутка:
- * - до остановки (доля перехода первого экрана p): на подлёте пыли проявляется тонкая линия;
+ * - в момент остановки линия выстреливает из скопления пыли (взрыв рисует disc.ts);
  * - во время остановки в центре экрана (доля q): контуры букв обводятся от середины слова к краям,
  *   буквы заливаются мелом, контур и линия гаснут.
  * Толщина контура и линии — 1 px экрана при любой ширине надписи (--sw в единицах viewBox).
- * Только transform-свободные свойства SVG: stroke-dashoffset и opacity.
+ * Двигаем только transform (линия), stroke-dashoffset и opacity.
  */
-import { heroProgress, landingScroll, smooth } from './hero-scroll.ts';
+import { landingScroll, smooth } from './hero-scroll.ts';
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
@@ -43,12 +43,13 @@ onPage(() => {
   let raf = 0;
   const apply = () => {
     raf = 0;
-    const p = heroProgress();
     const q = clamp((window.scrollY - landingScroll()) / pin);
     if (line) {
-      const appear = ease((p - 0.82) / 0.18);
+      // линия выстреливает из скопления пыли вместе со взрывом и гаснет, когда буквы залиты
+      const reach = q > 0 ? 1 - Math.pow(1 - clamp(q / 0.18), 3) : 0;
       const vanish = ease((q - 0.7) / 0.25);
-      line.style.opacity = (0.5 * appear * (1 - vanish)).toFixed(3);
+      line.style.transform = `scaleX(${reach.toFixed(4)})`;
+      line.style.opacity = (q > 0 ? 0.5 * (1 - vanish) : 0).toFixed(3);
     }
     for (const letter of letters) {
       const shift = 0.09 * letter.order;
