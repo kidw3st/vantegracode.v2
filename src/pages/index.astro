@@ -77,9 +77,6 @@ const secondary = showWorks
         </div>
       </div>
     </div>
-    <div class="hero__bottom container" data-hero="rise" style="--i: 4">
-      <p class="eyebrow hero__geo">{t(site.geography)}</p>
-    </div>
   </section>
 
   <section class="section idea" aria-labelledby="idea-title">
@@ -169,7 +166,6 @@ const secondary = showWorks
   .hero {
     position: relative;
     display: grid;
-    grid-template-rows: 1fr auto;
     min-height: 100svh;
     padding-top: var(--header-h);
     overflow: clip;
@@ -220,13 +216,6 @@ const secondary = showWorks
     margin-top: clamp(var(--space-6), 4.4vh, var(--space-7));
   }
 
-  .hero__bottom {
-    position: relative;
-    z-index: var(--z-content);
-    display: flex;
-    justify-content: flex-end;
-    padding-bottom: var(--space-5);
-  }
 
   @media (max-width: 479px) {
     .hero__actions {
@@ -235,10 +224,6 @@ const secondary = showWorks
       width: min(100%, 320px);
     }
 
-    .hero__bottom .eyebrow {
-      font-size: var(--fs-tag);
-      letter-spacing: var(--ls-button);
-    }
   }
 
   /* ---------- Идея ---------- */
