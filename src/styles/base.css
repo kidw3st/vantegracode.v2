@@ -171,6 +171,37 @@ button {
   column-gap: var(--column-gap);
 }
 
+/* ---------- Ленты карточек на телефоне ---------- */
+
+/* Решение владельца: на телефоне ряды карточек не складываются в высокую колонку,
+   а листаются вправо со «щелчком»; следующая карточка выглядывает из-за края.
+   Лента выходит к краям экрана, первая карточка стоит по полю контейнера. */
+@media (max-width: 767px) {
+  /* :is(ul, ol, div) — специфичность выше сброса списков ul[role='list'] */
+  .rail:is(ul, ol, div) {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(84%, 340px);
+    gap: var(--space-3);
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: none;
+  }
+
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rail > * {
+    scroll-snap-align: start;
+  }
+}
+
 /* ---------- Секции ---------- */
 
 .section {

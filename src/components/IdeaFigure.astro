@@ -1,0 +1,333 @@
+---
+/**
+ * Живые схемы блока «Идея» (холст 640 × 340, подписи — HTML поверх SVG, кегль не масштабируется).
+ * vector — буква V как траектория: бледный заход к задаче и вектор мелом к запуску,
+ *          по пути бежит светлый штрих (stroke-dashoffset, только CSS);
+ * orbit  — ядро «Продукт» и эхо-орбиты −12° (ry / rx = 0,306), по орбите медленно
+ *          идут спутники-технологии (scripts/idea.ts; без JS и при reduced motion стоят на месте).
+ * Линии прорисовываются, когда рамка появляется на экране (класс .is-in у списка).
+ */
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  kind: 'vector' | 'orbit';
+  /** vector: [старт, этап, этап, финиш]; orbit: [ядро, ...спутники] */
+  labels: string[];
+}
+
+const { kind, labels } = Astro.props;
+
+const W = 640;
+const H = 340;
+const pct = (value: number, total: number) => `${((value / total) * 100).toFixed(3)}%`;
+const n = (value: number) => Number(value.toFixed(2));
+
+/* ---------- Вектор ---------- */
+const L = [164, 70] as const; // начало захода
+const P = [256, 286] as const; // вершина V — «задача»
+const armLength = Math.hypot(P[0] - L[0], P[1] - L[1]);
+const ux = (P[0] - L[0]) / armLength; // направление вектора — зеркало захода, вверх-вправо
+const uy = -(P[1] - L[1]) / armLength;
+const reach = armLength * 1.2; // вектор длиннее захода: движение вперёд
+const T = [P[0] + ux * reach, P[1] + uy * reach] as const;
+const at = (f: number) => [P[0] + ux * reach * f, P[1] + uy * reach * f] as const;
+const nx = -uy; // нормаль вправо от вектора
+const ny = ux;
+const rotate = (x: number, y: number, deg: number) => {
+  const r = (deg * Math.PI) / 180;
+  return [x * Math.cos(r) - y * Math.sin(r), x * Math.sin(r) + y * Math.cos(r)] as const;
+};
+const [h1x, h1y] = rotate(-ux, -uy, 35);
+const [h2x, h2y] = rotate(-ux, -uy, -35);
+const head = `M${n(T[0] + h1x * 14)} ${n(T[1] + h1y * 14)}L${n(T[0])} ${n(T[1])}L${n(T[0] + h2x * 14)} ${n(T[1] + h2y * 14)}`;
+const stops = [0.38, 0.7].map((f) => {
+  const [x, y] = at(f);
+  return { x, y, tick: `M${n(x - nx * 6)} ${n(y - ny * 6)}L${n(x + nx * 6)} ${n(y + ny * 6)}` };
+});
+const vectorLabels = [
+  { text: labels[0], x: P[0], y: P[1] + 28, align: 'center' },
+  { text: labels[1], x: stops[0]!.x + nx * 20, y: stops[0]!.y + ny * 20, align: 'start', minor: true },
+  { text: labels[2], x: stops[1]!.x + nx * 20, y: stops[1]!.y + ny * 20, align: 'start', minor: true },
+  { text: labels[3], x: T[0] + 22, y: T[1] + 6, align: 'start' },
+];
+
+/* ---------- Орбита ---------- */
+const C = [320, 172] as const;
+const RATIO = 0.306;
+const TILT = -12;
+const rings = [
+  { a: 300, tone: 'faint' },
+  { a: 230, tone: 'main' },
+];
+const CORE = 100;
+const MAIN = 230;
+const orbitPoint = (deg: number) => {
+  const tt = (deg * Math.PI) / 180;
+  const tr = (TILT * Math.PI) / 180;
+  const x = MAIN * Math.cos(tt);
+  const y = MAIN * RATIO * Math.sin(tt);
+  return [C[0] + x * Math.cos(tr) - y * Math.sin(tr), C[1] + x * Math.sin(tr) + y * Math.cos(tr)] as const;
+};
+const satellites = labels.slice(1).map((text, i, all) => {
+  const start = 200 + (360 / all.length) * i;
+  const [x, y] = orbitPoint(start);
+  return { text, start, x, y };
+});
+---
+
+{
+  kind === 'vector' ? (
+    <div class="fig fig--vector" aria-hidden="true">
+      <svg viewBox={`0 0 ${W} ${H}`} focusable="false">
+        <path class="fig__ground" d={`M48 ${P[1]}H592`} pathLength="1" />
+        <path class="fig__line fig__line--ghost" d={`M${L[0]} ${L[1]}L${P[0]} ${P[1]}`} pathLength="1" />
+        <path class="fig__line fig__line--vector" d={`M${P[0]} ${P[1]}L${n(T[0])} ${n(T[1])}`} pathLength="1" />
+        <path class="fig__head" d={head} />
+        {stops.map((stop) => (
+          <path class="fig__tick" d={stop.tick} />
+        ))}
+        <circle class="fig__node" cx={P[0]} cy={P[1]} r="3.5" />
+        <path class="fig__comet" d={`M${L[0]} ${L[1]}L${P[0]} ${P[1]}L${n(T[0])} ${n(T[1])}`} pathLength="100" />
+      </svg>
+      {vectorLabels.map((label, i) => (
+        <span
+          class:list={['fig__label', 'fig__text', `fig__label--${label.align}`, { 'fig__label--minor': label.minor }]}
+          style={`left: ${pct(label.x, W)}; top: ${pct(label.y, H)}; --i: ${i}`}
+        >
+          {t(label.text ?? '')}
+        </span>
+      ))}
+    </div>
+  ) : (
+    <div class="fig fig--orbit" aria-hidden="true" data-idea-orbit data-cx={C[0]} data-cy={C[1]} data-a={MAIN} data-w={W}>
+      <svg viewBox={`0 0 ${W} ${H}`} focusable="false">
+        {rings.map((ring) => (
+          <ellipse
+            class:list={['fig__ring', `fig__ring--${ring.tone}`]}
+            cx={C[0]}
+            cy={C[1]}
+            rx={ring.a}
+            ry={n(ring.a * RATIO)}
+            transform={`rotate(${TILT} ${C[0]} ${C[1]})`}
+            pathLength="1"
+          />
+        ))}
+        <rect class="fig__core" x={C[0] - CORE / 2} y={C[1] - CORE / 2} width={CORE} height={CORE} />
+      </svg>
+      <span class="fig__label fig__text fig__label--core" style={`left: ${pct(C[0], W)}; top: ${pct(C[1], H)}`}>
+        {t(labels[0] ?? '')}
+      </span>
+      {satellites.map((sat, i) => (
+        <span
+          class="fig__sat"
+          data-sat
+          data-start={sat.start}
+          style={`left: ${pct(sat.x, W)}; top: ${pct(sat.y, H)}; --i: ${i}`}
+        >
+          <span class="fig__dot" />
+          <span class="fig__text">{t(sat.text)}</span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .fig {
+    position: relative;
+    aspect-ratio: 640 / 340;
+  }
+
+  .fig svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: var(--chalk);
+    stroke-width: 1.25;
+    stroke-linecap: square;
+  }
+
+  .fig__ground {
+    stroke-width: 1;
+    opacity: 0.14;
+  }
+
+  .fig__line--ghost {
+    opacity: 0.4;
+  }
+
+  .fig__node {
+    fill: var(--chalk);
+    stroke: none;
+  }
+
+  .fig__ring {
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .fig__ring--faint {
+    opacity: 0.14;
+  }
+
+  .fig__ring--main {
+    opacity: 0.45;
+  }
+
+  .fig__core {
+    fill: var(--soot);
+  }
+
+  /* Светлый штрих бежит по V: заход → задача → запуск, потом пауза */
+  .fig__comet {
+    stroke-width: 2;
+    stroke-dasharray: 7 100;
+    stroke-dashoffset: 7;
+    opacity: 0;
+  }
+
+  .fig__label {
+    position: absolute;
+    transform: translate(0, -50%);
+  }
+
+  .fig__text {
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: 0.6875rem;
+    letter-spacing: 0.24em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--ash);
+    white-space: nowrap;
+  }
+
+  .fig__label--center {
+    transform: translate(-50%, -50%);
+  }
+
+  .fig__label--core {
+    transform: translate(-50%, -50%);
+    padding-left: 0.16em;
+    letter-spacing: 0.16em;
+    color: var(--chalk);
+  }
+
+  /* Телефон: схема на всю ширину рамки, промежуточные подписи и подпись ядра убираем —
+     на узкой схеме они наползают друг на друга, смысл объясняет текст под схемой */
+  @media (max-width: 479px) {
+    .fig {
+      margin-inline: calc(var(--card-pad) * -1 + var(--space-3));
+    }
+
+    .fig__label--minor,
+    .fig__label--core {
+      display: none;
+    }
+  }
+
+  /* Спутник: точка на орбите, подпись справа */
+  .fig__sat {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    transform: translate(-4px, -50%);
+  }
+
+  /* --depth задаёт scripts/idea.ts: дальняя сторона орбиты бледнее */
+  .fig__sat > * {
+    opacity: var(--depth, 1);
+  }
+
+  .fig__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--chalk);
+  }
+
+  /* ---------- Прорисовка при появлении (только с JS) ---------- */
+
+  :global(.js) .fig__ground,
+  :global(.js) .fig__line,
+  :global(.js) .fig__ring {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset var(--dur-slow) var(--ease-out);
+  }
+
+  :global(.js) .fig__line--vector {
+    transition-delay: 500ms;
+  }
+
+  :global(.js) .fig__ring--main {
+    transition-delay: 200ms;
+  }
+
+  :global(.js) .fig__head,
+  :global(.js) .fig__tick,
+  :global(.js) .fig__node,
+  :global(.js) .fig__core,
+  :global(.js) .fig__label,
+  :global(.js) .fig__sat {
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease-out);
+    transition-delay: calc(900ms + var(--i, 0) * var(--stagger) * 2);
+  }
+
+  :global(.is-in) .fig__ground,
+  :global(.is-in) .fig__line,
+  :global(.is-in) .fig__ring {
+    stroke-dashoffset: 0;
+  }
+
+  :global(.is-in) .fig__head,
+  :global(.is-in) .fig__tick,
+  :global(.is-in) .fig__node,
+  :global(.is-in) .fig__core,
+  :global(.is-in) .fig__label,
+  :global(.is-in) .fig__sat {
+    opacity: 1;
+  }
+
+  :global(.is-in) .fig__comet {
+    animation: comet 6s var(--ease-in-out) 2.2s infinite;
+  }
+
+  @keyframes comet {
+    0% {
+      stroke-dashoffset: 7;
+      opacity: 1;
+    }
+
+    60% {
+      stroke-dashoffset: -100;
+      opacity: 1;
+    }
+
+    60.1%,
+    100% {
+      stroke-dashoffset: -100;
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .fig__ground,
+    :global(.js) .fig__line,
+    :global(.js) .fig__ring {
+      stroke-dasharray: none;
+      transition: none;
+    }
+
+    :global(.is-in) .fig__comet {
+      animation: none;
+    }
+  }
+</style>

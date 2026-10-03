@@ -56,7 +56,27 @@ const eyebrow = num ? `${String(num).padStart(2, '0')} — ${contactBlock.label}
   }
 
   .cta__title {
+    justify-self: start;
     margin-top: var(--space-2);
+  }
+
+  /* Заголовок раскрывается от центра, как у блоков главной (SectionHeader) */
+  :global(.js) .cta__title {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(-25% 50% -25% 50%);
+    transition: clip-path var(--dur-curtain) var(--ease-in-out) var(--delay-curtain);
+  }
+
+  .cta__info:global(.is-in) .cta__title {
+    clip-path: inset(-25% -4% -25% -4%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .cta__title {
+      clip-path: none;
+      transition: none;
+    }
   }
 
   .cta__text {

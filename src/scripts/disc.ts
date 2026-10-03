@@ -9,8 +9,10 @@
  *   текст стоит на ровной саже и не сливается с пылью;
  * - 15 000 частиц (7500 на телефоне), вся анимация в вершинном шейдере, плотность пикселей ≤ 1,5;
  * - ровное медленное вращение без реакции на курсор; вне экрана — пауза;
+ * - при прокрутке диск сплющивается до тонкой полосы — «орбита ложится в линию» (hero-scroll.ts);
  *   при prefers-reduced-motion — неподвижный кадр.
  */
+import { heroProgress } from './hero-scroll.ts';
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
 const DPR_CAP = 1.5;
@@ -40,6 +42,8 @@ uniform vec2 uViewport;      // размер холста, CSS px
 uniform vec4 uClear;         // чистая зона за текстом: центр и полуразмеры, CSS px
 uniform float uClearRadius;  // скругление чистой зоны, px
 uniform float uFeather;      // ширина растворения, px
+uniform float uFlat;         // 0 — диск как есть, 1 — сплющен в линию (прокрутка первого экрана)
+uniform float uClearMix;     // сила чистой зоны: гаснет вместе с текстом первого экрана
 varying float vAlpha;
 varying float vMix;
 
@@ -60,9 +64,11 @@ void main() {
   th -= PULL * sin(armAngle) / ARMS;
   float arm = pow(0.5 + 0.5 * cos(armAngle), SHARP);
 
-  vec2 disc = vec2(r * cos(th), r * sin(th) * TILT);
-  float c = cos(ROLL);
-  float s = sin(ROLL);
+  vec2 disc = vec2(r * cos(th), r * sin(th) * TILT * (1.0 - 0.96 * uFlat));
+  // сплющиваясь, полоса выпрямляется из −12° в горизонталь — и ложится ровно на линию блока
+  float roll = ROLL * (1.0 - uFlat);
+  float c = cos(roll);
+  float s = sin(roll);
   vec2 screen = vec2(c * disc.x - s * disc.y, s * disc.x + c * disc.y);
   vec2 ndc = uCenter + screen * uScale;
   gl_Position = vec4(ndc, 0.0, 1.0);
@@ -73,14 +79,14 @@ void main() {
     vec2 px = vec2((ndc.x * 0.5 + 0.5) * uViewport.x, (0.5 - ndc.y * 0.5) * uViewport.y);
     vec2 q = abs(px - uClear.xy) - uClear.zw + uClearRadius;
     float sd = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uClearRadius;
-    clearFade = smoothstep(0.0, uFeather, sd);
+    clearFade = mix(1.0, smoothstep(0.0, uFeather, sd), uClearMix);
   }
 
   // дальняя сторона диска — сверху, ближняя — снизу: лёгкая разница яркости только для глубины
   float far = 0.5 + 0.5 * sin(th);
   float rim = smoothstep(0.0, 0.03, f);
   float radial = rim * exp(-f * 1.5);
-  vAlpha = radial * (0.25 + 0.75 * arm) * mix(0.78, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95 * clearFade;
+  vAlpha = radial * (0.25 + 0.75 * arm) * mix(0.78, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95 * clearFade * (1.0 - 0.45 * uFlat);
   vMix = clamp(arm * 0.9 + (1.0 - f) * 0.25, 0.0, 1.0);
   gl_PointSize = uDot * (0.65 + 0.7 * aSeed.w) * mix(1.15, 0.9, far);
 }`;
@@ -172,6 +178,8 @@ onPage(() => {
     clear: gl.getUniformLocation(program, 'uClear'),
     clearRadius: gl.getUniformLocation(program, 'uClearRadius'),
     feather: gl.getUniformLocation(program, 'uFeather'),
+    flat: gl.getUniformLocation(program, 'uFlat'),
+    clearMix: gl.getUniformLocation(program, 'uClearMix'),
   };
   gl.uniform1f(gl.getUniformLocation(program, 'uRout'), narrow ? ROUT_MOBILE : ROUT_DESKTOP);
   gl.uniform3fv(gl.getUniformLocation(program, 'uBase'), ASH);
@@ -180,29 +188,66 @@ onPage(() => {
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
+  const hero = canvas.closest<HTMLElement>('.hero');
+  /** Линия-разделитель следующего блока: на неё ложится сплющенный диск */
+  const rule = hero?.nextElementSibling?.querySelector<HTMLElement>('.sh') ?? null;
+  const still = prefersReducedMotion();
+  // Переход к блокам: холст закреплён на экране, диск ведём к линии сами (без reduced motion)
+  const follow = Boolean(hero) && !still;
+  if (follow) canvas.classList.add('is-fixed');
+
+  /** Положение на странице, px: центр знака и линия следующего блока (без учёта прокрутки) */
+  let originX = 0;
+  let originY = 0;
+  let ruleY = 0;
+  let boxW = 1;
+  let boxH = 1;
+  let ratio = 1;
+
   /** Центр диска — центр логотипа, единица длины — радиус внутренней эхо-орбиты */
   const layout = () => {
-    const ratio = Math.min(DPR_CAP, window.devicePixelRatio || 1);
+    ratio = Math.min(DPR_CAP, window.devicePixelRatio || 1);
     const box = canvas.getBoundingClientRect();
-    const width = Math.max(1, Math.round(box.width * ratio));
-    const height = Math.max(1, Math.round(box.height * ratio));
+    boxW = Math.max(1, box.width);
+    boxH = Math.max(1, box.height);
+    const width = Math.max(1, Math.round(boxW * ratio));
+    const height = Math.max(1, Math.round(boxH * ratio));
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
       canvas.height = height;
     }
     gl.viewport(0, 0, width, height);
     const logoBox = logo.getBoundingClientRect();
-    const cx = logoBox.left + logoBox.width / 2 - box.left;
-    const cy = logoBox.top + logoBox.height / 2 - box.top;
+    const scroll = follow ? window.scrollY : 0;
+    originX = logoBox.left + logoBox.width / 2 - box.left;
+    originY = logoBox.top + logoBox.height / 2 + scroll - (follow ? 0 : box.top);
+    ruleY = rule ? rule.getBoundingClientRect().top + scroll : originY;
     const unit = rimInLogoWidths * logo.offsetWidth;
-    gl.uniform2f(uniforms.center, (cx / box.width) * 2 - 1, 1 - (cy / box.height) * 2);
-    gl.uniform2f(uniforms.scale, (unit * 2) / box.width, (unit * 2) / box.height);
+    gl.uniform2f(uniforms.scale, (unit * 2) / boxW, (unit * 2) / boxH);
     gl.uniform1f(uniforms.dot, DOT * ratio);
+    gl.uniform2f(uniforms.viewport, boxW, boxH);
+    gl.uniform1f(uniforms.clearRadius, narrow ? 40 : 72);
+    gl.uniform1f(uniforms.feather, narrow ? 64 : 110);
+  };
 
-    // чистая зона за текстом: блок с подписью, заголовком, лидом и кнопками + поля
-    gl.uniform2f(uniforms.viewport, box.width, box.height);
+  /** Доля перехода 0…1 и сглаженная доля */
+  let progress = 0;
+  const place = () => {
+    progress = follow && hero ? heroProgress(hero) : 0;
+    const eased = progress * progress * (3 - 2 * progress);
+    // сплющивается раньше, чем доезжает: последние доли перехода на линию скользит уже тонкая полоса
+    const squash = Math.min(1, progress / 0.7);
+    const scroll = follow ? window.scrollY : 0;
+    // центр: сначала вместе со знаком, к концу перехода — на линии следующего блока
+    const centerY = originY - scroll + (ruleY - originY) * eased;
+    gl.uniform2f(uniforms.center, (originX / boxW) * 2 - 1, 1 - (centerY / boxH) * 2);
+    gl.uniform1f(uniforms.flat, squash * squash * (3 - 2 * squash));
+    // текст гаснет так же, как в hero-scroll.ts: 1 − 1,3 × доля
+    gl.uniform1f(uniforms.clearMix, Math.max(0, 1 - 1.3 * eased));
+    // чистая зона за текстом идёт за текстом (он уходит с параллаксом)
     if (copy) {
       const text = copy.getBoundingClientRect();
+      const box = canvas.getBoundingClientRect();
       const pad = narrow ? 12 : 28;
       gl.uniform4f(
         uniforms.clear,
@@ -211,10 +256,13 @@ onPage(() => {
         text.width / 2 + pad,
         text.height / 2 + pad,
       );
-      gl.uniform1f(uniforms.clearRadius, narrow ? 40 : 72);
-      gl.uniform1f(uniforms.feather, narrow ? 64 : 110);
     } else {
       gl.uniform4f(uniforms.clear, 0, 0, 0, 0);
+    }
+    // у линии диск растворяется
+    if (follow && canvas.classList.contains('is-ready')) {
+      const fade = Math.min(1, Math.max(0, (progress - 0.84) / 0.16));
+      canvas.style.opacity = progress > 0 ? (1 - fade * fade * (3 - 2 * fade)).toFixed(3) : '';
     }
   };
 
@@ -222,6 +270,7 @@ onPage(() => {
   let last = 0;
   let raf = 0;
   const draw = () => {
+    place();
     gl.uniform1f(uniforms.time, time);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -232,40 +281,63 @@ onPage(() => {
     last = now;
     time += dt;
     draw();
+    // диск лёг в линию и погас — дальше не рисуем, пока не вернутся наверх
+    raf = follow && progress >= 1 ? 0 : requestAnimationFrame(frame);
+  };
+  const run = () => {
+    if (still || raf) return;
+    last = 0;
     raf = requestAnimationFrame(frame);
   };
+  const stop = () => {
+    cancelAnimationFrame(raf);
+    raf = 0;
+  };
 
-  const still = prefersReducedMotion();
   if (still) time = STILL_TIME;
 
   layout();
   draw();
   canvas.classList.add('is-ready');
+  // плавное появление — только при загрузке; дальше прозрачность ведёт прокрутка без задержки
+  const settle = window.setTimeout(() => {
+    if (follow) canvas.style.transition = 'none';
+  }, 1600);
 
   const resizeObserver = new ResizeObserver(() => {
     layout();
     if (!raf) draw();
   });
   resizeObserver.observe(canvas);
+  if (rule) resizeObserver.observe(rule);
 
-  const observer = new IntersectionObserver(([entry]) => {
-    if (still) return;
-    if (entry?.isIntersecting) {
-      if (!raf) {
-        last = 0;
-        raf = requestAnimationFrame(frame);
-      }
-    } else {
-      cancelAnimationFrame(raf);
-      raf = 0;
-    }
-  });
-  observer.observe(canvas);
+  let cleanupVisibility: () => void;
+  if (follow && hero) {
+    // закреплённый холст всегда «на экране»: паузу даёт доля прокрутки первого экрана
+    const onScroll = () => {
+      if (heroProgress(hero) < 1) run();
+      else if (!raf) draw();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    run();
+    cleanupVisibility = () => window.removeEventListener('scroll', onScroll);
+  } else {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) run();
+      else stop();
+    });
+    observer.observe(canvas);
+    cleanupVisibility = () => observer.disconnect();
+  }
 
   return () => {
-    cancelAnimationFrame(raf);
-    observer.disconnect();
+    stop();
+    window.clearTimeout(settle);
+    cleanupVisibility();
     resizeObserver.disconnect();
+    canvas.classList.remove('is-fixed');
+    canvas.style.opacity = '';
+    canvas.style.transition = '';
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
 });

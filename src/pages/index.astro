@@ -6,7 +6,8 @@ import Logo from '../components/Logo.astro';
 import OrbitField from '../components/OrbitField.astro';
 import PriceCard from '../components/PriceCard.astro';
 import SectionHeader from '../components/SectionHeader.astro';
-import ApproachCard from '../components/ApproachCard.astro';
+import Frame from '../components/Frame.astro';
+import IdeaFigure from '../components/IdeaFigure.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import Steps from '../components/Steps.astro';
 import WorkCard from '../components/WorkCard.astro';
@@ -109,8 +110,17 @@ const secondary = showWorks
         title={home.idea.title}
         text={home.idea.text}
       />
-      <ul class="approach" role="list" data-reveal="stagger">
-        {home.idea.items.map((item) => <ApproachCard {...item} resultLabel={home.idea.resultLabel} />)}
+      <ul class="idea rail" role="list" aria-label={home.idea.railLabel} data-reveal="stagger">
+        <Frame as="li" class="idea__frame">
+          <IdeaFigure kind="vector" labels={home.idea.vector.stops} />
+          <h3 class="idea__title">{t(home.idea.vector.title)}</h3>
+          <p class="idea__text">{t(home.idea.vector.text)}</p>
+        </Frame>
+        <Frame as="li" class="idea__frame">
+          <IdeaFigure kind="orbit" labels={[home.idea.orbit.core, ...home.idea.orbit.satellites]} />
+          <h3 class="idea__title">{t(home.idea.orbit.title)}</h3>
+          <p class="idea__text">{t(home.idea.orbit.text)}</p>
+        </Frame>
       </ul>
     </div>
   </section>
@@ -123,7 +133,7 @@ const secondary = showWorks
         title={home.services.title}
         link={{ href: '/uslugi/', label: home.services.link }}
       />
-      <ul class="cards cards--3" role="list" data-reveal="stagger">
+      <ul class="cards cards--3 rail" role="list" data-reveal="stagger">
         {
           services.map((service, i) => (
             <li>
@@ -170,7 +180,7 @@ const secondary = showWorks
         title={home.prices.title}
         link={{ href: '/ceny/', label: home.prices.link }}
       />
-      <ul class="cards cards--3" role="list" data-reveal="stagger">
+      <ul class="cards cards--3 rail" role="list" data-reveal="stagger">
         {
           priceCards.map((card) => (
             <li>
@@ -210,6 +220,12 @@ const secondary = showWorks
 
   .hero__disc.is-ready {
     opacity: 1;
+  }
+
+  /* Переход к блокам: холст закреплён на экране, диск сплющивается и ложится
+     на линию следующего блока (scripts/disc.ts, hero-scroll.ts) */
+  .hero__disc.is-fixed {
+    position: fixed;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -316,18 +332,33 @@ const secondary = showWorks
     }
   }
 
-  /* ---------- Подход ---------- */
+  /* ---------- Идея ---------- */
 
-  /* Две колонки карточек; ряды карточек — подсетка (ApproachCard) */
-  .approach {
+  /* Две рамки со схемами; на телефоне — лента вправо (.rail) */
+  .idea {
     display: grid;
     gap: var(--space-3);
   }
 
   @media (min-width: 768px) {
-    .approach {
+    .idea {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+  }
+
+  .idea > :global(.idea__frame) {
+    display: grid;
+    align-content: start;
+  }
+
+  .idea :global(.fig) {
+    margin-block: var(--space-2) var(--space-7);
+  }
+
+  .idea__text {
+    margin-top: var(--space-3);
+    color: var(--ash);
+    max-width: 46ch;
   }
 
   /* ---------- Сетки карточек ---------- */

@@ -1,0 +1,64 @@
+---
+/**
+ * Рамка 1 px графитом с уголками мелом, как метки на чертеже.
+ * Для карточек-«рамок» главной; содержимое — слот.
+ */
+interface Props {
+  as?: 'li' | 'div' | 'article';
+  class?: string;
+}
+
+const { as: Tag = 'div', class: className } = Astro.props;
+---
+
+<Tag class:list={['frame', className]}>
+  <span class="frame__corner frame__corner--tl" aria-hidden="true"></span>
+  <span class="frame__corner frame__corner--tr" aria-hidden="true"></span>
+  <span class="frame__corner frame__corner--bl" aria-hidden="true"></span>
+  <span class="frame__corner frame__corner--br" aria-hidden="true"></span>
+  <slot />
+</Tag>
+
+<style>
+  .frame {
+    position: relative;
+    padding: var(--card-pad);
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .frame__corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 0 solid var(--chalk);
+    pointer-events: none;
+  }
+
+  .frame__corner--tl {
+    top: -1px;
+    left: -1px;
+    border-top-width: var(--hairline);
+    border-left-width: var(--hairline);
+  }
+
+  .frame__corner--tr {
+    top: -1px;
+    right: -1px;
+    border-top-width: var(--hairline);
+    border-right-width: var(--hairline);
+  }
+
+  .frame__corner--bl {
+    bottom: -1px;
+    left: -1px;
+    border-bottom-width: var(--hairline);
+    border-left-width: var(--hairline);
+  }
+
+  .frame__corner--br {
+    bottom: -1px;
+    right: -1px;
+    border-bottom-width: var(--hairline);
+    border-right-width: var(--hairline);
+  }
+</style>

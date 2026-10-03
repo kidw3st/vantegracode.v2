@@ -34,10 +34,58 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className } =
 
 <style>
   .sh {
+    position: relative;
     row-gap: var(--space-5);
     padding-top: var(--space-6);
-    border-top: var(--hairline) solid var(--rule);
     margin-bottom: clamp(var(--space-8), 6vw, var(--space-9));
+  }
+
+  /* Вход в блок: линия-разделитель расходится от центра (продолжение «орбиты, легшей в линию»
+     на первом экране), затем из неё, как занавес, раскрывается заголовок */
+  .sh::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-top: var(--hairline) solid var(--rule);
+  }
+
+  /* Ширина заголовка — по тексту, чтобы занавес раскрывался от середины строки */
+  .sh__title {
+    justify-self: start;
+  }
+
+  :global(.js) .sh::before {
+    transform: scaleX(0);
+    transition: transform var(--dur-slow) var(--ease-in-out);
+  }
+
+  :global(.js) .sh__title {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(-25% 50% -25% 50%);
+    transition: clip-path var(--dur-curtain) var(--ease-in-out) var(--delay-curtain);
+  }
+
+  .sh:global(.is-in)::before {
+    transform: none;
+  }
+
+  .sh:global(.is-in) .sh__title {
+    clip-path: inset(-25% -4% -25% -4%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .sh::before {
+      transform: none;
+      transition: none;
+    }
+
+    :global(.js) .sh__title {
+      clip-path: none;
+      transition: none;
+    }
   }
 
   .sh__eyebrow,

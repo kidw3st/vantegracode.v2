@@ -23,7 +23,8 @@
 - Astro 7 static, TS strict, обычный CSS (стили компонентов внутри `.astro`), ванильный TS. Без фреймворков, Tailwind, GSAP, Three.js, smooth-scroll.
 - Тексты страниц — из `src/data/site.ts` и коллекций в `src/content/`, не хардкодить. Токены `{…}` подставляет `src/lib/fill.ts`; неизвестный токен ломает сборку.
 - Все строки — через `t()` из `src/lib/typograf.ts` (кроме ссылок, телефонов, кода).
-- Движение: только `transform`, `opacity`, `stroke-dashoffset`; тайминги из токенов; скрытые состояния только под `html.js`; `prefers-reduced-motion` отключает всё, кроме коротких фейдов.
+- Движение: только `transform`, `opacity`, `stroke-dashoffset`; исключение — `clip-path: inset()` для раскрытия заголовков блоков «занавесом» (решение владельца). Тайминги из токенов; скрытые состояния только под `html.js`; `prefers-reduced-motion` отключает всё, кроме коротких фейдов.
+- Ряды карточек на телефоне (до 767 px) — лентой вправо: класс `.rail` (решение владельца). Новые ряды карточек делать так же.
 - Скрипты регистрируются через `src/scripts/lifecycle.ts`: init на `astro:page-load`, очистка на `astro:before-swap`.
 - После каждого этапа: `npm run build` без ошибок и предупреждений, коммит.
 - Проверки: `npm run test` (Playwright), `npm run shots` (скриншоты в `docs/screenshots/`), `npm run links`.
