@@ -6,7 +6,7 @@ import './orbits.ts';
 import './hero.ts';
 import './hero-scroll.ts';
 import './disc.ts';
-import './idea.ts';
+import './brand.ts';
 import './rails.ts';
 import './accordion.ts';
 import './form.ts';

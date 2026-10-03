@@ -1,13 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ArrowLink from '../components/ArrowLink.astro';
+import BrandWordmark from '../components/BrandWordmark.astro';
 import Button from '../components/Button.astro';
 import CtaSection from '../components/CtaSection.astro';
 import Logo from '../components/Logo.astro';
 import OrbitField from '../components/OrbitField.astro';
 import PriceCard from '../components/PriceCard.astro';
 import SectionHeader from '../components/SectionHeader.astro';
-import Frame from '../components/Frame.astro';
-import IdeaFigure from '../components/IdeaFigure.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import Steps from '../components/Steps.astro';
 import WorkCard from '../components/WorkCard.astro';
@@ -29,7 +29,7 @@ const showWorks = homeWorks.length > 0;
 const serviceNames = Object.fromEntries(services.map((service) => [service.id, service.data.title]));
 
 // Номера в подписях идут подряд по блокам, которые реально выводятся
-const order = ['idea', 'services', ...(showWorks ? ['works'] : []), 'process', 'prices', 'contact'];
+const order = ['about', 'services', 'process', ...(showWorks ? ['works'] : []), 'prices', 'contact'];
 const num = (key: string) => order.indexOf(key) + 1;
 const eyebrow = (key: string, label: string) => `${String(num(key)).padStart(2, '0')} — ${label}`;
 
@@ -102,26 +102,17 @@ const secondary = showWorks
     </div>
   </section>
 
-  <section class="section" aria-labelledby="idea-title">
-    <div class="container">
-      <SectionHeader
-        id="idea-title"
-        eyebrow={eyebrow('idea', home.idea.label)}
-        title={home.idea.title}
-        text={home.idea.text}
-      />
-      <ul class="idea rail" role="list" aria-label={home.idea.railLabel} data-reveal="stagger">
-        <Frame as="li" class="idea__frame">
-          <IdeaFigure kind="vector" labels={home.idea.vector.stops} />
-          <h3 class="idea__title">{t(home.idea.vector.title)}</h3>
-          <p class="idea__text">{t(home.idea.vector.text)}</p>
-        </Frame>
-        <Frame as="li" class="idea__frame">
-          <IdeaFigure kind="orbit" labels={[home.idea.orbit.core, ...home.idea.orbit.satellites]} />
-          <h3 class="idea__title">{t(home.idea.orbit.title)}</h3>
-          <p class="idea__text">{t(home.idea.orbit.text)}</p>
-        </Frame>
-      </ul>
+  {/* Надпись по центру экрана: на её среднюю линию ложится пыль первого экрана, затем буквы прорисовываются */}
+  <div class="brand">
+    <BrandWordmark />
+  </div>
+
+  <section class="section about" aria-labelledby="about-title">
+    <div class="container about__inner" data-reveal="stagger">
+      <p class="eyebrow">{t(eyebrow('about', home.about.label))}</p>
+      <h2 id="about-title" class="about__title curtain">{t(home.about.title)}</h2>
+      <p class="lead about__text">{t(home.about.text)}</p>
+      <ArrowLink href="/o-studii/" label={home.about.link} />
     </div>
   </section>
 
@@ -145,6 +136,13 @@ const secondary = showWorks
     </div>
   </section>
 
+  <section class="section" aria-labelledby="process-title">
+    <div class="container">
+      <SectionHeader id="process-title" eyebrow={eyebrow('process', home.process.label)} title={home.process.title} />
+      <Steps steps={filledSteps} />
+    </div>
+  </section>
+
   {
     showWorks && (
       <section class="section" aria-labelledby="works-title">
@@ -165,12 +163,6 @@ const secondary = showWorks
     )
   }
 
-  <section class="section" aria-labelledby="process-title">
-    <div class="container">
-      <SectionHeader id="process-title" eyebrow={eyebrow('process', home.process.label)} title={home.process.title} />
-      <Steps steps={filledSteps} />
-    </div>
-  </section>
 
   <section class="section" aria-labelledby="prices-title">
     <div class="container">
@@ -332,33 +324,48 @@ const secondary = showWorks
     }
   }
 
-  /* ---------- Идея ---------- */
+  /* ---------- Надпись и «О студии» ---------- */
 
-  /* Две рамки со схемами; на телефоне — лента вправо (.rail) */
-  .idea {
+  /* Надпись — в центре экрана; блок ниже первого экрана, «О студии» сразу под ним */
+  .brand {
     display: grid;
-    gap: var(--space-3);
+    place-items: center;
+    min-height: 72svh;
+    padding-inline: var(--gutter);
   }
 
-  @media (min-width: 768px) {
-    .idea {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  .brand :global(.brand-mark) {
+    width: min(100%, 64vw, 1100px);
+  }
+
+  @media (max-width: 767px) {
+    .brand {
+      min-height: 56svh;
+    }
+
+    .brand :global(.brand-mark) {
+      width: 100%;
     }
   }
 
-  .idea > :global(.idea__frame) {
+  .about {
+    padding-top: var(--space-7);
+  }
+
+  .about__inner {
     display: grid;
-    align-content: start;
+    justify-items: center;
+    gap: var(--space-5);
+    text-align: center;
   }
 
-  .idea :global(.fig) {
-    margin-block: var(--space-2) var(--space-7);
+  .about__title {
+    max-width: 30ch;
   }
 
-  .idea__text {
-    margin-top: var(--space-3);
+  .about__text {
+    max-width: 60ch;
     color: var(--ash);
-    max-width: 46ch;
   }
 
   /* ---------- Сетки карточек ---------- */

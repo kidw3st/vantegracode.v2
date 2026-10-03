@@ -12,7 +12,7 @@
  * - при прокрутке диск сплющивается до тонкой полосы — «орбита ложится в линию» (hero-scroll.ts);
  *   при prefers-reduced-motion — неподвижный кадр.
  */
-import { heroProgress } from './hero-scroll.ts';
+import { heroProgress, smooth, squashOf, fadeOf } from './hero-scroll.ts';
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
 const DPR_CAP = 1.5;
@@ -189,14 +189,14 @@ onPage(() => {
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const hero = canvas.closest<HTMLElement>('.hero');
-  /** Линия-разделитель следующего блока: на неё ложится сплющенный диск */
-  const rule = hero?.nextElementSibling?.querySelector<HTMLElement>('.sh') ?? null;
+  /** Надпись VANTEGRA после первого экрана: на её среднюю линию ложится сплющенный диск */
+  const target = document.querySelector<HTMLElement>('[data-disc-target]');
   const still = prefersReducedMotion();
   // Переход к блокам: холст закреплён на экране, диск ведём к линии сами (без reduced motion)
   const follow = Boolean(hero) && !still;
   if (follow) canvas.classList.add('is-fixed');
 
-  /** Положение на странице, px: центр знака и линия следующего блока (без учёта прокрутки) */
+  /** Положение на странице, px: центр знака и средняя линия надписи (без учёта прокрутки) */
   let originX = 0;
   let originY = 0;
   let ruleY = 0;
@@ -221,7 +221,12 @@ onPage(() => {
     const scroll = follow ? window.scrollY : 0;
     originX = logoBox.left + logoBox.width / 2 - box.left;
     originY = logoBox.top + logoBox.height / 2 + scroll - (follow ? 0 : box.top);
-    ruleY = rule ? rule.getBoundingClientRect().top + scroll : originY;
+    if (target) {
+      const targetBox = target.getBoundingClientRect();
+      ruleY = targetBox.top + targetBox.height / 2 + scroll;
+    } else {
+      ruleY = originY;
+    }
     const unit = rimInLogoWidths * logo.offsetWidth;
     gl.uniform2f(uniforms.scale, (unit * 2) / boxW, (unit * 2) / boxH);
     gl.uniform1f(uniforms.dot, DOT * ratio);
@@ -234,16 +239,15 @@ onPage(() => {
   let progress = 0;
   const place = () => {
     progress = follow && hero ? heroProgress(hero) : 0;
-    const eased = progress * progress * (3 - 2 * progress);
-    // сплющивается раньше, чем доезжает: последние доли перехода на линию скользит уже тонкая полоса
-    const squash = Math.min(1, progress / 0.7);
+    const eased = smooth(progress);
     const scroll = follow ? window.scrollY : 0;
     // центр: сначала вместе со знаком, к концу перехода — на линии следующего блока
     const centerY = originY - scroll + (ruleY - originY) * eased;
     gl.uniform2f(uniforms.center, (originX / boxW) * 2 - 1, 1 - (centerY / boxH) * 2);
-    gl.uniform1f(uniforms.flat, squash * squash * (3 - 2 * squash));
-    // текст гаснет так же, как в hero-scroll.ts: 1 − 1,3 × доля
-    gl.uniform1f(uniforms.clearMix, Math.max(0, 1 - 1.3 * eased));
+    // сплющивается раньше, чем доезжает: последние доли перехода на линию скользит уже тонкая полоса
+    gl.uniform1f(uniforms.flat, squashOf(progress));
+    // чистая зона гаснет вместе с текстом первого экрана
+    gl.uniform1f(uniforms.clearMix, fadeOf(eased));
     // чистая зона за текстом идёт за текстом (он уходит с параллаксом)
     if (copy) {
       const text = copy.getBoundingClientRect();
@@ -262,7 +266,7 @@ onPage(() => {
     // у линии диск растворяется
     if (follow && canvas.classList.contains('is-ready')) {
       const fade = Math.min(1, Math.max(0, (progress - 0.84) / 0.16));
-      canvas.style.opacity = progress > 0 ? (1 - fade * fade * (3 - 2 * fade)).toFixed(3) : '';
+      canvas.style.opacity = progress > 0 ? (1 - smooth(fade)).toFixed(3) : '';
     }
   };
 
@@ -309,7 +313,7 @@ onPage(() => {
     if (!raf) draw();
   });
   resizeObserver.observe(canvas);
-  if (rule) resizeObserver.observe(rule);
+  resizeObserver.observe(document.body);
 
   let cleanupVisibility: () => void;
   if (follow && hero) {

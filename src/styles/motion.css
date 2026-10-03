@@ -21,6 +21,19 @@
   transform: none;
 }
 
+/* Заголовок раскрывается от центра, как занавес (решение владельца); внутри [data-reveal] */
+.js .curtain {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(-25% 50% -25% 50%);
+  transition: clip-path var(--dur-curtain) var(--ease-in-out) var(--delay-curtain);
+}
+
+.js .is-in .curtain,
+.js .is-in.curtain {
+  clip-path: inset(-25% -4% -25% -4%);
+}
+
 [data-reveal='stagger'] > :nth-child(2) { --i: 1; }
 [data-reveal='stagger'] > :nth-child(3) { --i: 2; }
 [data-reveal='stagger'] > :nth-child(4) { --i: 3; }
@@ -114,6 +127,11 @@
 
   .js [data-hero='settle'] {
     animation: none;
+  }
+
+  .js .curtain {
+    clip-path: none;
+    transition: none;
   }
 
   *,

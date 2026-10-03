@@ -1,0 +1,149 @@
+---
+/**
+ * Надпись VANTEGRA по центру экрана — блок после первого экрана.
+ * Источник — SVG владельца (src/assets/brand/logo/vantegra-wordmark-chalk.svg, та же надпись,
+ * что logo/svg/vantegra-wordmark-on-soot.svg, без фона). Геометрия не меняется: те же контуры,
+ * только разложены по буквам, чтобы прорисовывать их по очереди; в конце надпись совпадает с оригиналом.
+ *
+ * Прорисовка (класс .is-drawn ставит scripts/brand.ts, когда на надпись ложится пыль первого экрана):
+ * от центра расходится линия → контуры букв обводятся от середины к краям → буквы заливаются мелом,
+ * контур и линия гаснут. Без JS и при prefers-reduced-motion надпись сразу целиком.
+ */
+import raw from '../assets/brand/logo/vantegra-wordmark-chalk.svg?raw';
+
+const viewBox = raw.match(/viewBox="([^"]+)"/)?.[1];
+const d = raw.match(/<path[^>]*\sd="([^"]+)"/)?.[1];
+if (!viewBox || !d) throw new Error('BrandWordmark: в SVG надписи нет viewBox или контура');
+if (/[^MLZ\d\s.,-]/i.test(d)) throw new Error('BrandWordmark: ожидались только команды M, L, Z');
+
+/** Подконтуры → буквы: перекрывающиеся по горизонтали подконтуры — одна буква (перекладины A, E, T, ножка R) */
+const parts = d
+  .split(/(?=M)/)
+  .map((part) => part.trim())
+  .filter(Boolean)
+  .map((part) => {
+    const numbers = (part.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+    const xs = numbers.filter((_, i) => i % 2 === 0);
+    const ys = numbers.filter((_, i) => i % 2 === 1);
+    return { part, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+  })
+  .sort((a, b) => a.x0 - b.x0);
+
+const letters: { d: string; x0: number; x1: number }[] = [];
+for (const part of parts) {
+  const last = letters.at(-1);
+  if (last && part.x0 < last.x1) {
+    last.d += part.part;
+    last.x1 = Math.max(last.x1, part.x1);
+  } else {
+    letters.push({ d: part.part, x0: part.x0, x1: part.x1 });
+  }
+}
+
+const top = Math.min(...parts.map((part) => part.y0));
+const bottom = Math.max(...parts.map((part) => part.y1));
+const mid = (top + bottom) / 2; // средняя линия букв: сюда ложится пыль
+const left = letters[0]!.x0;
+const right = letters.at(-1)!.x1;
+const center = (letters.length - 1) / 2;
+const [, , vbWidth] = viewBox.split(/\s+/).map(Number);
+---
+
+<div class="brand-mark" data-brand data-vb-width={vbWidth}>
+  <svg viewBox={viewBox} role="img" aria-label="Vantegra" focusable="false" data-disc-target>
+    <line class="brand-mark__line" x1={left - 60} x2={right + 60} y1={mid} y2={mid} />
+    {
+      letters.map((letter, i) => (
+        <g class="brand-mark__letter" style={`--o: ${Math.floor(Math.abs(i - center))}`}>
+          <path class="brand-mark__fill" d={letter.d} />
+          <path class="brand-mark__outline" d={letter.d} pathLength="1" />
+        </g>
+      ))
+    }
+  </svg>
+</div>
+
+<style>
+  .brand-mark {
+    width: min(100%, 1100px);
+  }
+
+  .brand-mark svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .brand-mark__fill {
+    fill: var(--chalk);
+  }
+
+  .brand-mark__outline {
+    fill: none;
+    stroke: var(--chalk);
+    stroke-width: var(--sw, 2);
+    stroke-linejoin: miter;
+    opacity: 0;
+  }
+
+  .brand-mark__line {
+    stroke: var(--chalk);
+    stroke-width: var(--sw, 2);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* ---------- Прорисовка (только с JS) ---------- */
+
+  :global(.js) .brand-mark__fill {
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease-out);
+    transition-delay: calc(1100ms + var(--o) * 140ms);
+  }
+
+  :global(.js) .brand-mark__outline {
+    opacity: 1;
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 1;
+    transition:
+      stroke-dashoffset 1200ms var(--ease-in-out) calc(300ms + var(--o) * 140ms),
+      opacity var(--dur) var(--ease-out) calc(1900ms + var(--o) * 140ms);
+  }
+
+  :global(.js) .brand-mark__line {
+    opacity: 0.45;
+    transform: scaleX(0);
+    transition:
+      transform 800ms var(--ease-in-out),
+      opacity var(--dur-slow) var(--ease-out) 1900ms;
+  }
+
+  .brand-mark:global(.is-drawn) .brand-mark__fill {
+    opacity: 1;
+  }
+
+  .brand-mark:global(.is-drawn) .brand-mark__outline {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+
+  .brand-mark:global(.is-drawn) .brand-mark__line {
+    transform: none;
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .brand-mark__fill {
+      opacity: 1;
+      transition: none;
+    }
+
+    :global(.js) .brand-mark__outline,
+    :global(.js) .brand-mark__line {
+      opacity: 0;
+      transition: none;
+    }
+  }
+</style>
