@@ -84,16 +84,16 @@
 }
 
 .js [data-hero-logo] {
-  animation: logo-in var(--dur-logo) var(--ease-out) var(--delay-logo) both;
+  animation: logo-in var(--dur-logo) var(--ease-out) var(--delay-logo) backwards;
 }
 
 .js [data-hero='rise'] {
-  animation: rise var(--dur) var(--ease-out) both;
+  animation: rise var(--dur) var(--ease-out) backwards;
   animation-delay: calc(var(--delay-hero) + var(--i, 0) * var(--stagger));
 }
 
 .js [data-hero='settle'] {
-  animation: settle var(--dur) var(--ease-out) both;
+  animation: settle var(--dur) var(--ease-out) backwards;
   animation-delay: calc(var(--delay-hero) + var(--i, 0) * var(--stagger));
 }
 
@@ -109,7 +109,7 @@
 
   .js [data-hero-logo],
   .js [data-hero='rise'] {
-    animation: fade var(--dur-fast) linear both;
+    animation: fade var(--dur-fast) linear backwards;
   }
 
   .js [data-hero='settle'] {

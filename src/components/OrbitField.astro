@@ -164,7 +164,7 @@ const items = rings.map((ring, i) => {
   }
 
   :global(.js) .orbits[data-draw='auto'] .orbit__line {
-    animation: orbit-draw var(--dur-draw) var(--ease-in-out) both;
+    animation: orbit-draw var(--dur-draw) var(--ease-in-out) backwards;
     animation-delay: calc(var(--n) * var(--stagger-orbit));
   }
 

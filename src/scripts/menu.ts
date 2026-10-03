@@ -42,10 +42,66 @@ onPage(() => {
     else link.removeAttribute('aria-current');
   });
 
+  // Линия под ссылками: к наведённой, обратно к активной; после перехода — к новой активной
+  const indicator = header.querySelector<HTMLElement>('[data-nav-indicator]');
+  const navList = header.querySelector<HTMLElement>('[data-nav-list]');
+  let resizeObserver: ResizeObserver | null = null;
+  if (indicator && navList) {
+    const links = [...navList.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')];
+    const activeLink = () => links.find((link) => link.hasAttribute('aria-current')) ?? null;
+    const moveTo = (link: HTMLAnchorElement | null) => {
+      if (!link || !link.offsetWidth) {
+        indicator.style.opacity = '0';
+        return;
+      }
+      const tracking = Number.parseFloat(getComputedStyle(link).letterSpacing) || 0;
+      const nav = indicator.offsetParent ?? navList;
+      const x = link.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+      // из скрытого состояния линия появляется сразу на месте, а не выезжает слева
+      const hidden = getComputedStyle(indicator).opacity === '0';
+      if (hidden) indicator.classList.remove('is-ready');
+      indicator.style.translate = `${x.toFixed(2)}px 0`;
+      indicator.style.scale = `${Math.max(1, link.offsetWidth - tracking).toFixed(2)} 1`;
+      if (hidden) {
+        void indicator.offsetWidth;
+        indicator.classList.add('is-ready');
+      }
+      indicator.style.opacity = '1';
+    };
+
+    if (indicator.classList.contains('is-ready')) {
+      moveTo(activeLink());
+    } else {
+      moveTo(activeLink());
+      void indicator.offsetWidth;
+      indicator.classList.add('is-ready');
+    }
+
+    for (const link of links) {
+      link.addEventListener('pointerenter', () => moveTo(link), { signal });
+      link.addEventListener('focus', () => moveTo(link), { signal });
+    }
+    navList.addEventListener('pointerleave', () => moveTo(activeLink()), { signal });
+    navList.addEventListener(
+      'focusout',
+      (event) => {
+        if (!navList.contains(event.relatedTarget as Node | null)) moveTo(activeLink());
+      },
+      { signal },
+    );
+    resizeObserver = new ResizeObserver(() => moveTo(activeLink()));
+    resizeObserver.observe(navList);
+  }
+
   // Мобильное меню
   const toggle = header.querySelector<HTMLButtonElement>('[data-menu-toggle]');
   const menu = document.querySelector<HTMLElement>('[data-menu]');
-  if (!toggle || !menu) return () => ac.abort();
+  if (!toggle || !menu) {
+    return () => {
+      ac.abort();
+      resizeObserver?.disconnect();
+    };
+  }
 
   const root = document.documentElement;
   const logo = header.querySelector<HTMLAnchorElement>('[data-header-logo]');
@@ -143,6 +199,7 @@ onPage(() => {
 
   return () => {
     ac.abort();
+    resizeObserver?.disconnect();
     window.clearTimeout(hideTimer);
     if (open) {
       open = false;
