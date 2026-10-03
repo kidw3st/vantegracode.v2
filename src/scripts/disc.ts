@@ -5,6 +5,8 @@
  * - геометрия эхо-орбит: окружность диска видна эллипсом ry / rx = 0,306, наклон −12°;
  *   центр — центр логотипа, внутренний край — первая эхо-орбита: пыль не заходит на знак;
  * - мел и пепел, наложение без «перекала», без свечения; диск заполняет первый экран сверху и снизу;
+ * - за текстом первого экрана — чистая зона: частицы плавно растворяются у блока с заголовком,
+ *   текст стоит на ровной саже и не сливается с пылью;
  * - 15 000 частиц (7500 на телефоне), вся анимация в вершинном шейдере, плотность пикселей ≤ 1,5;
  * - ровное медленное вращение без реакции на курсор; вне экрана — пауза;
  *   при prefers-reduced-motion — неподвижный кадр.
@@ -34,6 +36,10 @@ uniform vec2 uCenter;
 uniform vec2 uScale;
 uniform float uDot;
 uniform float uRout;         // внешний радиус в радиусах внутренней орбиты
+uniform vec2 uViewport;      // размер холста, CSS px
+uniform vec4 uClear;         // чистая зона за текстом: центр и полуразмеры, CSS px
+uniform float uClearRadius;  // скругление чистой зоны, px
+uniform float uFeather;      // ширина растворения, px
 varying float vAlpha;
 varying float vMix;
 
@@ -58,13 +64,23 @@ void main() {
   float c = cos(ROLL);
   float s = sin(ROLL);
   vec2 screen = vec2(c * disc.x - s * disc.y, s * disc.x + c * disc.y);
-  gl_Position = vec4(uCenter + screen * uScale, 0.0, 1.0);
+  vec2 ndc = uCenter + screen * uScale;
+  gl_Position = vec4(ndc, 0.0, 1.0);
+
+  // расстояние до скруглённого прямоугольника текста (SDF): внутри — 0, дальше плавно до 1
+  float clearFade = 1.0;
+  if (uClear.z > 0.0) {
+    vec2 px = vec2((ndc.x * 0.5 + 0.5) * uViewport.x, (0.5 - ndc.y * 0.5) * uViewport.y);
+    vec2 q = abs(px - uClear.xy) - uClear.zw + uClearRadius;
+    float sd = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uClearRadius;
+    clearFade = smoothstep(0.0, uFeather, sd);
+  }
 
   // дальняя сторона диска — сверху, ближняя — снизу: лёгкая разница яркости только для глубины
   float far = 0.5 + 0.5 * sin(th);
   float rim = smoothstep(0.0, 0.03, f);
   float radial = rim * exp(-f * 1.5);
-  vAlpha = radial * (0.25 + 0.75 * arm) * mix(0.78, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95;
+  vAlpha = radial * (0.25 + 0.75 * arm) * mix(0.78, 1.0, far) * (0.55 + 0.45 * aSeed.z) * 0.95 * clearFade;
   vMix = clamp(arm * 0.9 + (1.0 - f) * 0.25, 0.0, 1.0);
   gl_PointSize = uDot * (0.65 + 0.7 * aSeed.w) * mix(1.15, 0.9, far);
 }`;
@@ -119,6 +135,7 @@ function compile(gl: WebGLRenderingContext, type: number, source: string): WebGL
 onPage(() => {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-disc]');
   const logo = document.querySelector<HTMLElement>('.hero__logo');
+  const copy = document.querySelector<HTMLElement>('.hero__copy');
   if (!canvas || !logo) return;
   const rimInLogoWidths = Number(canvas.dataset.rim) || 2.6;
 
@@ -151,6 +168,10 @@ onPage(() => {
     center: gl.getUniformLocation(program, 'uCenter'),
     scale: gl.getUniformLocation(program, 'uScale'),
     dot: gl.getUniformLocation(program, 'uDot'),
+    viewport: gl.getUniformLocation(program, 'uViewport'),
+    clear: gl.getUniformLocation(program, 'uClear'),
+    clearRadius: gl.getUniformLocation(program, 'uClearRadius'),
+    feather: gl.getUniformLocation(program, 'uFeather'),
   };
   gl.uniform1f(gl.getUniformLocation(program, 'uRout'), narrow ? ROUT_MOBILE : ROUT_DESKTOP);
   gl.uniform3fv(gl.getUniformLocation(program, 'uBase'), ASH);
@@ -177,6 +198,24 @@ onPage(() => {
     gl.uniform2f(uniforms.center, (cx / box.width) * 2 - 1, 1 - (cy / box.height) * 2);
     gl.uniform2f(uniforms.scale, (unit * 2) / box.width, (unit * 2) / box.height);
     gl.uniform1f(uniforms.dot, DOT * ratio);
+
+    // чистая зона за текстом: блок с подписью, заголовком, лидом и кнопками + поля
+    gl.uniform2f(uniforms.viewport, box.width, box.height);
+    if (copy) {
+      const text = copy.getBoundingClientRect();
+      const pad = narrow ? 12 : 28;
+      gl.uniform4f(
+        uniforms.clear,
+        text.left + text.width / 2 - box.left,
+        text.top + text.height / 2 - box.top,
+        text.width / 2 + pad,
+        text.height / 2 + pad,
+      );
+      gl.uniform1f(uniforms.clearRadius, narrow ? 40 : 72);
+      gl.uniform1f(uniforms.feather, narrow ? 64 : 110);
+    } else {
+      gl.uniform4f(uniforms.clear, 0, 0, 0, 0);
+    }
   };
 
   let time = 0;
