@@ -43,7 +43,7 @@ const verticalBox = protectedBox('vertical');
 const [innerOrbit] = logoRings({ hw: verticalBox.hw, hh: verticalBox.hh, rings: 1 });
 const discRim = innerOrbit?.rx ?? 2.6;
 
-const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text) }));
+const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text), icon: step.icon }));
 const secondary = showWorks
   ? { href: site.cta.worksHref, label: site.cta.works }
   : { href: site.cta.servicesHref, label: site.cta.services };
@@ -72,8 +72,7 @@ const secondary = showWorks
         </div>
       </div>
       <div class="hero__copy">
-        <p class="eyebrow center-tracked" data-hero="rise" style="--i: 0">{t(home.hero.eyebrow)}</p>
-        <h1 id="hero-title" class="hero__title" data-hero="settle" style="--i: 1">
+        <h1 id="hero-title" class="hero__title" data-hero="settle" style="--i: 0">
           {
             home.hero.title.map((line, i) => (
               <Fragment>
@@ -83,8 +82,17 @@ const secondary = showWorks
             ))
           }
         </h1>
-        <p class="lead hero__lead" data-hero="settle" style="--i: 2">{t(home.hero.lead)}</p>
-        <div class="hero__actions" data-hero="rise" style="--i: 3">
+        <p class="lead hero__lead" data-hero="settle" style="--i: 1">
+          {
+            home.hero.lead.map((sentence, i) => (
+              <Fragment>
+                {i > 0 && <br />}
+                {t(sentence)}
+              </Fragment>
+            ))
+          }
+        </p>
+        <div class="hero__actions" data-hero="rise" style="--i: 2">
           <Button href={site.cta.discussHref} label={site.cta.discuss} />
           <Button href={secondary.href} variant="secondary" label={secondary.label} />
         </div>
@@ -266,32 +274,41 @@ const secondary = showWorks
     justify-items: center;
   }
 
+  /* Оптическая середина: у «Студия» тяжёлые штамбы справа (Д, И, Я) и круглая С слева —
+     первая строка сдвинута влево на 0,08 em, ось проходит между серединой рамки и центром масс */
   .hero__title {
-    margin-top: clamp(var(--space-3), 1.8vh, var(--space-4));
     padding-inline-start: var(--ls-display);
+    text-indent: -0.16em;
   }
 
+  /* «Студия / разработки» — короткие строки помещаются и на телефоне: кегль и разрядка как на десктопе */
+  @media (max-width: 480px) {
+    .hero__title {
+      font-size: var(--fs-h1);
+      letter-spacing: var(--ls-display);
+    }
+  }
+
+  /* Каждая фраза лида — с новой строки, переносы внутри фразы выровнены */
   .hero__lead {
     margin-top: clamp(var(--space-4), 2.4vh, var(--space-5));
     margin-inline: auto;
+    text-wrap: balance;
   }
 
+  /* Кнопки равной ширины (по более широкой): ось экрана проходит ровно через зазор */
   .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-3);
     margin-top: clamp(var(--space-6), 4.4vh, var(--space-7));
   }
 
-
   @media (max-width: 479px) {
     .hero__actions {
-      flex-direction: column;
-      align-items: stretch;
+      grid-template-columns: 1fr;
       width: min(100%, 320px);
     }
-
   }
 
   /* ---------- Идея ---------- */

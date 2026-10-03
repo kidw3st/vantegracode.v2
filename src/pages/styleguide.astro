@@ -15,6 +15,8 @@ import ServiceCard from '../components/ServiceCard.astro';
 import ServiceRow from '../components/ServiceRow.astro';
 import Steps from '../components/Steps.astro';
 import Tag from '../components/Tag.astro';
+import Icon, { type IconName } from '../components/Icon.astro';
+import iconManifest from '../assets/icons/manifest.json';
 import { steps } from '../data/pages.ts';
 import { ui } from '../data/ui.ts';
 import { getFaq, getPrices, getServices } from '../lib/content.ts';
@@ -41,8 +43,16 @@ const orbits = [
   { token: '--orbit-faint', value: 'мел 4 %' },
 ];
 const spaces = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+const iconGroups = [
+  { key: 'ui', label: 'Интерфейс' },
+  { key: 'contact', label: 'Контакты и служебные' },
+  { key: 'service', label: 'Услуги' },
+  { key: 'process', label: 'Процесс и цена' },
+  { key: 'feature', label: 'Состав работ и функции' },
+  { key: 'brand', label: 'Фирменные мотивы' },
+];
 const faqItems = faq.slice(0, 3).map((item) => ({ id: item.id, q: item.data.q, a: text(item.data.a) }));
-const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text) }));
+const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text), icon: step.icon }));
 const priceMeta = (price: (typeof prices)[number]) =>
   `от ${text(`{price:${price.id}}`)} ₽ · от ${text(`{term:${price.id}}`)}`;
 ---
@@ -327,9 +337,81 @@ const priceMeta = (price: (typeof prices)[number]) =>
       </div>
     </div>
   </section>
+  <section class="section" aria-labelledby="sg-icons">
+    <div class="container sg">
+      <h2 class="eyebrow" id="sg-icons">13 — Иконки</h2>
+      {iconGroups.map((group) => (
+        <div class="sg__icon-group">
+          <h3 class="eyebrow">{group.label}</h3>
+          <ul class="sg__icons" role="list">
+            {iconManifest.filter((icon) => icon.group === group.key).map((icon) => (
+              <li>
+                <Icon name={icon.name as IconName} size={32} label={icon.label} />
+                <span class="tech sg__icon-name">{icon.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <div class="sg__icon-group">
+        <p class="eyebrow">Размеры</p>
+        <div class="sg__row">
+          {[16, 20, 24, 32, 48].map((size) => (
+            <div class="sg__icon-sample">
+              <Icon name="orbit" size={size} />
+              <span class="tech sg__icon-name">{size} px</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="sg__icon-group">
+        <p class="eyebrow">Цвета</p>
+        <div class="sg__row">
+          <div class="sg__icon-sample"><Icon name="orbit" /><span class="tech sg__icon-name">Мел</span></div>
+          <div class="sg__icon-sample sg__icon-ash"><Icon name="orbit" /><span class="tech sg__icon-name">Пепел</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
+  .sg__icon-group {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .sg__icons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+    gap: var(--space-3);
+  }
+
+  .sg__icons li {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-2);
+    text-align: center;
+  }
+
+  .sg__icon-name {
+    font-size: var(--fs-tag);
+    color: var(--ash);
+    overflow-wrap: anywhere;
+  }
+
+  .sg__icon-sample {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+  }
+
+  .sg__icon-ash {
+    color: var(--ash);
+  }
+
   .sg {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

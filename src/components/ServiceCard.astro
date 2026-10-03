@@ -1,6 +1,7 @@
 ---
-/** Карточка услуги для главной: номер, название, строка short, стрелка. Вся карточка — ссылка. */
+/** Карточка услуги для главной: сверху номер и иконка, снизу название, строка short и стрелка. Вся карточка — ссылка. */
 import Arrow from './Arrow.astro';
+import Icon, { type IconName } from './Icon.astro';
 import { t } from '../lib/typograf.ts';
 import type { Service } from '../lib/content.ts';
 
@@ -16,10 +17,11 @@ const num = String(index + 1).padStart(2, '0');
 
 <a class:list={['service-card', className]} href={`/uslugi/${service.id}/`}>
   <span class="service-card__num num" aria-hidden="true">{num}</span>
-  <Arrow class="service-card__arrow" />
+  <Icon name={service.data.icon as IconName} size={32} class="service-card__icon" />
   <span class="service-card__body">
     <h3 class="service-card__title">{t(service.data.title)}</h3>
     <span class="service-card__short">{t(service.data.short)}</span>
+    <Arrow class="service-card__arrow" />
   </span>
 </a>
 
@@ -45,7 +47,7 @@ const num = String(index + 1).padStart(2, '0');
   }
 
   .service-card :global(.service-card__arrow) {
-    align-self: start;
+    align-self: end;
     font-size: 1.25rem;
     color: var(--ash);
     transition:
@@ -53,11 +55,24 @@ const num = String(index + 1).padStart(2, '0');
       color var(--dur-fast) var(--ease-out);
   }
 
+  /* Название — на всю ширину; описание и стрелка — в одной строке, стрелка по нижнему краю */
   .service-card__body {
     grid-column: 1 / -1;
     align-self: end;
     display: grid;
-    gap: var(--space-3);
+    grid-template-columns: 1fr auto;
+    gap: var(--space-3) var(--space-5);
+  }
+
+  .service-card__title {
+    grid-column: 1 / -1;
+  }
+
+  /* Иконка — в правом верхнем углу, на одной линии с номером; пеплом, при наведении мелом */
+  .service-card :global(.service-card__icon) {
+    align-self: center;
+    color: var(--ash);
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
   .service-card__short {
@@ -76,6 +91,10 @@ const num = String(index + 1).padStart(2, '0');
       translate: var(--arrow-shift) 0;
       color: var(--chalk);
     }
+
+    .service-card:hover :global(.service-card__icon) {
+      color: var(--chalk);
+    }
   }
 
   .service-card.is-hover {
@@ -84,6 +103,10 @@ const num = String(index + 1).padStart(2, '0');
 
   .service-card.is-hover :global(.service-card__arrow) {
     translate: var(--arrow-shift) 0;
+    color: var(--chalk);
+  }
+
+  .service-card.is-hover :global(.service-card__icon) {
     color: var(--chalk);
   }
 

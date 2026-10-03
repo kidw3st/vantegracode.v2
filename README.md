@@ -18,6 +18,7 @@
 - **3D-знак** — модель из Blender (`tools/hero-mark.py`) по контурам логотипа, рисуется в реальном времени на WebGL (`src/scripts/hero.ts`).
 - **Пылевой диск** — частицы на кеплеровских орбитах, WebGL (`src/scripts/disc.ts`).
 - **Шапка** — наверху плоская, при прокрутке перетекает в капсулу (`src/scripts/header.ts`).
+- **Иконки** — собственный пак из 64 SVG в стиле бренда (`src/assets/icons/`, компонент `src/components/Icon.astro`), проверка — `npm run icons:check`, лист превью — `npm run icons:sheet`.
 
 ## Запуск
 

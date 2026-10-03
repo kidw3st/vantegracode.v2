@@ -1,0 +1,99 @@
+---
+/** Иконки Vantegra: инлайн-SVG, декоративные или с доступной подписью. */
+import manifest from '../assets/icons/manifest.json';
+
+/** Имена из manifest.json; синхронизацию проверяет icons:check. */
+export type IconName =
+  | 'arrow-right'
+  | 'arrow-left'
+  | 'arrow-up'
+  | 'arrow-down'
+  | 'arrow-up-right'
+  | 'chevron-down'
+  | 'chevron-up'
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'plus'
+  | 'minus'
+  | 'close'
+  | 'check'
+  | 'menu'
+  | 'search'
+  | 'filter'
+  | 'copy'
+  | 'link'
+  | 'share'
+  | 'download'
+  | 'telegram'
+  | 'mail'
+  | 'phone'
+  | 'chat'
+  | 'location'
+  | 'globe'
+  | 'clock'
+  | 'calendar'
+  | 'document'
+  | 'lock'
+  | 'shield'
+  | 'user'
+  | 'service-sites'
+  | 'service-web-apps'
+  | 'service-telegram-bots'
+  | 'service-mobile-games'
+  | 'service-audit'
+  | 'service-support'
+  | 'step-brief'
+  | 'step-prototype'
+  | 'step-build'
+  | 'step-launch'
+  | 'factor-scope'
+  | 'factor-logic'
+  | 'factor-integrations'
+  | 'factor-content'
+  | 'crm'
+  | 'payment'
+  | 'analytics'
+  | 'seo'
+  | 'speed'
+  | 'security'
+  | 'devices'
+  | 'cms'
+  | 'backup'
+  | 'monitoring'
+  | 'report'
+  | 'api'
+  | 'database'
+  | 'users'
+  | 'notification'
+  | 'booking'
+  | 'orbit'
+  | 'orbit-planet';
+
+interface Props {
+  name: IconName;
+  size?: number;
+  label?: string;
+  class?: string;
+}
+const { name, size = 24, label, class: className } = Astro.props;
+const assets = import.meta.glob('../assets/icons/*.svg', { query: '?raw', import: 'default', eager: true });
+const source = assets[`../assets/icons/${name}.svg`];
+if (!manifest.some((icon) => icon.name === name) || typeof source !== 'string') {
+  throw new Error(`Icon: неизвестная иконка «${name}».`);
+}
+if (!Number.isFinite(size) || size <= 0) throw new Error('Icon: size должен быть положительным числом.');
+const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
+const attributes = ` width="${size}" height="${size}" class="${escape(['icon', className].filter(Boolean).join(' '))}" focusable="false"${label ? ' role="img"' : ' aria-hidden="true"'}`;
+const svg = source.replace('<svg ', `<svg${attributes} `).replace(/(<svg[^>]*>)/, (root) => root + (label ? `<title>${escape(label)}</title>` : ''));
+---
+
+<Fragment set:html={svg} />
+
+<style is:global>
+  .icon {
+    display: inline-block;
+    flex: none;
+    vertical-align: middle;
+    color: inherit;
+  }
+</style>

@@ -5,6 +5,7 @@
  * Esc и клик по ссылке закрывают, фокус остаётся внутри, прокрутка страницы заблокирована.
  */
 import Button from './Button.astro';
+import Icon from './Icon.astro';
 import OrbitField from './OrbitField.astro';
 import { nav, site } from '../data/site.ts';
 import { ui } from '../data/ui.ts';
@@ -33,19 +34,28 @@ import { ui } from '../data/ui.ts';
       <ul class="menu__contacts" role="list">
         <li>
           <a class="menu__contact" href={site.telegram.url} target="_blank" rel="noopener noreferrer">
-            <span class="eyebrow">{ui.contacts.telegram}</span>
+            <span class="menu__contact-label">
+              <Icon name="telegram" size={18} />
+              <span class="eyebrow">{ui.contacts.telegram}</span>
+            </span>
             <span class="num">{site.telegram.handle}</span>
           </a>
         </li>
         <li>
           <a class="menu__contact" href={`mailto:${site.email}`}>
-            <span class="eyebrow">{ui.contacts.email}</span>
+            <span class="menu__contact-label">
+              <Icon name="mail" size={18} />
+              <span class="eyebrow">{ui.contacts.email}</span>
+            </span>
             <span class="num">{site.email}</span>
           </a>
         </li>
         <li>
           <a class="menu__contact" href={`tel:${site.phone.tel}`}>
-            <span class="eyebrow">{ui.contacts.phone}</span>
+            <span class="menu__contact-label">
+              <Icon name="phone" size={18} />
+              <span class="eyebrow">{ui.contacts.phone}</span>
+            </span>
             <span class="num">{site.phone.display}</span>
           </a>
         </li>
@@ -153,6 +163,13 @@ import { ui } from '../data/ui.ts';
     gap: var(--space-4);
     min-height: var(--tap);
     border-bottom: var(--hairline) solid var(--graphite);
+  }
+
+  .menu__contact-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--ash);
   }
 
   .menu__contact .num {

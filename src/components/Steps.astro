@@ -1,10 +1,11 @@
 ---
-/** Четыре шага процесса, соединённые одной линией 1 px с точками на шагах. Номер — Geologica 300. */
+/** Четыре шага процесса, соединённые одной линией 1 px с точками на шагах. Над номером (Geologica 300) — иконка шага. */
+import Icon, { type IconName } from './Icon.astro';
 import { t } from '../lib/typograf.ts';
 
 interface Props {
   /** шаги с уже подставленными значениями */
-  steps: { title: string; text: string }[];
+  steps: { title: string; text: string; icon?: IconName }[];
   /** уровень заголовка шага */
   headingLevel?: 'h3' | 'h4';
 }
@@ -16,8 +17,9 @@ const { steps, headingLevel: Heading = 'h3' } = Astro.props;
   {
     steps.map((step, i) => (
       <li class="step">
-        <span class="step__num num" aria-hidden="true">
-          {String(i + 1).padStart(2, '0')}
+        <span class="step__head" aria-hidden="true">
+          {step.icon && <Icon name={step.icon} size={28} class="step__icon" />}
+          <span class="step__num num">{String(i + 1).padStart(2, '0')}</span>
         </span>
         <span class="step__dot" aria-hidden="true" />
         <Heading class="step__title h3">{t(step.title)}</Heading>
@@ -64,9 +66,20 @@ const { steps, headingLevel: Heading = 'h3' } = Astro.props;
     background: currentColor;
   }
 
+  /* Иконка над номером: точка на линии, иконка, номер, заголовок и текст — на одной вертикали */
+  .step__head {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-5);
+  }
+
   .step__num {
     font-size: var(--fs-num-xl);
     line-height: 1;
+  }
+
+  .step :global(.step__icon) {
+    color: var(--ash);
   }
 
   .step__text {

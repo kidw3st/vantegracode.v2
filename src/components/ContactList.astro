@@ -3,6 +3,7 @@
  * Контакты строками: подпись + значение Geologica 300.
  * md — 22–28 px (блок CTA), xl — 28–32 px и кнопки «Скопировать» (страница «Контакты»).
  */
+import Icon from './Icon.astro';
 import { site } from '../data/site.ts';
 import { ui } from '../data/ui.ts';
 
@@ -15,17 +16,20 @@ interface Props {
 const { size = 'md', copy = false, class: className } = Astro.props;
 
 const items = [
-  { key: 'telegram', label: ui.contacts.telegram, value: site.telegram.handle, href: site.telegram.url, external: true },
-  { key: 'email', label: ui.contacts.email, value: site.email, href: `mailto:${site.email}`, external: false },
-  { key: 'phone', label: ui.contacts.phone, value: site.phone.display, href: `tel:${site.phone.tel}`, external: false },
-];
+  { key: 'telegram', icon: 'telegram', label: ui.contacts.telegram, value: site.telegram.handle, href: site.telegram.url, external: true },
+  { key: 'email', icon: 'mail', label: ui.contacts.email, value: site.email, href: `mailto:${site.email}`, external: false },
+  { key: 'phone', icon: 'phone', label: ui.contacts.phone, value: site.phone.display, href: `tel:${site.phone.tel}`, external: false },
+] as const;
 ---
 
 <dl class:list={['contacts', `contacts--${size}`, className]}>
   {
     items.map((item) => (
       <div class="contacts__row">
-        <dt class="eyebrow contacts__label">{item.label}</dt>
+        <dt class="eyebrow contacts__label">
+          <Icon name={item.icon} size={18} class="contacts__icon" />
+          {item.label}
+        </dt>
         <dd class="contacts__value">
           <a
             class="contacts__link num"
@@ -64,6 +68,13 @@ const items = [
   .contacts__row {
     display: grid;
     gap: var(--space-2);
+  }
+
+  /* Иконка перед подписью — цветом подписи */
+  .contacts__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
   }
 
   .contacts__value {

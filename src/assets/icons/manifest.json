@@ -1,0 +1,322 @@
+[
+  {
+    "name": "arrow-right",
+    "group": "ui",
+    "label": "Стрелка вправо"
+  },
+  {
+    "name": "arrow-left",
+    "group": "ui",
+    "label": "Стрелка влево"
+  },
+  {
+    "name": "arrow-up",
+    "group": "ui",
+    "label": "Стрелка вверх"
+  },
+  {
+    "name": "arrow-down",
+    "group": "ui",
+    "label": "Стрелка вниз"
+  },
+  {
+    "name": "arrow-up-right",
+    "group": "ui",
+    "label": "Стрелка по диагонали"
+  },
+  {
+    "name": "chevron-down",
+    "group": "ui",
+    "label": "Шеврон вниз"
+  },
+  {
+    "name": "chevron-up",
+    "group": "ui",
+    "label": "Шеврон вверх"
+  },
+  {
+    "name": "chevron-left",
+    "group": "ui",
+    "label": "Шеврон влево"
+  },
+  {
+    "name": "chevron-right",
+    "group": "ui",
+    "label": "Шеврон вправо"
+  },
+  {
+    "name": "plus",
+    "group": "ui",
+    "label": "Плюс"
+  },
+  {
+    "name": "minus",
+    "group": "ui",
+    "label": "Минус"
+  },
+  {
+    "name": "close",
+    "group": "ui",
+    "label": "Закрыть"
+  },
+  {
+    "name": "check",
+    "group": "ui",
+    "label": "Галочка"
+  },
+  {
+    "name": "menu",
+    "group": "ui",
+    "label": "Меню"
+  },
+  {
+    "name": "search",
+    "group": "ui",
+    "label": "Поиск"
+  },
+  {
+    "name": "filter",
+    "group": "ui",
+    "label": "Фильтр"
+  },
+  {
+    "name": "copy",
+    "group": "ui",
+    "label": "Копировать"
+  },
+  {
+    "name": "link",
+    "group": "ui",
+    "label": "Ссылка"
+  },
+  {
+    "name": "share",
+    "group": "ui",
+    "label": "Поделиться"
+  },
+  {
+    "name": "download",
+    "group": "ui",
+    "label": "Скачать"
+  },
+  {
+    "name": "telegram",
+    "group": "contact",
+    "label": "Telegram"
+  },
+  {
+    "name": "mail",
+    "group": "contact",
+    "label": "Почта"
+  },
+  {
+    "name": "phone",
+    "group": "contact",
+    "label": "Телефон"
+  },
+  {
+    "name": "chat",
+    "group": "contact",
+    "label": "Сообщение"
+  },
+  {
+    "name": "location",
+    "group": "contact",
+    "label": "Местоположение"
+  },
+  {
+    "name": "globe",
+    "group": "contact",
+    "label": "Мир"
+  },
+  {
+    "name": "clock",
+    "group": "contact",
+    "label": "Время"
+  },
+  {
+    "name": "calendar",
+    "group": "contact",
+    "label": "Календарь"
+  },
+  {
+    "name": "document",
+    "group": "contact",
+    "label": "Документ"
+  },
+  {
+    "name": "lock",
+    "group": "contact",
+    "label": "Защищённый доступ"
+  },
+  {
+    "name": "shield",
+    "group": "contact",
+    "label": "Щит"
+  },
+  {
+    "name": "user",
+    "group": "contact",
+    "label": "Пользователь"
+  },
+  {
+    "name": "service-sites",
+    "group": "service",
+    "label": "Сайты"
+  },
+  {
+    "name": "service-web-apps",
+    "group": "service",
+    "label": "Веб-приложения"
+  },
+  {
+    "name": "service-telegram-bots",
+    "group": "service",
+    "label": "Telegram-боты"
+  },
+  {
+    "name": "service-mobile-games",
+    "group": "service",
+    "label": "Мобильные игры"
+  },
+  {
+    "name": "service-audit",
+    "group": "service",
+    "label": "Аудит сайта"
+  },
+  {
+    "name": "service-support",
+    "group": "service",
+    "label": "Поддержка"
+  },
+  {
+    "name": "step-brief",
+    "group": "process",
+    "label": "Разбор задачи"
+  },
+  {
+    "name": "step-prototype",
+    "group": "process",
+    "label": "Прототип"
+  },
+  {
+    "name": "step-build",
+    "group": "process",
+    "label": "Разработка"
+  },
+  {
+    "name": "step-launch",
+    "group": "process",
+    "label": "Запуск"
+  },
+  {
+    "name": "factor-scope",
+    "group": "process",
+    "label": "Объём"
+  },
+  {
+    "name": "factor-logic",
+    "group": "process",
+    "label": "Логика"
+  },
+  {
+    "name": "factor-integrations",
+    "group": "process",
+    "label": "Интеграции"
+  },
+  {
+    "name": "factor-content",
+    "group": "process",
+    "label": "Контент"
+  },
+  {
+    "name": "crm",
+    "group": "feature",
+    "label": "CRM"
+  },
+  {
+    "name": "payment",
+    "group": "feature",
+    "label": "Оплата"
+  },
+  {
+    "name": "analytics",
+    "group": "feature",
+    "label": "Аналитика"
+  },
+  {
+    "name": "seo",
+    "group": "feature",
+    "label": "SEO"
+  },
+  {
+    "name": "speed",
+    "group": "feature",
+    "label": "Скорость"
+  },
+  {
+    "name": "security",
+    "group": "feature",
+    "label": "Безопасность"
+  },
+  {
+    "name": "devices",
+    "group": "feature",
+    "label": "Устройства"
+  },
+  {
+    "name": "cms",
+    "group": "feature",
+    "label": "Управление сайтом"
+  },
+  {
+    "name": "backup",
+    "group": "feature",
+    "label": "Резервная копия"
+  },
+  {
+    "name": "monitoring",
+    "group": "feature",
+    "label": "Мониторинг"
+  },
+  {
+    "name": "report",
+    "group": "feature",
+    "label": "Отчёт"
+  },
+  {
+    "name": "api",
+    "group": "feature",
+    "label": "API"
+  },
+  {
+    "name": "database",
+    "group": "feature",
+    "label": "База данных"
+  },
+  {
+    "name": "users",
+    "group": "feature",
+    "label": "Роли пользователей"
+  },
+  {
+    "name": "notification",
+    "group": "feature",
+    "label": "Уведомления"
+  },
+  {
+    "name": "booking",
+    "group": "feature",
+    "label": "Запись"
+  },
+  {
+    "name": "orbit",
+    "group": "brand",
+    "label": "Орбита"
+  },
+  {
+    "name": "orbit-planet",
+    "group": "brand",
+    "label": "Планета на орбите"
+  }
+]

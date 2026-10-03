@@ -15,6 +15,7 @@ forWhom:
   - Нужна игра для продвижения бренда
   - Нужно довести проект до релиза
 priceKey: game
+icon: service-mobile-games
 faqTags: [process]
 seoTitle: Разработка мобильных игр для iOS и Android
 seoDescription: Казуальные игры от прототипа механики до публикации в App Store, Google Play и RuStore — геймплей, интерфейс, аналитика, монетизация.

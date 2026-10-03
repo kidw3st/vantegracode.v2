@@ -3,6 +3,9 @@ import path from 'node:path';
 import { defineCollection } from 'astro:content';
 import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import iconManifest from './assets/icons/manifest.json';
+
+const iconNames = new Set(iconManifest.map((icon) => icon.name));
 
 /** Услуги — 6 файлов Markdown */
 const services = defineCollection({
@@ -15,6 +18,8 @@ const services = defineCollection({
     includes: z.array(z.string()).min(3),
     forWhom: z.array(z.string()).length(3),
     priceKey: z.string(),
+    /** Иконка карточки — имя из src/assets/icons/manifest.json */
+    icon: z.string().refine((name) => iconNames.has(name), { message: 'нет такой иконки в src/assets/icons/manifest.json' }),
     image: z.string().optional(),
     faqTags: z.array(z.string()).default([]),
     seoTitle: z.string(),

@@ -15,6 +15,7 @@ forWhom:
   - Нужна запись или приём заявок круглосуточно
   - Хотите продавать в Telegram
 priceKey: bot
+icon: service-telegram-bots
 faqTags: [money]
 seoTitle: Разработка Telegram-ботов для бизнеса
 seoDescription: Боты для продаж, записи, поддержки и автоматизации — заявки, оплата, запись и передача данных в CRM. Работаем по всей России.

@@ -12,7 +12,9 @@
     "test": "playwright test",
     "shots": "node tests/screenshots.mjs",
     "links": "node tests/check-links.mjs",
-    "todo": "node tests/todo.mjs"
+    "todo": "node tests/todo.mjs",
+    "icons:sheet": "node tests/icons-sheet.mjs",
+    "icons:check": "node tests/icons.mjs"
   },
   "type": "module",
   "private": "true",
