@@ -1,4 +1,5 @@
 /** Точка входа клиентских скриптов: модули регистрируются, затем запускается жизненный цикл */
+import './theme.ts';
 import './menu.ts';
 import './header.ts';
 import './reveal.ts';
@@ -8,6 +9,7 @@ import './hero-scroll.ts';
 import './disc.ts';
 import './brand.ts';
 import './neon.ts';
+import './to-top.ts';
 import './rails.ts';
 import './accordion.ts';
 import './form.ts';

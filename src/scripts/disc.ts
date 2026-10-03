@@ -32,9 +32,13 @@ const STILL_TIME = 40;
 /** Длительность взрыва, мс */
 const BURST_MS = 1300;
 
-/** Мел #F4F2EE и пепел #8C8984 */
+/** Тёмная тема: мел #F4F2EE и пепел #8C8984; дневная: сажа #111111 и пепел на меле #6E6B66 */
 const CHALK: [number, number, number] = [244 / 255, 242 / 255, 238 / 255];
 const ASH: [number, number, number] = [140 / 255, 137 / 255, 132 / 255];
+const SOOT: [number, number, number] = [17 / 255, 17 / 255, 17 / 255];
+const ASH_ON_CHALK: [number, number, number] = [110 / 255, 107 / 255, 102 / 255];
+const dustColors = () =>
+  document.documentElement.dataset.theme === 'light' ? { base: ASH_ON_CHALK, accent: SOOT } : { base: ASH, accent: CHALK };
 
 const VERTEX = `
 precision highp float;
@@ -217,8 +221,14 @@ onPage(() => {
     burstSize: gl.getUniformLocation(program, 'uBurstSize'),
   };
   gl.uniform1f(gl.getUniformLocation(program, 'uRout'), narrow ? ROUT_MOBILE : ROUT_DESKTOP);
-  gl.uniform3fv(gl.getUniformLocation(program, 'uBase'), ASH);
-  gl.uniform3fv(gl.getUniformLocation(program, 'uAccent'), CHALK);
+  const baseLocation = gl.getUniformLocation(program, 'uBase');
+  const accentLocation = gl.getUniformLocation(program, 'uAccent');
+  const paint = () => {
+    const colors = dustColors();
+    gl.uniform3fv(baseLocation, colors.base);
+    gl.uniform3fv(accentLocation, colors.accent);
+  };
+  paint();
   gl.disable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -367,6 +377,12 @@ onPage(() => {
     layout();
     if (!raf) draw();
   });
+  // смена темы — перекрасить пыль сразу
+  const onTheme = () => {
+    paint();
+    if (!raf) draw();
+  };
+  window.addEventListener('vantegra:theme', onTheme);
   resizeObserver.observe(canvas);
   resizeObserver.observe(document.body);
 
@@ -394,6 +410,7 @@ onPage(() => {
     stop();
     cleanupVisibility();
     resizeObserver.disconnect();
+    window.removeEventListener('vantegra:theme', onTheme);
     canvas.classList.remove('is-fixed');
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };

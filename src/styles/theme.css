@@ -1,0 +1,35 @@
+/* ==========================================================================
+   Дневная тема (решение владельца): мел вместо сажи.
+   Новых цветов нет — палитра та же: фон и текст меняются местами, линии и подписи
+   берут производные «на меле» из tokens.css (--line-on-chalk, --ash-on-chalk).
+   Тема — атрибут data-theme на <html>: 'dark' по умолчанию или 'light' (scripts/theme.ts).
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --soot: #f4f2ee;    /* фон — мел */
+  --chalk: #111111;   /* текст и знак — сажа */
+  --graphite: #dcd8d1; /* линии и рамки — --line-on-chalk */
+  --ash: #6e6b66;     /* подписи — --ash-on-chalk, контраст AA */
+  --orbit-strong: rgba(17, 17, 17, 0.2);
+  --orbit: rgba(17, 17, 17, 0.12);
+  --orbit-faint: rgba(17, 17, 17, 0.05);
+  --header-bg: rgba(244, 242, 238, 0.92);
+}
+
+/* Логотипы: в каждой теме — свой файл владельца (мел на тёмной, сажа на светлой) */
+:root:not([data-theme='light']) .logo--for-light,
+:root[data-theme='light'] .logo--for-dark {
+  display: none !important;
+}
+
+/* Смена темы: новая раскрывается кругом от переключателя, без общей перекрёстной смены кадров */
+:root.theme-switching::view-transition-old(root),
+:root.theme-switching::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

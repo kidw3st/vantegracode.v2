@@ -14,8 +14,10 @@ const FOCAL = 135;
 const SENSOR = 36;
 const VIEW_W = 2.25;
 const DISTANCE = (VIEW_W * FOCAL) / SENSOR;
-/** Мел #F4F2EE */
+/** Мел #F4F2EE на тёмной теме, сажа #111111 на дневной */
 const CHALK: [number, number, number] = [244 / 255, 242 / 255, 238 / 255];
+const SOOT: [number, number, number] = [17 / 255, 17 / 255, 17 / 255];
+const markColor = () => (document.documentElement.dataset.theme === 'light' ? SOOT : CHALK);
 
 /** Угол сохраняется между кадрами и паузами — вращение продолжается с того же места */
 let angle = 0;
@@ -88,6 +90,7 @@ onPage(() => {
   let disposed = false;
   let count = 0;
   let matrixLocation: WebGLUniformLocation | null = null;
+  let colorLocation: WebGLUniformLocation | null = null;
 
   const resize = () => {
     const ratio = Math.min(2, window.devicePixelRatio || 1);
@@ -162,7 +165,8 @@ onPage(() => {
     count = mesh.indices.length;
 
     matrixLocation = gl.getUniformLocation(program, 'u_matrix');
-    gl.uniform3fv(gl.getUniformLocation(program, 'u_color'), CHALK);
+    colorLocation = gl.getUniformLocation(program, 'u_color');
+    gl.uniform3fv(colorLocation, markColor());
     gl.enable(gl.DEPTH_TEST);
 
     resize();
@@ -179,6 +183,13 @@ onPage(() => {
     art.classList.remove('is-3d');
   };
   canvas.addEventListener('webglcontextlost', onLost);
+  // смена темы — перекрасить знак сразу, даже если вращение на паузе
+  const onTheme = () => {
+    if (!colorLocation) return;
+    gl.uniform3fv(colorLocation, markColor());
+    if (count) draw();
+  };
+  window.addEventListener('vantegra:theme', onTheme);
 
   setup().catch(() => art.classList.remove('is-3d'));
 
@@ -188,6 +199,7 @@ onPage(() => {
     observer.disconnect();
     resizeObserver.disconnect();
     canvas.removeEventListener('webglcontextlost', onLost);
+    window.removeEventListener('vantegra:theme', onTheme);
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
 });

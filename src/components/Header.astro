@@ -12,6 +12,7 @@
  */
 import Button from './Button.astro';
 import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
 import { nav, site } from '../data/site.ts';
 import { ui } from '../data/ui.ts';
 
@@ -54,6 +55,7 @@ const current = (href: string) => (path === href ? 'page' : path.startsWith(href
     </nav>
 
     <div class="header__actions">
+      <ThemeToggle class="header__theme" />
       <Button class="header__cta" href={site.cta.discussHref} variant="primary" size="sm" label={site.cta.discuss} />
       <button
         class="header__burger"

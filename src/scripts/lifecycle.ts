@@ -42,6 +42,10 @@ export function start(): void {
   started = true;
   document.addEventListener('astro:page-load', setup);
   document.addEventListener('astro:before-swap', teardown);
+  document.addEventListener('astro:before-swap', (event) => {
+    const theme = document.documentElement.dataset.theme;
+    if (theme) (event as Event & { newDocument: Document }).newDocument.documentElement.dataset.theme = theme;
+  });
   // ClientRouter переносит атрибуты <html> новой страницы — возвращаем класс .js до отрисовки
   document.addEventListener('astro:after-swap', () => {
     document.documentElement.classList.add('js');

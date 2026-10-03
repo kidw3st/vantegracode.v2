@@ -3,6 +3,8 @@
 export const ui = {
   skipLink: 'Перейти к содержимому',
   homeLabel: 'Vantegra — на главную',
+  themeLight: 'Дневная тема',
+  toTop: 'Наверх',
   breadcrumbsLabel: 'Хлебные крошки',
   home: 'Главная',
   navLabel: 'Основная навигация',

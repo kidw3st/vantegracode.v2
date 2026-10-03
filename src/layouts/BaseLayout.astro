@@ -1,6 +1,7 @@
 ---
 import '../styles/tokens.css';
 import '../styles/tokens-extra.css';
+import '../styles/theme.css';
 import '../styles/base.css';
 import '../styles/typography.css';
 import '../styles/forms.css';
@@ -8,6 +9,7 @@ import '../styles/motion.css';
 import { ClientRouter, fade } from 'astro:transitions';
 import CookieNotice from '../components/CookieNotice.astro';
 import Footer from '../components/Footer.astro';
+import ScrollTop from '../components/ScrollTop.astro';
 import Header from '../components/Header.astro';
 import MobileMenu from '../components/MobileMenu.astro';
 import Seo from '../components/Seo.astro';
@@ -39,12 +41,18 @@ const { seo, crumbs } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
       document.documentElement.classList.add('js');
+      // Тема до первой отрисовки: сохранённый выбор, по умолчанию тёмная (scripts/theme.ts)
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem('vantegra-theme') === 'light' ? 'light' : 'dark';
+      } catch {
+        document.documentElement.dataset.theme = 'dark';
+      }
     </script>
     <link rel="preload" href="/fonts/TenorSans-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Manrope-Variable.woff2" as="font" type="font/woff2" crossorigin />
     <Seo {...seo} crumbs={crumbs} />
-    <meta name="theme-color" content="#111111" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#111111" data-theme-color />
+    <meta name="color-scheme" content="dark light" />
     <meta name="format-detection" content="telephone=no" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -72,6 +80,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       <slot />
     </main>
     <Footer />
+    <ScrollTop />
     <CookieNotice />
     <script>
       import '../scripts/main.ts';

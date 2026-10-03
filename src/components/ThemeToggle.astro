@@ -1,0 +1,162 @@
+---
+/**
+ * Переключатель темы в шапке (решение владельца): капсула-тумблер, как на iPhone, в стиле бренда —
+ * тонкая рамка, ручка цвета текста с иконкой текущей темы; на свободной стороне — бледная иконка другой.
+ * Нажать или перетащить ручку: отпустили — защёлкивается к ближайшей стороне (или по направлению броска).
+ * role="switch": включено — дневная тема. Логика — scripts/theme.ts.
+ */
+import Icon from './Icon.astro';
+import { ui } from '../data/ui.ts';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<button
+  class:list={['theme-toggle', className]}
+  type="button"
+  role="switch"
+  aria-checked="false"
+  aria-label={ui.themeLight}
+  data-theme-toggle
+>
+  <span class="theme-toggle__hint theme-toggle__hint--moon" aria-hidden="true">
+    <Icon name="moon" size={14} />
+  </span>
+  <span class="theme-toggle__hint theme-toggle__hint--sun" aria-hidden="true">
+    <Icon name="sun" size={14} />
+  </span>
+  <span class="theme-toggle__knob" aria-hidden="true" data-theme-knob>
+    <span class="theme-toggle__icon theme-toggle__icon--moon"><Icon name="moon" size={14} /></span>
+    <span class="theme-toggle__icon theme-toggle__icon--sun"><Icon name="sun" size={14} /></span>
+  </span>
+</button>
+
+<style>
+  /* Капсула 56 × 30, ручка 24; --x — сдвиг ручки, --p — доля пути (0 — ночь, 1 — день).
+     Во время перетаскивания их ставит theme.ts, в покое — тема */
+  .theme-toggle {
+    --w: 56px;
+    --h: 30px;
+    --k: 24px;
+    --pad: 2px;
+    --travel: calc(var(--w) - var(--k) - 2 * var(--pad) - 2 * var(--hairline));
+    --x: 0px;
+    --p: 0;
+
+    position: relative;
+    flex: none;
+    display: inline-block;
+    width: var(--w);
+    height: var(--h);
+    padding: 0;
+    border: var(--hairline) solid var(--graphite);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--chalk);
+    cursor: pointer;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  /* Зона касания 44 px по высоте — сам тумблер компактный */
+  .theme-toggle::before {
+    content: '';
+    position: absolute;
+    inset: -8px -4px;
+  }
+
+  :global(:root[data-theme='light']) .theme-toggle {
+    --x: var(--travel);
+    --p: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .theme-toggle:hover {
+      border-color: var(--ash);
+    }
+  }
+
+  /* Иконки: толщина линии как у остальных иконок на этом размере */
+  .theme-toggle :global(svg) {
+    stroke-width: 2;
+  }
+
+  .theme-toggle__hint {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: var(--k);
+    height: var(--k);
+    margin-top: calc(var(--k) / -2);
+    color: var(--ash);
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .theme-toggle__hint--moon {
+    left: var(--pad);
+    opacity: var(--p);
+  }
+
+  .theme-toggle__hint--sun {
+    right: var(--pad);
+    opacity: calc(1 - var(--p));
+  }
+
+  .theme-toggle__knob {
+    position: absolute;
+    top: 50%;
+    left: var(--pad);
+    display: grid;
+    place-items: center;
+    width: var(--k);
+    height: var(--k);
+    margin-top: calc(var(--k) / -2);
+    border-radius: 50%;
+    background: var(--chalk);
+    color: var(--soot);
+    transform: translateX(var(--x));
+    /* защёлкивание с лёгким перелётом, как у тумблера iPhone */
+    transition:
+      transform 460ms cubic-bezier(0.34, 1.45, 0.64, 1),
+      scale var(--dur-fast) var(--ease-out);
+  }
+
+  .theme-toggle__icon {
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .theme-toggle__icon--moon {
+    opacity: calc(1 - var(--p));
+  }
+
+  .theme-toggle__icon--sun {
+    opacity: var(--p);
+  }
+
+  /* Нажали — ручка чуть подрастает; тянут — идёт за пальцем без задержки */
+  .theme-toggle:global(.is-pressed) .theme-toggle__knob {
+    scale: 1.1;
+  }
+
+  .theme-toggle:global(.is-dragging) .theme-toggle__knob,
+  .theme-toggle:global(.is-dragging) .theme-toggle__icon,
+  .theme-toggle:global(.is-dragging) .theme-toggle__hint {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle__knob {
+      transition: none;
+    }
+  }
+</style>

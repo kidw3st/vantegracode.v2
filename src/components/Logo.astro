@@ -2,6 +2,8 @@
 /**
  * Логотип — только SVG владельца через <img> (файл кешируется, пути внутри SVG не меняются).
  * Версия × цвет × ширина. Не поворачивать, не растягивать, не перекрашивать, без эффектов.
+ * color='auto' (по умолчанию) — оба файла владельца: мел для тёмной темы, сажа для дневной;
+ * лишний скрывает theme.css. Скрытый дневной файл грузится лениво — только когда нужен.
  */
 import markChalk from '../assets/brand/logo/vantegra-mark-chalk.svg';
 import markSoot from '../assets/brand/logo/vantegra-mark-soot.svg';
@@ -15,7 +17,7 @@ import { LOGO, type LogoColor, type LogoVariant } from '../lib/logo.ts';
 
 interface Props {
   variant: LogoVariant;
-  color?: LogoColor;
+  color?: LogoColor | 'auto';
   /** ширина в px — атрибут width и проверка минимального размера */
   width: number;
   /** адаптивная ширина в CSS, например var(--hero-logo); её минимум тоже проверяется */
@@ -31,7 +33,7 @@ interface Props {
 
 const {
   variant,
-  color = 'chalk',
+  color = 'auto',
   width,
   cssWidth,
   minWidth,
@@ -55,23 +57,55 @@ if (shown < geometry.minPx) {
   throw new Error(`Logo ${variant}: ширина ${shown}px меньше минимальной ${geometry.minPx}px`);
 }
 
-const file = FILES[variant][color];
+const files = FILES[variant];
 const height = Math.round((width * geometry.h) / geometry.w);
 ---
 
-<img
-  class:list={['logo', `logo--${variant}`, className]}
-  src={file.src}
-  width={width}
-  height={height}
-  alt={alt}
-  loading={loading}
-  decoding="async"
-  fetchpriority={fetchpriority}
-  draggable="false"
-  style={`--logo-w: ${cssWidth ?? `${width}px`}`}
-  {...rest}
-/>
+{
+  color === 'auto' ? (
+    <Fragment>
+      <img
+        class:list={['logo', `logo--${variant}`, 'logo--for-dark', className]}
+        src={files.chalk.src}
+        width={width}
+        height={height}
+        alt={alt}
+        loading={loading}
+        decoding="async"
+        fetchpriority={fetchpriority}
+        draggable="false"
+        style={`--logo-w: ${cssWidth ?? `${width}px`}`}
+        {...rest}
+      />
+      <img
+        class:list={['logo', `logo--${variant}`, 'logo--for-light', className]}
+        src={files.soot.src}
+        width={width}
+        height={height}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        draggable="false"
+        style={`--logo-w: ${cssWidth ?? `${width}px`}`}
+        {...rest}
+      />
+    </Fragment>
+  ) : (
+    <img
+      class:list={['logo', `logo--${variant}`, className]}
+      src={files[color].src}
+      width={width}
+      height={height}
+      alt={alt}
+      loading={loading}
+      decoding="async"
+      fetchpriority={fetchpriority}
+      draggable="false"
+      style={`--logo-w: ${cssWidth ?? `${width}px`}`}
+      {...rest}
+    />
+  )
+}
 
 <style>
   .logo {

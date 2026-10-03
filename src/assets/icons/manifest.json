@@ -318,5 +318,15 @@
     "name": "orbit-planet",
     "group": "brand",
     "label": "Планета на орбите"
+  },
+  {
+    "name": "sun",
+    "group": "ui",
+    "label": "Дневная тема"
+  },
+  {
+    "name": "moon",
+    "group": "ui",
+    "label": "Ночная тема"
   }
 ]
