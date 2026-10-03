@@ -5,9 +5,11 @@
  * что logo/svg/vantegra-wordmark-on-soot.svg, без фона). Геометрия не меняется: те же контуры,
  * только разложены по буквам, чтобы прорисовывать их по очереди; в конце надпись совпадает с оригиналом.
  *
- * Прорисовка (класс .is-drawn ставит scripts/brand.ts, когда на надпись ложится пыль первого экрана):
- * от центра расходится линия → контуры букв обводятся от середины к краям → буквы заливаются мелом,
- * контур и линия гаснут. Без JS и при prefers-reduced-motion надпись сразу целиком.
+ * Надпись не «приезжает снизу»: пока она ниже центра, её не видно; когда встаёт в центр экрана,
+ * останавливается (sticky) на время прорисовки. Прорисовку ведёт прокрутка (scripts/brand.ts):
+ * пыль первого экрана становится линией → контуры букв обводятся от середины слова к краям →
+ * буквы заливаются мелом, контур и линия гаснут → надпись уходит вверх, сразу за ней «О студии».
+ * Без JS и при prefers-reduced-motion надпись стоит целиком, без остановки.
  */
 import raw from '../assets/brand/logo/vantegra-wordmark-chalk.svg?raw';
 
@@ -40,32 +42,57 @@ for (const part of parts) {
   }
 }
 
+const [, , vbWidth, vbHeight] = viewBox.split(/\s+/).map(Number);
 const top = Math.min(...parts.map((part) => part.y0));
 const bottom = Math.max(...parts.map((part) => part.y1));
 const mid = (top + bottom) / 2; // средняя линия букв: сюда ложится пыль
-const left = letters[0]!.x0;
-const right = letters.at(-1)!.x1;
 const center = (letters.length - 1) / 2;
-const [, , vbWidth] = viewBox.split(/\s+/).map(Number);
+const ratio = ((vbHeight ?? 1) / (vbWidth ?? 1)).toFixed(5);
 ---
 
-<div class="brand-mark" data-brand data-vb-width={vbWidth}>
-  <svg viewBox={viewBox} role="img" aria-label="Vantegra" focusable="false" data-disc-target>
-    <line class="brand-mark__line" x1={left - 60} x2={right + 60} y1={mid} y2={mid} />
-    {
-      letters.map((letter, i) => (
-        <g class="brand-mark__letter" style={`--o: ${Math.floor(Math.abs(i - center))}`}>
-          <path class="brand-mark__fill" d={letter.d} />
-          <path class="brand-mark__outline" d={letter.d} pathLength="1" />
-        </g>
-      ))
-    }
-  </svg>
+<div class="brand-track" data-brand-track style={`--ratio: ${ratio}`}>
+  <div class="brand-stage" data-brand-stage>
+    <div class="brand-mark" data-brand data-vb-width={vbWidth}>
+      <svg viewBox={viewBox} role="img" aria-label="Vantegra" focusable="false">
+        <line class="brand-mark__line" x1="0" x2={vbWidth} y1={mid} y2={mid} data-brand-line />
+        {
+          letters.map((letter, i) => (
+            <g data-letter data-order={Math.floor(Math.abs(i - center))}>
+              <path class="brand-mark__fill" d={letter.d} />
+              <path class="brand-mark__outline" d={letter.d} pathLength="1" />
+            </g>
+          ))
+        }
+      </svg>
+    </div>
+  </div>
 </div>
 
 <style>
+  /* Ширина надписи и высота сцены (по пропорциям viewBox) */
+  .brand-track {
+    --w: min(64vw, 1100px);
+    --h: calc(var(--w) * var(--ratio));
+    --pin: 70svh;
+
+    padding-block: var(--space-6) var(--space-4);
+  }
+
+  @media (max-width: 767px) {
+    .brand-track {
+      --w: calc(100vw - 2 * var(--gutter));
+      --pin: 50svh;
+    }
+  }
+
+  .brand-stage {
+    display: grid;
+    place-items: center;
+    height: var(--h);
+  }
+
   .brand-mark {
-    width: min(100%, 1100px);
+    width: var(--w);
   }
 
   .brand-mark svg {
@@ -91,59 +118,31 @@ const [, , vbWidth] = viewBox.split(/\s+/).map(Number);
     stroke: var(--chalk);
     stroke-width: var(--sw, 2);
     opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
   }
 
-  /* ---------- Прорисовка (только с JS) ---------- */
+  /* ---------- Остановка в центре и прорисовка (только с JS и без reduced motion) ---------- */
 
-  :global(.js) .brand-mark__fill {
-    opacity: 0;
-    transition: opacity var(--dur) var(--ease-out);
-    transition-delay: calc(1100ms + var(--o) * 140ms);
-  }
-
-  :global(.js) .brand-mark__outline {
-    opacity: 1;
-    stroke-dasharray: 1 1;
-    stroke-dashoffset: 1;
-    transition:
-      stroke-dashoffset 1200ms var(--ease-in-out) calc(300ms + var(--o) * 140ms),
-      opacity var(--dur) var(--ease-out) calc(1900ms + var(--o) * 140ms);
-  }
-
-  :global(.js) .brand-mark__line {
-    opacity: 0.45;
-    transform: scaleX(0);
-    transition:
-      transform 800ms var(--ease-in-out),
-      opacity var(--dur-slow) var(--ease-out) 1900ms;
-  }
-
-  .brand-mark:global(.is-drawn) .brand-mark__fill {
-    opacity: 1;
-  }
-
-  .brand-mark:global(.is-drawn) .brand-mark__outline {
-    stroke-dashoffset: 0;
-    opacity: 0;
-  }
-
-  .brand-mark:global(.is-drawn) .brand-mark__line {
-    transform: none;
-    opacity: 0;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :global(.js) .brand-mark__fill {
-      opacity: 1;
-      transition: none;
+  @media (prefers-reduced-motion: no-preference) {
+    /* место под остановку: сцена «едет» по этому отрезку, оставаясь в центре экрана */
+    :global(.js) .brand-track::after {
+      content: '';
+      display: block;
+      height: var(--pin);
     }
 
-    :global(.js) .brand-mark__outline,
-    :global(.js) .brand-mark__line {
+    :global(.js) .brand-stage {
+      position: sticky;
+      top: calc(50svh - var(--h) / 2);
+    }
+
+    :global(.js) .brand-mark__fill {
       opacity: 0;
-      transition: none;
+    }
+
+    :global(.js) .brand-mark__outline {
+      opacity: 1;
+      stroke-dasharray: 1 1;
+      stroke-dashoffset: 1;
     }
   }
 </style>

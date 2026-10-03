@@ -12,7 +12,7 @@
  * - при прокрутке диск сплющивается до тонкой полосы — «орбита ложится в линию» (hero-scroll.ts);
  *   при prefers-reduced-motion — неподвижный кадр.
  */
-import { heroProgress, smooth, squashOf, fadeOf } from './hero-scroll.ts';
+import { fadeOf, heroProgress, resetTarget, smooth, squashOf, straightOf, targetCenter } from './hero-scroll.ts';
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
 const DPR_CAP = 1.5;
@@ -44,6 +44,7 @@ uniform float uClearRadius;  // скругление чистой зоны, px
 uniform float uFeather;      // ширина растворения, px
 uniform float uFlat;         // 0 — диск как есть, 1 — сплющен в линию (прокрутка первого экрана)
 uniform float uClearMix;     // сила чистой зоны: гаснет вместе с текстом первого экрана
+uniform float uStraight;     // 0 — наклон −12°, 1 — горизонталь (выпрямляется раньше, чем сплющивается)
 varying float vAlpha;
 varying float vMix;
 
@@ -63,10 +64,12 @@ void main() {
   float armAngle = ARMS * (th - WIND * log(r)) - SPIN * uTime;
   th -= PULL * sin(armAngle) / ARMS;
   float arm = pow(0.5 + 0.5 * cos(armAngle), SHARP);
+  // сплющиваясь, рукава выравниваются по яркости: линия ровная, без отдельных полос
+  arm = mix(arm, 0.55, uFlat);
 
   vec2 disc = vec2(r * cos(th), r * sin(th) * TILT * (1.0 - 0.96 * uFlat));
   // сплющиваясь, полоса выпрямляется из −12° в горизонталь — и ложится ровно на линию блока
-  float roll = ROLL * (1.0 - uFlat);
+  float roll = ROLL * (1.0 - uStraight);
   float c = cos(roll);
   float s = sin(roll);
   vec2 screen = vec2(c * disc.x - s * disc.y, s * disc.x + c * disc.y);
@@ -180,6 +183,7 @@ onPage(() => {
     feather: gl.getUniformLocation(program, 'uFeather'),
     flat: gl.getUniformLocation(program, 'uFlat'),
     clearMix: gl.getUniformLocation(program, 'uClearMix'),
+    straight: gl.getUniformLocation(program, 'uStraight'),
   };
   gl.uniform1f(gl.getUniformLocation(program, 'uRout'), narrow ? ROUT_MOBILE : ROUT_DESKTOP);
   gl.uniform3fv(gl.getUniformLocation(program, 'uBase'), ASH);
@@ -189,8 +193,6 @@ onPage(() => {
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const hero = canvas.closest<HTMLElement>('.hero');
-  /** Надпись VANTEGRA после первого экрана: на её среднюю линию ложится сплющенный диск */
-  const target = document.querySelector<HTMLElement>('[data-disc-target]');
   const still = prefersReducedMotion();
   // Переход к блокам: холст закреплён на экране, диск ведём к линии сами (без reduced motion)
   const follow = Boolean(hero) && !still;
@@ -221,12 +223,9 @@ onPage(() => {
     const scroll = follow ? window.scrollY : 0;
     originX = logoBox.left + logoBox.width / 2 - box.left;
     originY = logoBox.top + logoBox.height / 2 + scroll - (follow ? 0 : box.top);
-    if (target) {
-      const targetBox = target.getBoundingClientRect();
-      ruleY = targetBox.top + targetBox.height / 2 + scroll;
-    } else {
-      ruleY = originY;
-    }
+    // центр надписи VANTEGRA в момент, когда она останавливается в центре экрана
+    resetTarget();
+    ruleY = (follow && targetCenter()) || originY;
     const unit = rimInLogoWidths * logo.offsetWidth;
     gl.uniform2f(uniforms.scale, (unit * 2) / boxW, (unit * 2) / boxH);
     gl.uniform1f(uniforms.dot, DOT * ratio);
@@ -238,7 +237,7 @@ onPage(() => {
   /** Доля перехода 0…1 и сглаженная доля */
   let progress = 0;
   const place = () => {
-    progress = follow && hero ? heroProgress(hero) : 0;
+    progress = follow ? heroProgress() : 0;
     const eased = smooth(progress);
     const scroll = follow ? window.scrollY : 0;
     // центр: сначала вместе со знаком, к концу перехода — на линии следующего блока
@@ -246,6 +245,7 @@ onPage(() => {
     gl.uniform2f(uniforms.center, (originX / boxW) * 2 - 1, 1 - (centerY / boxH) * 2);
     // сплющивается раньше, чем доезжает: последние доли перехода на линию скользит уже тонкая полоса
     gl.uniform1f(uniforms.flat, squashOf(progress));
+    gl.uniform1f(uniforms.straight, straightOf(progress));
     // чистая зона гаснет вместе с текстом первого экрана
     gl.uniform1f(uniforms.clearMix, fadeOf(eased));
     // чистая зона за текстом идёт за текстом (он уходит с параллаксом)
@@ -319,7 +319,7 @@ onPage(() => {
   if (follow && hero) {
     // закреплённый холст всегда «на экране»: паузу даёт доля прокрутки первого экрана
     const onScroll = () => {
-      if (heroProgress(hero) < 1) run();
+      if (heroProgress() < 1) run();
       else if (!raf) draw();
     };
     window.addEventListener('scroll', onScroll, { passive: true });

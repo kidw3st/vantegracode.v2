@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ArrowLink from '../components/ArrowLink.astro';
 import BrandWordmark from '../components/BrandWordmark.astro';
 import Button from '../components/Button.astro';
 import CtaSection from '../components/CtaSection.astro';
@@ -11,10 +10,11 @@ import SectionHeader from '../components/SectionHeader.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import Steps from '../components/Steps.astro';
 import WorkCard from '../components/WorkCard.astro';
+import Icon from '../components/Icon.astro';
 import { home, steps } from '../data/pages.ts';
 import { site } from '../data/site.ts';
 import { getPrices, getServices, getWorks } from '../lib/content.ts';
-import { getText } from '../lib/fill.ts';
+import { getText, PLACEHOLDER } from '../lib/fill.ts';
 import { protectedBox } from '../lib/logo.ts';
 import { logoRings } from '../lib/orbit.ts';
 import { website } from '../lib/seo.ts';
@@ -29,7 +29,8 @@ const showWorks = homeWorks.length > 0;
 const serviceNames = Object.fromEntries(services.map((service) => [service.id, service.data.title]));
 
 // Номера в подписях идут подряд по блокам, которые реально выводятся
-const order = ['about', 'services', 'process', ...(showWorks ? ['works'] : []), 'prices', 'contact'];
+// Структура владельца: О студии → Что делаем → Процесс → Работы → Цены → Контакты («Работы» всегда, без кейсов — заглушки)
+const order = ['about', 'services', 'process', 'works', 'prices', 'contact'];
 const num = (key: string) => order.indexOf(key) + 1;
 const eyebrow = (key: string, label: string) => `${String(num(key)).padStart(2, '0')} — ${label}`;
 
@@ -102,17 +103,32 @@ const secondary = showWorks
     </div>
   </section>
 
-  {/* Надпись по центру экрана: на её среднюю линию ложится пыль первого экрана, затем буквы прорисовываются */}
-  <div class="brand">
-    <BrandWordmark />
-  </div>
+  {/* Надпись по центру экрана: на её среднюю линию ложится пыль первого экрана, буквы прорисовываются на месте */}
+  <BrandWordmark />
 
   <section class="section about" aria-labelledby="about-title">
-    <div class="container about__inner" data-reveal="stagger">
-      <p class="eyebrow">{t(eyebrow('about', home.about.label))}</p>
-      <h2 id="about-title" class="about__title curtain">{t(home.about.title)}</h2>
-      <p class="lead about__text">{t(home.about.text)}</p>
-      <ArrowLink href="/o-studii/" label={home.about.link} />
+    <div class="container">
+      <SectionHeader
+        id="about-title"
+        eyebrow={eyebrow('about', home.about.label)}
+        title={home.about.title}
+        text={home.about.text}
+      />
+      <dl class="facts" data-reveal="stagger">
+        {
+          home.about.facts.map((fact, i) => (
+            <div class="facts__item">
+              <dt class="facts__label">
+                <span class="facts__num num" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                {t(fact.label)}
+              </dt>
+              <dd class="facts__text">{t(fact.text)}</dd>
+            </div>
+          ))
+        }
+      </dl>
     </div>
   </section>
 
@@ -143,25 +159,37 @@ const secondary = showWorks
     </div>
   </section>
 
-  {
-    showWorks && (
-      <section class="section" aria-labelledby="works-title">
-        <div class="container">
-          <SectionHeader
-            id="works-title"
-            eyebrow={eyebrow('works', home.works.label)}
-            title={home.works.title}
-            link={{ href: '/raboty/', label: home.works.link }}
-          />
+  <section class="section" aria-labelledby="works-title">
+    <div class="container">
+      <SectionHeader
+        id="works-title"
+        eyebrow={eyebrow('works', home.works.label)}
+        title={home.works.title}
+        link={{ href: '/raboty/', label: home.works.link }}
+      />
+      {
+        showWorks ? (
           <div class="home-works" data-reveal="stagger">
             {homeWorks.map((work, i) => (
               <WorkCard work={work} serviceNames={serviceNames} size={i === 0 ? 'lg' : 'md'} />
             ))}
           </div>
-        </div>
-      </section>
-    )
-  }
+        ) : (
+          <ul class="home-works rail" role="list" data-reveal="stagger">
+            {Array.from({ length: home.works.placeholders }, (_, i) => (
+              <li class="work-stub">
+                <div class="work-stub__media">
+                  <Icon name="orbit" size={40} />
+                </div>
+                <p class="work-stub__meta eyebrow">{`${home.works.placeholder} ${String(i + 1).padStart(2, '0')}`}</p>
+                <h3 class="work-stub__title">{PLACEHOLDER}</h3>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </section>
 
 
   <section class="section" aria-labelledby="prices-title">
@@ -324,48 +352,80 @@ const secondary = showWorks
     }
   }
 
-  /* ---------- Надпись и «О студии» ---------- */
+  /* ---------- «О студии» ---------- */
 
-  /* Надпись — в центре экрана; блок ниже первого экрана, «О студии» сразу под ним */
-  .brand {
-    display: grid;
-    place-items: center;
-    min-height: 72svh;
-    padding-inline: var(--gutter);
-  }
-
-  .brand :global(.brand-mark) {
-    width: min(100%, 64vw, 1100px);
-  }
-
-  @media (max-width: 767px) {
-    .brand {
-      min-height: 56svh;
-    }
-
-    .brand :global(.brand-mark) {
-      width: 100%;
-    }
-  }
-
+  /* Сразу за надписью: без лишнего отступа сверху */
   .about {
-    padding-top: var(--space-7);
+    padding-top: var(--space-6);
   }
 
-  .about__inner {
+  /* Четыре коротких факта: на десктопе в ряд, на телефоне 2 × 2 */
+  .facts {
     display: grid;
-    justify-items: center;
-    gap: var(--space-5);
-    text-align: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--column-gap);
+    margin: 0;
   }
 
-  .about__title {
+  @media (min-width: 1024px) {
+    .facts {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .facts__item {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .facts__label {
+    display: grid;
+    gap: var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    line-height: 1.25;
+    letter-spacing: var(--ls-heading);
+    text-transform: uppercase;
+  }
+
+  .facts__num {
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    color: var(--ash);
+  }
+
+  .facts__text {
+    margin: 0;
+    color: var(--ash);
     max-width: 30ch;
   }
 
-  .about__text {
-    max-width: 60ch;
+  /* ---------- «Работы»: заглушки, пока нет кейсов ---------- */
+
+  .work-stub {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+  }
+
+  .work-stub__media {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 10;
+    margin-bottom: var(--space-2);
+    border: var(--hairline) solid var(--graphite);
+    color: var(--graphite);
+  }
+
+  .work-stub__meta {
     color: var(--ash);
+  }
+
+  .work-stub__title {
+    font-size: var(--fs-h3);
   }
 
   /* ---------- Сетки карточек ---------- */
