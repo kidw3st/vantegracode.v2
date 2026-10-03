@@ -1,16 +1,14 @@
 ---
 /**
- * Шапка (правка владельца 03.10.2026).
+ * Шапка (правки владельца 03.10.2026).
  * - Пока страница не прокручена, шапка прилегает к верхнему краю: без формы, рамки и подложки,
  *   логотип и кнопка стоят по сетке.
- * - После прокрутки на 24 px шапка плавно перетекает в плавающую капсулу: сжимается к сетке,
- *   опускается от края, закругляется (pill, как кнопки), проявляются рамка графитом и подложка
- *   сажи 95 % с размытием. Логотип при этом остаётся на месте — форма собирается вокруг него.
- *   Кнопка в капсуле вписана концентрично. Наверху — обратно.
+ * - После прокрутки на 24 px форма «вытекает» из полосы в плавающую капсулу (scripts/header.ts):
+ *   пружина, сначала подложка и углы, затем ширина; рамка графитом, сажа 95 % с размытием.
+ *   Кнопка в капсуле вписана концентрично; закругление не заходит в охранное поле логотипа.
  * - Под ссылками скользит линия 1 px: к наведённой и обратно к активной, при переходе — к новой.
- * Охранное поле логотипа: капсула 56 px и блок 140 px, от 768 px — 64 px и 156 px.
- * Исключение из правила «только transform и opacity»: перетекание формы анимирует размеры
- * самой шапки — по запросу владельца. Сохраняется между переходами (transition:persist).
+ * Меняется только пустая подложка [data-header-shape]; содержимое двигается сдвигом (translate).
+ * Сохраняется между переходами (transition:persist).
  */
 import Button from './Button.astro';
 import Logo from './Logo.astro';
@@ -22,8 +20,8 @@ const current = (href: string) => (path === href ? 'page' : path.startsWith(href
 ---
 
 <header class="header" data-header transition:persist="site-header">
+  <span class="header__shape" aria-hidden="true" data-header-shape></span>
   <div class="header__bar">
-    <span class="header__fill" aria-hidden="true"></span>
 
     <a class="header__logo" href="/" aria-label={ui.homeLabel} data-header-logo>
       <Logo
@@ -83,7 +81,7 @@ const current = (href: string) => (path === href ? 'page' : path.startsWith(href
     pointer-events: none;
   }
 
-  /* Наверху: во всю ширину, вплотную к краю, содержимое по сетке */
+  /* Раскладка всегда «наверху»: во всю ширину, содержимое по сетке. Капсулу рисует подложка */
   .header__bar {
     --edge: max(var(--gutter), (100% - var(--maxw)) / 2);
 
@@ -93,43 +91,29 @@ const current = (href: string) => (path === href ? 'page' : path.startsWith(href
     align-items: center;
     width: 100%;
     height: var(--header-h);
-    margin: 0 auto;
-    padding-left: var(--edge);
-    padding-right: var(--edge);
-    border-radius: 0;
+    padding-inline: var(--edge);
+    pointer-events: none;
+  }
+
+  .header__bar > * {
     pointer-events: auto;
-    transition:
-      width var(--dur) var(--ease-out),
-      height var(--dur) var(--ease-out),
-      margin-top var(--dur) var(--ease-out),
-      padding var(--dur) var(--ease-out),
-      border-radius var(--dur) var(--ease-out);
   }
 
-  /* После прокрутки: капсула. Края логотипа по сетке, справа — концентрично кнопке */
-  :global(html:not(.menu-open)) .header.is-scrolled .header__bar {
-    width: min(100% - 2 * (var(--gutter) - var(--bar-pad)), var(--maxw) + 2 * var(--bar-pad));
-    height: var(--bar-h);
-    margin-top: var(--bar-top);
-    padding-left: var(--bar-pad);
-    padding-right: var(--bar-inset);
-    border-radius: calc(var(--bar-h) / 2);
-  }
-
-  .header__fill {
+  /* Подложка-форма: геометрию на каждом кадре задаёт scripts/header.ts */
+  .header__shape {
     position: absolute;
-    inset: 0;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: var(--header-h);
     border: var(--hairline) solid var(--graphite);
-    border-radius: inherit;
     background: var(--header-bg);
     backdrop-filter: blur(var(--header-blur));
     -webkit-backdrop-filter: blur(var(--header-blur));
     opacity: 0;
-    transition: opacity var(--dur) var(--ease-out);
-  }
-
-  :global(html:not(.menu-open)) .header.is-scrolled .header__fill {
-    opacity: 1;
+    pointer-events: none;
+    transform-origin: 0 0;
+    will-change: transform, opacity;
   }
 
   .header__logo {
@@ -347,12 +331,8 @@ const current = (href: string) => (path === href ? 'page' : path.startsWith(href
     }
 
     /* форма меняется сразу, остаётся только короткое проявление подложки */
-    .header__bar {
-      transition: none;
-    }
-
-    .header__fill {
-      transition-duration: var(--dur-fast);
+    .header__shape {
+      transition: opacity var(--dur-fast) linear;
     }
 
     :global(.js) .header__logo,

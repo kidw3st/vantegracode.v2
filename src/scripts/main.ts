@@ -1,5 +1,6 @@
 /** Точка входа клиентских скриптов: модули регистрируются, затем запускается жизненный цикл */
 import './menu.ts';
+import './header.ts';
 import './reveal.ts';
 import './orbits.ts';
 import './accordion.ts';

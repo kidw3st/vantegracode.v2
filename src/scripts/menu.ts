@@ -1,13 +1,11 @@
 /**
- * Шапка и мобильное меню.
- * - подложка шапки после прокрутки на 24 px;
+ * Шапка и мобильное меню (перетекание формы шапки — scripts/header.ts).
  * - активная ссылка и aria-current после каждого перехода (шапка сохраняется между страницами);
  * - меню: Esc и клик по ссылке закрывают, фокус внутри, прокрутка страницы заблокирована,
  *   знак для шапки подгружается только при первом открытии.
  */
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
-const SCROLL_THRESHOLD = 24;
 const MENU_DURATION = 250;
 
 onPage(() => {
@@ -15,23 +13,6 @@ onPage(() => {
   const { signal } = ac;
   const header = document.querySelector<HTMLElement>('[data-header]');
   if (!header) return () => ac.abort();
-
-  // Подложка шапки
-  let ticking = false;
-  const updateScrolled = () => {
-    header.classList.toggle('is-scrolled', window.scrollY > SCROLL_THRESHOLD);
-    ticking = false;
-  };
-  updateScrolled();
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(updateScrolled);
-    },
-    { passive: true, signal },
-  );
 
   // Активные ссылки в шапке и меню
   const path = window.location.pathname;
