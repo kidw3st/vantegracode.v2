@@ -1,7 +1,7 @@
 ---
 /**
- * Заголовок секции: подпись «02 — Услуги» сверху слева, крупный заголовок,
- * поясняющий текст и ссылка «Все …» — в правой части сетки (колонки 8–12).
+ * Заголовок секции — по центру блока (решение владельца): подпись «02 — Услуги»,
+ * крупный заголовок, под ним поясняющий текст и ссылка «Все …».
  */
 import ArrowLink from './ArrowLink.astro';
 import { t } from '../lib/typograf.ts';
@@ -19,7 +19,7 @@ interface Props {
 const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className } = Astro.props;
 ---
 
-<header class:list={['sh grid', className]} data-reveal="stagger">
+<header class:list={['sh', className]} data-reveal="stagger">
   <p class="eyebrow sh__eyebrow">{t(eyebrow)}</p>
   <Heading class="sh__title" id={id}>{t(title)}</Heading>
   {
@@ -33,15 +33,17 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className } =
 </header>
 
 <style>
+  /* Всё по центру блока; линия-разделитель расходится от центра, заголовок раскрывается из неё занавесом */
   .sh {
     position: relative;
+    display: grid;
+    justify-items: center;
     row-gap: var(--space-5);
     padding-top: var(--space-6);
     margin-bottom: clamp(var(--space-8), 6vw, var(--space-9));
+    text-align: center;
   }
 
-  /* Вход в блок: линия-разделитель расходится от центра (продолжение «орбиты, легшей в линию»
-     на первом экране), затем из неё, как занавес, раскрывается заголовок */
   .sh::before {
     content: '';
     position: absolute;
@@ -51,9 +53,32 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className } =
     border-top: var(--hairline) solid var(--rule);
   }
 
-  /* Ширина заголовка — по тексту, чтобы занавес раскрывался от середины строки */
+  /* Разрядка заглавных добавляет пробел после последней буквы — возвращаем его слева, чтобы строка стояла по центру */
+  .sh__eyebrow {
+    margin-bottom: var(--space-2);
+    padding-inline-start: var(--ls-label);
+  }
+
   .sh__title {
-    justify-self: start;
+    justify-self: center;
+    padding-inline-start: var(--ls-heading);
+  }
+
+  @media (max-width: 480px) {
+    .sh__title {
+      padding-inline-start: 0.08em;
+    }
+  }
+
+  .sh__aside {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: center;
+  }
+
+  .sh__text {
+    color: var(--text-muted);
+    max-width: 52ch;
   }
 
   :global(.js) .sh::before {
@@ -85,46 +110,6 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className } =
     :global(.js) .sh__title {
       clip-path: none;
       transition: none;
-    }
-  }
-
-  .sh__eyebrow,
-  .sh__title,
-  .sh__aside {
-    grid-column: 1 / -1;
-  }
-
-  .sh__eyebrow {
-    margin-bottom: var(--space-2);
-  }
-
-  .sh__aside {
-    display: grid;
-    gap: var(--space-5);
-    justify-items: start;
-    align-content: end;
-  }
-
-  .sh__text {
-    color: var(--text-muted);
-    max-width: 44ch;
-  }
-
-  @media (min-width: 1024px) {
-    .sh__title {
-      grid-column: 1 / span 7;
-    }
-
-    .sh__aside {
-      grid-column: 8 / -1;
-      grid-row: 2;
-      justify-items: end;
-      text-align: right;
-    }
-
-    .sh__aside:has(.sh__text) {
-      justify-items: start;
-      text-align: left;
     }
   }
 </style>

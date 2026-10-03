@@ -1,6 +1,7 @@
 ---
-/** Финальный блок: слева подпись, заголовок, текст и контакты; справа форма. Бледные орбиты на фоне. */
+/** Финальный блок: заголовок по центру (как у всех блоков), под ним слева контакты, справа форма. Бледные орбиты на фоне. */
 import ContactList from './ContactList.astro';
+import SectionHeader from './SectionHeader.astro';
 import LeadForm from './LeadForm.astro';
 import OrbitField from './OrbitField.astro';
 import { contactBlock } from '../data/pages.ts';
@@ -18,15 +19,15 @@ const eyebrow = num ? `${String(num).padStart(2, '0')} — ${contactBlock.label}
 
 <section class="section cta" aria-labelledby="cta-title">
   <OrbitField mode="block" rings={3} tone="faint" start={0.3} />
-  <div class="container grid cta__grid">
-    <div class="cta__info" data-reveal="stagger">
-      <p class="eyebrow">{text(eyebrow)}</p>
-      <h2 id="cta-title" class="cta__title">{text(contactBlock.title)}</h2>
-      <p class="cta__text">{text(contactBlock.text)}</p>
-      <ContactList class="cta__contacts" />
-    </div>
-    <div class="cta__form" data-reveal>
-      <LeadForm />
+  <div class="container cta__inner">
+    <SectionHeader id="cta-title" eyebrow={text(eyebrow)} title={text(contactBlock.title)} text={text(contactBlock.text)} />
+    <div class="grid cta__grid">
+      <div class="cta__info" data-reveal>
+        <ContactList class="cta__contacts" />
+      </div>
+      <div class="cta__form" data-reveal>
+        <LeadForm />
+      </div>
     </div>
   </div>
 </section>
@@ -36,56 +37,18 @@ const eyebrow = num ? `${String(num).padStart(2, '0')} — ${contactBlock.label}
     overflow: hidden;
   }
 
-  .cta__grid {
+  .cta__inner {
     position: relative;
     z-index: var(--z-content);
+  }
+
+  .cta__grid {
     row-gap: var(--space-9);
-    padding-top: var(--space-6);
-    border-top: var(--hairline) solid var(--rule);
   }
 
   .cta__info,
   .cta__form {
     grid-column: 1 / -1;
-  }
-
-  .cta__info {
-    display: grid;
-    align-content: start;
-    gap: var(--space-5);
-  }
-
-  .cta__title {
-    justify-self: start;
-    margin-top: var(--space-2);
-  }
-
-  /* Заголовок раскрывается от центра, как у блоков главной (SectionHeader) */
-  :global(.js) .cta__title {
-    opacity: 1;
-    transform: none;
-    clip-path: inset(-25% 50% -25% 50%);
-    transition: clip-path var(--dur-curtain) var(--ease-in-out) var(--delay-curtain);
-  }
-
-  .cta__info:global(.is-in) .cta__title {
-    clip-path: inset(-25% -4% -25% -4%);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :global(.js) .cta__title {
-      clip-path: none;
-      transition: none;
-    }
-  }
-
-  .cta__text {
-    color: var(--ash);
-    max-width: 40ch;
-  }
-
-  .cta__info :global(.cta__contacts) {
-    margin-top: var(--space-6);
   }
 
   @media (min-width: 1024px) {
