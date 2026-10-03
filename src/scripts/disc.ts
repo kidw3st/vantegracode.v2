@@ -15,6 +15,9 @@
  * остановится надпись. Когда надпись встаёт, вихрь взрывается: пыль разлетается во все стороны
  * и гаснет на лету, после взрыва пыли не остаётся. Взрыв идёт по времени (1,3 с), не по прокрутке.
  * При prefers-reduced-motion — неподвижный кадр без перехода.
+ *
+ * Дневная тема: тёмная пыль на меле. Тёмная точка на светлом читается слабее светлой на тёмном,
+ * поэтому днём частицы плотнее и крупнее (uInk); в стянутом вихре прибавка меньше — без чёрного пятна.
  */
 import { collapseOf, fadeOf, heroProgress, landingScroll, resetTarget, smooth, targetCenter } from './hero-scroll.ts';
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
@@ -31,14 +34,18 @@ const DOT = 2.4;
 const STILL_TIME = 40;
 /** Длительность взрыва, мс */
 const BURST_MS = 1300;
+/** Дневная тема: плотность частиц (в диске и в стянутом вихре) и размер точки */
+const INK_GAIN = 2.0;
+const INK_GAIN_CORE = 1.25;
+const INK_SIZE = 1.3;
 
 /** Тёмная тема: мел #F4F2EE и пепел #8C8984; дневная: сажа #111111 и пепел на меле #6E6B66 */
 const CHALK: [number, number, number] = [244 / 255, 242 / 255, 238 / 255];
 const ASH: [number, number, number] = [140 / 255, 137 / 255, 132 / 255];
 const SOOT: [number, number, number] = [17 / 255, 17 / 255, 17 / 255];
 const ASH_ON_CHALK: [number, number, number] = [110 / 255, 107 / 255, 102 / 255];
-const dustColors = () =>
-  document.documentElement.dataset.theme === 'light' ? { base: ASH_ON_CHALK, accent: SOOT } : { base: ASH, accent: CHALK };
+const isLight = () => document.documentElement.dataset.theme === 'light';
+const dustColors = () => (isLight() ? { base: ASH_ON_CHALK, accent: SOOT } : { base: ASH, accent: CHALK });
 
 const VERTEX = `
 precision highp float;
@@ -58,6 +65,7 @@ uniform float uSpin;         // докрутка вихря при стягив�
 uniform float uBurst;        // 0…1 — разлёт (резкий старт, торможение)
 uniform float uBurstT;       // 0…1 — время взрыва линейно: вспышка и угасание
 uniform vec2 uBurstSize;     // радиус разлёта, NDC (полуоси)
+uniform mediump float uInk;  // 0 — светлая пыль на тёмном, 1 — тёмная на светлом; точность как во фрагментном
 varying float vAlpha;
 varying float vMix;
 
@@ -120,16 +128,19 @@ void main() {
   // вспышка в начале взрыва, к концу всё гаснет — пыли после взрыва не остаётся
   float t = uBurstT;
   alpha *= (1.0 + 1.6 * sin(PI * min(t * 4.0, 1.0))) * mix(1.0, 1.8, min(t * 6.0, 1.0)) * (1.0 - smoothstep(0.4, 1.0, t));
+  // днём плотнее: тёмная точка на светлом теряется сильнее светлой на тёмном
+  alpha *= mix(1.0, mix(${INK_GAIN.toFixed(2)}, ${INK_GAIN_CORE.toFixed(2)}, uCollapse), uInk);
   vAlpha = alpha;
   vMix = clamp(arm * 0.9 + (1.0 - f) * 0.25 + 0.4 * uCollapse, 0.0, 1.0);
   gl_PointSize = uDot * (0.65 + 0.7 * aSeed.w) * mix(1.15, 0.9, far) * mix(1.0, 0.8, uCollapse)
-    * (1.0 + 0.5 * sin(PI * uBurstT));
+    * (1.0 + 0.5 * sin(PI * uBurstT)) * mix(1.0, ${INK_SIZE.toFixed(2)}, uInk);
 }`;
 
 const FRAGMENT = `
 precision mediump float;
 uniform vec3 uBase;
 uniform vec3 uAccent;
+uniform mediump float uInk;
 varying float vAlpha;
 varying float vMix;
 void main() {
@@ -137,6 +148,8 @@ void main() {
   float r2 = dot(d, d) * 4.0;
   if (r2 > 1.0) discard;
   float a = exp(-r2 * 4.5) * vAlpha;
+  // днём плотность не выше 1: тёмная вспышка взрыва не выжигает фон в чёрное
+  a = mix(a, min(a, 1.0), uInk);
   gl_FragColor = vec4(mix(uBase, uAccent, vMix) * a, a);
 }`;
 
@@ -223,10 +236,12 @@ onPage(() => {
   gl.uniform1f(gl.getUniformLocation(program, 'uRout'), narrow ? ROUT_MOBILE : ROUT_DESKTOP);
   const baseLocation = gl.getUniformLocation(program, 'uBase');
   const accentLocation = gl.getUniformLocation(program, 'uAccent');
+  const inkLocation = gl.getUniformLocation(program, 'uInk');
   const paint = () => {
     const colors = dustColors();
     gl.uniform3fv(baseLocation, colors.base);
     gl.uniform3fv(accentLocation, colors.accent);
+    gl.uniform1f(inkLocation, isLight() ? 1 : 0);
   };
   paint();
   gl.disable(gl.DEPTH_TEST);

@@ -27,9 +27,21 @@
   display: none !important;
 }
 
-/* Смена темы: новая раскрывается кругом от переключателя, без общей перекрёстной смены кадров */
-:root.theme-switching::view-transition-old(root),
-:root.theme-switching::view-transition-new(root) {
+/* Смена темы — цвета разом: без переходов цвета у ссылок, кнопок, карточек и полей.
+   Иначе десятки элементов перекрашиваются по кадрам без видеоускорения — телефон дёргается.
+   Тумблер не трогаем: его ручка в это время едет */
+:root.theme-instant *:not(.theme-toggle, .theme-toggle *),
+:root.theme-instant *::before,
+:root.theme-instant *::after {
+  transition: none !important;
+}
+
+/* Смена темы: старый снимок стоит, новый проявляется кругом или прозрачностью (scripts/theme.ts).
+   Снимаем стандартный переход Astro — у <html> своё имя снимка, поэтому (*), а не (root);
+   правила Astro лежат в @layer astro, эти — вне слоя и сильнее */
+:root.theme-switching::view-transition-group(*),
+:root.theme-switching::view-transition-old(*),
+:root.theme-switching::view-transition-new(*) {
   animation: none;
   mix-blend-mode: normal;
 }
