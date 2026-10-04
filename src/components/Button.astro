@@ -2,8 +2,8 @@
 /**
  * Кнопка: основная — мел на саже, вторичная — прозрачная с рамкой пепла.
  * Geologica 13 px, заглавные, разрядка 0,24em, высота 52 px (малая — 44 px), скругление pill.
- * orbit — вторичная с рамкой мелом: капсула — отсылка к орбите (tokens.css), поэтому при наведении
- * по её контуру обегает «планета» с коротким хвостом, как в фактах «О студии» (вместо стрелки).
+ * neon — вторичная с рамкой мелом, по контуру капсулы бегут неоновые импульсы, как на линии под VANTEGRA
+ * (решение владельца; рисует scripts/neon-pill.ts на canvas): в покое медленно, при наведении быстрее и ярче.
  */
 import { t } from '../lib/typograf.ts';
 
@@ -19,8 +19,8 @@ interface Props {
   [key: `aria-${string}`]: string | boolean | undefined;
   id?: string;
   disabled?: boolean;
-  /** планета на контуре капсулы — только у вторичной */
-  orbit?: boolean;
+  /** неоновые импульсы по контуру капсулы — только у вторичной */
+  neon?: boolean;
 }
 
 const {
@@ -31,13 +31,11 @@ const {
   label,
   class: className,
   external = false,
-  orbit = false,
+  neon = false,
   ...rest
 } = Astro.props;
 
-const classes = ['btn', `btn--${variant}`, `btn--${size}`, orbit && 'btn--orbit', className];
-// радиус контура = половина высоты капсулы без волоса рамки: --btn-h 52 px, --btn-h-sm 44 px (tokens-extra.css)
-const radius = size === 'sm' ? 21.5 : 25.5;
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, neon && 'btn--neon', className];
 const text = label ? t(label) : undefined;
 const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 ---
@@ -49,14 +47,7 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
         {text}
         <slot />
       </span>
-      {
-        orbit && (
-          <svg class="btn__orbit" aria-hidden="true" focusable="false">
-            <rect class="btn__trail" width="100%" height="100%" rx={radius} pathLength="100" />
-            <rect class="btn__planet" width="100%" height="100%" rx={radius} pathLength="100" />
-          </svg>
-        )
-      }
+      {neon && <canvas class="btn__neon" aria-hidden="true" data-neon-pill />}
     </a>
   ) : (
     <button class:list={classes} type={type} {...rest}>
@@ -64,14 +55,7 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
         {text}
         <slot />
       </span>
-      {
-        orbit && (
-          <svg class="btn__orbit" aria-hidden="true" focusable="false">
-            <rect class="btn__trail" width="100%" height="100%" rx={radius} pathLength="100" />
-            <rect class="btn__planet" width="100%" height="100%" rx={radius} pathLength="100" />
-          </svg>
-        )
-      }
+      {neon && <canvas class="btn__neon" aria-hidden="true" data-neon-pill />}
     </button>
   )
 }
@@ -191,92 +175,20 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
     }
   }
 
-  /* ---------- Капсула-орбита: рамка мелом, при наведении по контуру бежит планета ---------- */
+  /* ---------- Неоновая капсула: рамка мелом, импульсы рисует canvas с запасом под свечение ---------- */
 
-  .btn--orbit {
+  .btn--neon {
     --btn-line: var(--chalk);
+    --neon-bleed: 28px;
   }
 
-  /* контур — точно по линии рамки: холст на полволоса шире блока отступов в каждую сторону */
-  .btn__orbit {
+  .btn__neon {
     position: absolute;
-    inset: calc(var(--hairline) * -0.5);
-    width: calc(100% + var(--hairline));
-    height: calc(100% + var(--hairline));
-    overflow: visible;
+    top: calc(var(--neon-bleed) * -1 - var(--hairline));
+    left: calc(var(--neon-bleed) * -1 - var(--hairline));
+    width: calc(100% + 2 * (var(--neon-bleed) + var(--hairline)));
+    height: calc(100% + 2 * (var(--neon-bleed) + var(--hairline)));
     pointer-events: none;
-    fill: none;
-    stroke: var(--chalk);
-  }
-
-  .btn__planet,
-  .btn__trail {
-    opacity: 0;
-    transition: opacity var(--dur) var(--ease-out);
-  }
-
-  /* планета — точка с круглыми концами; хвост — короткая полоса позади неё */
-  .btn__planet {
-    stroke-width: 7;
-    stroke-linecap: round;
-    stroke-dasharray: 0.001 99.999;
-    animation: btn-planet 2.6s linear infinite paused;
-  }
-
-  /* хвост кончается ровно у планеты: его сдвиг = сдвиг планеты + длина хвоста */
-  .btn__trail {
-    stroke-width: 2;
-    stroke-dasharray: 9 91;
-    animation: btn-trail 2.6s linear infinite paused;
-  }
-
-  @keyframes btn-planet {
-    from {
-      stroke-dashoffset: 0;
-    }
-
-    to {
-      stroke-dashoffset: -100;
-    }
-  }
-
-  @keyframes btn-trail {
-    from {
-      stroke-dashoffset: 9;
-    }
-
-    to {
-      stroke-dashoffset: -91;
-    }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .btn--orbit:hover :is(.btn__planet, .btn__trail) {
-      animation-play-state: running;
-    }
-
-    .btn--orbit:hover .btn__planet {
-      opacity: 1;
-    }
-
-    .btn--orbit:hover .btn__trail {
-      opacity: 0.5;
-    }
-  }
-
-  .btn--orbit:focus-visible :is(.btn__planet, .btn__trail),
-  .btn--orbit.is-hover :is(.btn__planet, .btn__trail) {
-    animation-play-state: running;
-  }
-
-  .btn--orbit:focus-visible .btn__planet,
-  .btn--orbit.is-hover .btn__planet {
-    opacity: 1;
-  }
-
-  .btn--orbit:focus-visible .btn__trail,
-  .btn--orbit.is-hover .btn__trail {
-    opacity: 0.5;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -284,9 +196,8 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
       transform: none;
     }
 
-    .btn__planet,
-    .btn__trail {
-      animation: none;
+    .btn__neon {
+      display: none;
     }
   }
 </style>

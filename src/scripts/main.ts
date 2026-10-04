@@ -9,6 +9,7 @@ import './hero-scroll.ts';
 import './disc.ts';
 import './brand.ts';
 import './neon.ts';
+import './neon-pill.ts';
 import './facts.ts';
 import './process-screen.ts';
 import './to-top.ts';
