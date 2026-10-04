@@ -16,6 +16,9 @@ public/api/config.php
 /docs/*.pdf
 /docs/*.pptx
 
+# внутренние материалы студии (цены, ресёрч) — не в публичный репозиторий
+/docs/research/
+
 # служебное
 .DS_Store
 Thumbs.db
