@@ -4,42 +4,33 @@
  * и собирается по нашим этапам, пока слева листаются их тексты.
  *   01 Разбираем задачу — бриф: галочки «Цели, ограничения, объём и сроки, смета».
  *   02 Прототип — рисуется каркас страницы, курсор проходит сценарий.
- *   03 Дизайн и разработка — каркас наполняется за три итерации, каждую отмечает «Демо».
- *   04 Запуск и поддержка — в адресной строке печатается адрес, статус «Онлайн», значок «Поддержка».
- * Состояния и прогресс выставляет scripts/process-screen.ts по прокрутке. Подписи — из data/pages.ts.
- * Без JS — только этапы (окно — иллюстрация, текст этапов — содержание); при reduced motion
- * каждый этап показывает окно уже собранным, без промежуточной анимации.
+ *   03 Дизайн и разработка — каркас становится сайтом за три итерации, каждую отмечает «Демо».
+ *   04 Запуск и поддержка — адрес, «Онлайн», готовый сайт листается до коллекции, значок «Поддержка».
+ * Сам сайт в окне — ProcessSite.astro. Состояния и прогресс выставляет scripts/process-screen.ts
+ * по прокрутке. Подписи — из data/pages.ts. Без JS — только этапы (окно — иллюстрация, текст этапов —
+ * содержание); при reduced motion каждый этап показывает окно уже собранным, без промежуточной анимации.
  */
+import type { ComponentProps } from 'astro/types';
 import Icon from './Icon.astro';
+import ProcessSite from './ProcessSite.astro';
 import { t } from '../lib/typograf.ts';
 
 interface Props {
   /** шаги с уже подставленными значениями */
   steps: { title: string; text: string }[];
-  screen: { brief: string; checks: string[]; product: string; demo: string; url: string; online: string; support: string };
+  screen: {
+    brief: string;
+    checks: string[];
+    demo: string;
+    url: string;
+    online: string;
+    support: string;
+    site: ComponentProps<typeof ProcessSite>['site'];
+  };
 }
 
 const { steps, screen } = Astro.props;
 const pad = (n: number) => String(n).padStart(2, '0');
-
-// Каркас страницы в окне — координаты в сетке 640 × 400 (как пропорции окна 16 : 10);
-// d — очередь прорисовки
-const WIRE = [
-  { x: 32, y: 26, w: 64, h: 14, d: 0 },
-  { x: 32, y: 92, w: 300, h: 24, d: 0.08 },
-  { x: 32, y: 124, w: 220, h: 24, d: 0.12 },
-  { x: 32, y: 164, w: 250, h: 8, d: 0.16 },
-  { x: 32, y: 178, w: 190, h: 8, d: 0.18 },
-  { x: 32, y: 204, w: 112, h: 30, d: 0.22 },
-  { x: 368, y: 84, w: 240, h: 156, d: 0.14 },
-  { x: 32, y: 264, w: 176, h: 88, d: 0.28 },
-  { x: 232, y: 264, w: 176, h: 88, d: 0.32 },
-  { x: 432, y: 264, w: 176, h: 88, d: 0.36 },
-];
-const NAV = [384, 440, 496, 552];
-const pct = (value: number, of: number) => `${((value / of) * 100).toFixed(3)}%`;
-const box = (x: number, y: number, w: number, h: number) =>
-  `left: ${pct(x, 640)}; top: ${pct(y, 400)}; width: ${pct(w, 640)}; height: ${pct(h, 400)}`;
 ---
 
 <div class="pscreen" data-pscreen>
@@ -74,32 +65,9 @@ const box = (x: number, y: number, w: number, h: number) =>
           </ul>
         </div>
 
-        <!-- 02–04 — страница: каркас → дизайн → запуск -->
+        <!-- 02–04 — сайт: каркас → дизайн → готовый сайт -->
         <div class="win__page">
-          <svg class="win__wire" viewBox="0 0 640 400" focusable="false">
-            {WIRE.map((r) => <rect x={r.x} y={r.y} width={r.w} height={r.h} pathLength="1" style={`--d: ${r.d}`} />)}
-            {NAV.map((x, i) => <line x1={x} y1="33" x2={x + 40} y2="33" pathLength="1" style={`--d: ${0.04 + i * 0.02}`} />)}
-          </svg>
-
-          <div class="ui">
-            <span class="ui__logo" style={box(32, 26, 64, 14)}><i></i><b></b></span>
-            {NAV.map((x) => <span class="ui__nav" style={box(x, 31, 40, 4)} />)}
-            <span class="ui__title" style={box(32, 96, 330, 40)}>{t(screen.product)}</span>
-            <span class="ui__sub" style={box(32, 164, 250, 8)} />
-            <span class="ui__sub ui__sub--short" style={box(32, 178, 190, 8)} />
-            <span class="ui__btn" style={box(32, 204, 112, 30)}><b></b></span>
-            <span class="ui__media" style={box(368, 84, 240, 156)}><Icon name="factor-content" size={28} class="ui__media-icon" /></span>
-            {
-              [32, 232, 432].map((x) => (
-                <span class="ui__card" style={box(x, 264, 176, 88)}>
-                  <i />
-                  <b />
-                  <b class="is-short" />
-                </span>
-              ))
-            }
-            <span class="ui__sweep"></span>
-          </div>
+          <ProcessSite site={screen.site} />
 
           <span class="win__cursor" data-pscreen-cursor><Icon name="cursor" size={18} /></span>
 
@@ -441,152 +409,13 @@ const box = (x: number, y: number, w: number, h: number) =>
     transform: none;
   }
 
-  /* ---------- 02–04 Страница ---------- */
+  /* ---------- 02–04 Сайт (ProcessSite.astro) ---------- */
 
   .win__page {
     position: absolute;
     inset: 0;
     opacity: 0;
     transition: opacity 500ms var(--ease-out);
-  }
-
-  /* каркас: тонкие контуры прорисовываются по очереди (--draw ведёт прокрутка) */
-  .win__wire {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    fill: none;
-    stroke: var(--chalk);
-    stroke-opacity: 0.4;
-    stroke-width: 0.9;
-    transition: opacity 600ms var(--ease-out);
-  }
-
-  .win__wire rect,
-  .win__wire line {
-    stroke-dasharray: 1 1;
-    stroke-dashoffset: calc((1 - clamp(0, (var(--draw, 0) - var(--d)) * 2.2, 1)) * 1px);
-  }
-
-  .ui > * {
-    position: absolute;
-    opacity: 0;
-    transition:
-      opacity 600ms var(--ease-out),
-      transform 600ms var(--ease-out);
-  }
-
-  .ui__logo {
-    display: flex;
-    align-items: center;
-    gap: 8%;
-  }
-
-  .ui__logo i {
-    flex: none;
-    height: 100%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: var(--chalk);
-  }
-
-  .ui__logo b {
-    flex: 1;
-    height: 30%;
-    background: var(--chalk);
-  }
-
-  .ui__nav {
-    background: var(--ash);
-  }
-
-  .ui__title {
-    display: flex;
-    align-items: flex-start;
-    font-family: var(--font-display);
-    font-size: 4.6cqw;
-    line-height: 1;
-    letter-spacing: 0.06em;
-    white-space: nowrap;
-    text-transform: uppercase;
-    color: var(--chalk);
-    transform: translateY(6px);
-  }
-
-  .ui__sub {
-    background: var(--ash);
-    opacity: 0;
-  }
-
-  .ui__btn {
-    display: grid;
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background: var(--chalk);
-  }
-
-  .ui__btn b {
-    width: 52%;
-    height: 14%;
-    background: var(--soot);
-  }
-
-  .ui__media {
-    display: grid;
-    place-items: center;
-    background: var(--graphite);
-  }
-
-  .ui__media :global(.ui__media-icon) {
-    color: var(--ash);
-    opacity: 0;
-    transition: opacity 500ms var(--ease-out);
-  }
-
-  .ui__card {
-    display: grid;
-    align-content: end;
-    gap: 9%;
-    padding: 6%;
-    border: var(--hairline) solid var(--graphite);
-  }
-
-  .ui__card i {
-    position: absolute;
-    top: 14%;
-    left: 6%;
-    width: 9%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    border: var(--hairline) solid var(--chalk);
-    opacity: 0;
-    transition: opacity 500ms var(--ease-out);
-  }
-
-  .ui__card b {
-    height: 6px;
-    width: 80%;
-    background: var(--ash);
-    opacity: 0;
-    transition: opacity 500ms var(--ease-out);
-  }
-
-  .ui__card b.is-short {
-    width: 55%;
-  }
-
-  /* световая полоса запуска проходит по странице слева направо */
-  .ui__sweep {
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 22%;
-    background: var(--chalk);
-    opacity: 0;
-    transform: translateX(calc(var(--sweep, 0) * 560% - 120%)) skewX(-12deg);
-    transition: none;
-    will-change: transform, opacity;
   }
 
   .win__cursor {
@@ -690,34 +519,10 @@ const box = (x: number, y: number, w: number, h: number) =>
     opacity: 1;
   }
 
-  .pscreen__stage[data-step='2'] .win__cursor {
+  /* курсор: на прототипе проходит сценарий, на дизайне тянет кегль заголовка (итерация 1) */
+  .pscreen__stage[data-step='2'] .win__cursor,
+  .pscreen__stage[data-step='3']:not([data-iter='2'], [data-iter='3']) .win__cursor {
     opacity: 1;
-  }
-
-  /* дизайн по итерациям: 1 — блоки, 2 — типографика, 3 — детали; каркас уходит */
-  .pscreen__stage:is([data-iter='1'], [data-iter='2'], [data-iter='3']) :is(.ui__media, .ui__card) {
-    opacity: 1;
-  }
-
-  .pscreen__stage:is([data-iter='2'], [data-iter='3']) :is(.ui__title, .ui__sub, .ui__nav, .ui__logo) {
-    opacity: 1;
-    transform: none;
-  }
-
-  .pscreen__stage[data-iter='3'] :is(.ui__btn) {
-    opacity: 1;
-  }
-
-  .pscreen__stage[data-iter='3'] :is(.ui__card i, .ui__card b, .ui__media :global(.ui__media-icon)) {
-    opacity: 1;
-  }
-
-  .pscreen__stage:is([data-iter='2'], [data-iter='3']) .win__wire {
-    opacity: 0.35;
-  }
-
-  .pscreen__stage[data-iter='3'] .win__wire {
-    opacity: 0;
   }
 
   .pscreen__stage[data-step='3'] .win__chip--demo {
@@ -731,7 +536,7 @@ const box = (x: number, y: number, w: number, h: number) =>
     background: var(--chalk);
   }
 
-  /* запуск: адрес, «Онлайн», полоса света, «Поддержка» */
+  /* запуск: адрес, «Онлайн», «Поддержка»; сам сайт листается (ProcessSite.astro) */
   .pscreen__stage[data-step='4'] :global(.win__lock) {
     opacity: 1;
   }
@@ -748,10 +553,6 @@ const box = (x: number, y: number, w: number, h: number) =>
 
   .pscreen__stage[data-live] .win__live {
     animation: win-live 1.8s var(--ease-out) infinite;
-  }
-
-  .pscreen__stage[data-step='4'] .ui__sweep {
-    opacity: var(--sweep-a, 0);
   }
 
   .pscreen__stage[data-support] .win__chip--support {
@@ -812,8 +613,7 @@ const box = (x: number, y: number, w: number, h: number) =>
   @media (prefers-reduced-motion: reduce) {
     .win__brief,
     .win__page,
-    .ui > *,
-    .win__wire,
+    .win__cursor,
     .win__status,
     .win__chip,
     :global(.js) .pscreen__step {

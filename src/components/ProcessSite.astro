@@ -1,0 +1,532 @@
+---
+/**
+ * Сайт, который собирается в окне блока «Как работаем» (ProcessScreen.astro):
+ *   02 — каркас: контуры блоков прорисовываются по очереди;
+ *   03 — дизайн за три итерации: 1 — сетка и типографика (дизайнер тянет кегль заголовка за угол рамки),
+ *        2 — графика (гравюра проходит доску в несколько проходов), 3 — детали, сетка и каркас уходят;
+ *   04 — готовый сайт: шапка прилипает, страница листается до коллекции и подвала.
+ * Сайт нарисован в «настоящих» пикселях страницы шириной 1280 (lib/process-site.ts) и уменьшен в окно:
+ * --u — ширина окна / 1280, поэтому на любом экране это один и тот же макет.
+ * Бренд условный («Ваш бренд»), иллюстрации — гравюры (lib/engraving.ts), тексты — из data/pages.ts.
+ * Появление — классы: .m-type — с итерации 1, .m-art — с 2, .m-fine — с 3. Состояния (data-step, data-iter)
+ * и переменные (--draw, --fit, --ink, --scroll) ставит scripts/process-screen.ts на окне .pscreen__stage.
+ */
+import Engraving from './Engraving.astro';
+import Icon from './Icon.astro';
+import { t } from '../lib/typograf.ts';
+import { cubeCard, cylinderCard, sphereCard, sphereOnPedestal } from '../lib/engraving.ts';
+import { GRID, SITE, TITLE } from '../lib/process-site.ts';
+
+interface Props {
+  site: {
+    brand: string;
+    nav: string[];
+    buy: string;
+    eyebrow: string;
+    title: string[];
+    lead: string;
+    primary: string;
+    secondary: string;
+    badge: string;
+    scroll: string;
+    object: string;
+    shapes: string[];
+    price: string;
+    collection: string;
+    collectionTitle: string;
+    all: string;
+    top: string;
+    font: string;
+  };
+}
+
+const { site } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+const u = (n: number) => `calc(${n} * var(--u))`;
+/** Место элемента в пикселях макета */
+const at = (x: number, y: number, w?: number, h?: number) =>
+  [`left: ${u(x)}`, `top: ${u(y)}`, w === undefined ? '' : `width: ${u(w)}`, h === undefined ? '' : `height: ${u(h)}`].filter(Boolean).join('; ');
+/** Место по правому краю */
+const atRight = (right: number, y: number) => `right: ${u(SITE.w - right)}; top: ${u(y)}`;
+
+const hero = sphereOnPedestal();
+// по порядку названий в site.shapes: шар, цилиндр, куб
+const cards = [sphereCard(), cylinderCard(), cubeCard()];
+const columns = Array.from({ length: GRID.count }, (_, i) => GRID.margin + i * (GRID.column + GRID.gap));
+const cardX = (i: number) => GRID.margin + i * 4 * (GRID.column + GRID.gap);
+
+// Каркас первого экрана (этап 02): блоки там же, где встанет дизайн; d — очередь прорисовки
+const WIRE_RECTS: [x: number, y: number, w: number, h: number, rx: number, d: number][] = [
+  [40, 29, 150, 16, 0, 0],
+  [1124, 18, 116, 40, 20, 0.06],
+  [40, 187, 180, 10, 0, 0.1],
+  [40, 229, 250, 77, 0, 0.12],
+  [40, 329, 548, 77, 0, 0.16],
+  [652, 76, 628, 724, 0, 0.14],
+  [40, 566, 270, 56, 28, 0.24],
+  [684, 108, 104, 28, 14, 0.3],
+];
+const WIRE_LINES: [x1: number, y1: number, x2: number, y2: number, d: number][] = [
+  [416, 38, 515, 38, 0.02],
+  [551, 38, 639, 38, 0.04],
+  [675, 38, 741, 38, 0.06],
+  [777, 38, 865, 38, 0.08],
+  [0, 76, 1280, 76, 0.02],
+  [40, 480, 452, 480, 0.2],
+  [40, 509, 372, 509, 0.22],
+  [346, 604, 452, 604, 0.28],
+  [652, 76, 1280, 800, 0.2],
+  [1280, 76, 652, 800, 0.22],
+  [684, 754, 862, 754, 0.32],
+  [1150, 754, 1240, 754, 0.34],
+  [40, 746, 132, 746, 0.36],
+];
+---
+
+<div class="site">
+  <!-- 02 — каркас -->
+  <svg class="site__wire" viewBox={`0 0 ${SITE.w} ${SITE.h}`} focusable="false">
+    {WIRE_RECTS.map(([x, y, w, h, rx, d]) => <rect x={x} y={y} width={w} height={h} rx={rx} pathLength="1" style={`--d: ${d}`} />)}
+    {WIRE_LINES.map(([x1, y1, x2, y2, d]) => <line x1={x1} y1={y1} x2={x2} y2={y2} pathLength="1" style={`--d: ${d}`} />)}
+  </svg>
+
+  <div class="site__page">
+    <!-- Первый экран -->
+    <p class="m m-type m-label m-eyebrow" style={at(40, 186)}>{t(site.eyebrow)}</p>
+
+    <div class="m m-type m-titlebox" style={`${at(TITLE.x, TITLE.y, TITLE.w, TITLE.h)}; --from: ${TITLE.from}; --pad: ${TITLE.pad}`}>
+      <p class="m-title">{site.title.map((line) => <span>{t(line)}</span>)}</p>
+      <span class="m-select">
+        <i></i><i></i><i></i><i></i>
+        <span class="m-spec" data-site-spec data-font={site.font} data-size={TITLE.size}>{site.font} · {TITLE.size}</span>
+      </span>
+    </div>
+
+    <p class="m m-type m-lead" style={at(40, 466, 420)}>{t(site.lead)}</p>
+    <span class="m m-type m-label m-btn" style={at(40, 566, 270, 56)}>
+      {t(site.primary)}
+      <span class="m-btn__fill">{t(site.primary)}</span>
+    </span>
+    <span class="m m-type m-label m-link" style={at(346, 566, undefined, 56)}>
+      <span class="m-link__text">{t(site.secondary)}</span><Icon name="arrow-right" size={18} class="m-ico" />
+    </span>
+    <span class="m m-fine m-label m-note" style={at(40, 740)}>{t(site.scroll)}<Icon name="arrow-down" size={18} class="m-ico" /></span>
+
+    <span class="m m-fine m-split" style={at(652, 76, undefined, 724)}></span>
+    <div class="m m-art m-hero" style={at(652, 76, 628, 724)}><Engraving art={hero} /></div>
+    <span class="m m-fine m-label m-badge" style={at(684, 108)}>{t(site.badge)}</span>
+    <span class="m m-type m-label m-note" style={at(684, 748)}>{t(`${site.object} 01 — ${site.shapes[0] ?? ''}`)}</span>
+    <span class="m m-fine m-label m-note m-counter" style={atRight(1240, 748)}>
+      <Icon name="arrow-left" size={18} class="m-ico" />01 / {pad(cards.length)}<Icon name="arrow-right" size={18} class="m-ico" />
+    </span>
+
+    <!-- Коллекция: видна, когда готовый сайт листают (этап 04) -->
+    <p class="s m-label m-eyebrow" style={at(40, 912)}>{t(site.collection)}</p>
+    <p class="s c-title" style={at(40, 940)}>{t(site.collectionTitle)}</p>
+    <span class="s m-label c-all" style={atRight(1240, 962)}>{t(site.all)}<Icon name="arrow-right" size={18} class="m-ico" /></span>
+    {
+      cards.map((art, i) => (
+        <Fragment>
+          <div class="s c-frame" style={at(cardX(i), 1032, 384, 268)}>
+            <Engraving art={art} />
+          </div>
+          <span class="s c-name" style={at(cardX(i), 1320)}>
+            {t(`${site.object} ${pad(i + 1)}`)}
+          </span>
+          <span class="s m-label c-price" style={atRight(cardX(i) + 384, 1321)}>
+            {t(site.price)}
+          </span>
+          <span class="s c-shape" style={at(cardX(i), 1348)}>
+            {t(site.shapes[i] ?? '')}
+          </span>
+        </Fragment>
+      ))
+    }
+
+    <!-- Подвал -->
+    <span class="s f-rule" style={at(0, 1398, SITE.w)}></span>
+    <span class="s m-label m-note" style={at(40, 1422)}>© {t(site.brand)}</span>
+    <span class="s m-label m-note f-links" style={`top: ${u(1422)}`}>{site.nav.map((item) => <span>{t(item)}</span>)}</span>
+    <span class="s m-label m-note" style={atRight(1240, 1422)}>{t(site.top)}<Icon name="arrow-up" size={18} class="m-ico" /></span>
+    <svg class="s f-mark" style={at(40, 1448, 1200, 152)} viewBox="0 0 1200 152" focusable="false">
+      <text x="0" y="118" textLength="1200" lengthAdjust="spacing">{site.brand.toUpperCase()}</text>
+    </svg>
+  </div>
+
+  <!-- Шапка: на готовом сайте прилипает, страница уходит под неё -->
+  <div class="site__nav">
+    <span class="m m-type m-brand" style={at(40, 28)}>{t(site.brand)}</span>
+    <span class="m m-type m-label m-links" style={`top: ${u(32)}`}>{site.nav.map((item) => <span>{t(item)}</span>)}</span>
+    <span class="m m-type m-label m-buy" style={`${atRight(1240, 18)}; width: ${u(116)}; height: ${u(40)}`}>{t(site.buy)}</span>
+    <span class="m m-fine m-navline" style={`top: ${u(76)}`}></span>
+  </div>
+
+  <!-- 03 — модульная сетка дизайнера: 12 колонок -->
+  <svg class="site__grid" viewBox={`0 0 ${SITE.w} ${SITE.h}`} focusable="false">
+    {columns.map((x) => <rect x={x} y="0" width={GRID.column} height={SITE.h} />)}
+  </svg>
+</div>
+
+<style>
+  .site {
+    --u: calc(100cqw / 1280);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    color: var(--chalk);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ---------- 02 Каркас: тонкие контуры прорисовываются по очереди (--draw ведёт прокрутка) ---------- */
+
+  .site__wire {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--chalk);
+    stroke-opacity: 0.4;
+    stroke-width: 1.8;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .site__wire :is(rect, line) {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: calc((1 - clamp(0, (var(--draw, 0) - var(--d)) * 2.2, 1)) * 1px);
+  }
+
+  /* ---------- Страница, шапка, сетка ---------- */
+
+  .site__page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(1600 * var(--u));
+    transform: translateY(calc(var(--scroll, 0) * -800 * var(--u)));
+  }
+
+  .site__nav {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: calc(76 * var(--u));
+  }
+
+  .site__grid {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: var(--chalk);
+    fill-opacity: 0.05;
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .m,
+  .s {
+    position: absolute;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .m {
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .site :global(.m-ico) {
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+  }
+
+  /* подписи макета: Geologica, заглавные, разрядка */
+  .m-label {
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: calc(12 * var(--u));
+    line-height: 1;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .m-eyebrow {
+    font-size: calc(13 * var(--u));
+    letter-spacing: 0.24em;
+    color: var(--ash);
+  }
+
+  .m-note {
+    font-size: calc(11 * var(--u));
+    letter-spacing: 0.24em;
+    color: var(--ash);
+  }
+
+  /* ---------- Шапка ---------- */
+
+  .m-brand {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: calc(20 * var(--u));
+    line-height: 1;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .m-links {
+    right: 0;
+    left: 0;
+    justify-content: center;
+    gap: calc(36 * var(--u));
+    font-size: calc(13 * var(--u));
+    letter-spacing: 0.18em;
+  }
+
+  .m-buy {
+    justify-content: center;
+    border: var(--hairline) solid var(--chalk);
+    border-radius: var(--radius-pill);
+  }
+
+  .m-navline {
+    right: 0;
+    left: 0;
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  /* ---------- Первый экран ---------- */
+
+  /* кегль тянут за угол рамки: --fit 0 → 1 (итерация 1) */
+  .m-titlebox {
+    transform: scale(calc(var(--from) + (1 - var(--from)) * var(--fit, 1)));
+    transform-origin: 0 0;
+  }
+
+  .m-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: calc(104 * var(--u));
+    line-height: calc(100 * var(--u));
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .m-title span {
+    display: block;
+  }
+
+  /* рамка выделения дизайнера: ручки по углам, подпись кегля */
+  .m-select {
+    position: absolute;
+    inset: calc(var(--pad) * -1 * var(--u));
+    border: var(--hairline) solid var(--chalk);
+    opacity: 0;
+    transition: opacity 400ms var(--ease-out);
+  }
+
+  .m-select i {
+    position: absolute;
+    width: max(5px, calc(10 * var(--u)));
+    aspect-ratio: 1;
+    border: var(--hairline) solid var(--chalk);
+    background: var(--soot);
+    translate: -50% -50%;
+  }
+
+  .m-select i:nth-child(2),
+  .m-select i:nth-child(4) {
+    left: 100%;
+  }
+
+  .m-select i:nth-child(3),
+  .m-select i:nth-child(4) {
+    top: 100%;
+  }
+
+  .m-spec {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10 * var(--u));
+    padding: calc(6 * var(--u)) calc(10 * var(--u));
+    background: var(--chalk);
+    color: var(--soot);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: calc(13 * var(--u));
+    line-height: 1;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .m-lead {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: calc(18 * var(--u));
+    line-height: 1.6;
+    white-space: normal;
+    color: var(--ash);
+  }
+
+  /* кнопка: на типографике — контур, на графике заливается */
+  .m-btn {
+    justify-content: center;
+    border: var(--hairline) solid var(--chalk);
+    border-radius: var(--radius-pill);
+  }
+
+  .m-btn__fill {
+    position: absolute;
+    inset: calc(var(--hairline) * -1);
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    background: var(--chalk);
+    color: var(--soot);
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .m-link__text {
+    text-decoration: underline;
+    text-decoration-thickness: var(--hairline);
+    text-underline-offset: calc(8 * var(--u));
+  }
+
+  .m-split {
+    border-left: var(--hairline) solid var(--graphite);
+  }
+
+  .m-badge {
+    height: calc(28 * var(--u));
+    padding: 0 calc(14 * var(--u));
+    border: var(--hairline) solid var(--chalk);
+    border-radius: var(--radius-pill);
+    font-size: calc(11 * var(--u));
+    letter-spacing: 0.24em;
+  }
+
+  /* ---------- Коллекция и подвал ---------- */
+
+  .c-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: calc(56 * var(--u));
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .c-frame {
+    --ink: 1;
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .c-name {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: calc(18 * var(--u));
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .c-price {
+    font-size: calc(13 * var(--u));
+    letter-spacing: 0.08em;
+  }
+
+  .c-shape {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: calc(15 * var(--u));
+    line-height: 1;
+    color: var(--ash);
+  }
+
+  .f-rule {
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .f-links {
+    right: 0;
+    left: 0;
+    justify-content: center;
+    gap: calc(32 * var(--u));
+  }
+
+  .f-mark {
+    overflow: visible;
+  }
+
+  .f-mark text {
+    font-family: var(--font-display);
+    font-size: 156px;
+    fill: var(--chalk);
+  }
+
+  /* Днём тонкий Tenor Sans крупных заголовков — с волосной обводкой, как заголовки сайта (styles/theme.css) */
+  :global(:root[data-theme='light']) :is(.m-title, .c-title) {
+    -webkit-text-stroke: 0.35px currentColor;
+  }
+
+  /* ---------- Состояния ---------- */
+
+  /* итерации дизайна: 1 — сетка и типографика, 2 — графика, 3 — детали; каркас и сетка уходят */
+  :global(.pscreen__stage[data-iter]) .m-type {
+    opacity: 1;
+  }
+
+  :global(.pscreen__stage:is([data-iter='2'], [data-iter='3'])) :is(.m-art, .m-btn__fill) {
+    opacity: 1;
+  }
+
+  :global(.pscreen__stage[data-iter='3']) .m-fine {
+    opacity: 1;
+  }
+
+  :global(.pscreen__stage[data-iter='1']) .site__wire {
+    opacity: 0.35;
+  }
+
+  :global(.pscreen__stage[data-iter='2']) .site__wire {
+    opacity: 0.12;
+  }
+
+  :global(.pscreen__stage[data-iter='3']) .site__wire {
+    opacity: 0;
+  }
+
+  :global(.pscreen__stage:is([data-iter='1'], [data-iter='2'])) .site__grid,
+  :global(.pscreen__stage[data-iter='1']) .m-select {
+    opacity: 1;
+  }
+
+  /* 04 — шапка прилипает: страница уходит под неё */
+  :global(.pscreen__stage[data-step='4']) .site__nav {
+    background: var(--soot);
+  }
+
+  :global(.pscreen__stage[data-step='4']) .site__page {
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .m,
+    .site__wire,
+    .site__grid,
+    .m-select,
+    .m-btn__fill {
+      transition: none;
+    }
+  }
+</style>
