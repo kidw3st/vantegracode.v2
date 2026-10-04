@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BrandWordmark from '../components/BrandWordmark.astro';
+import ArrowLink from '../components/ArrowLink.astro';
 import Button from '../components/Button.astro';
 import CtaSection from '../components/CtaSection.astro';
 import Logo from '../components/Logo.astro';
@@ -150,9 +151,7 @@ const secondary = showWorks
     <div class="container">
       <SectionHeader
         id="services-title"
-        eyebrow={eyebrow('services', home.services.label)}
         title={home.services.title}
-        link={{ href: '/uslugi/', label: home.services.link }}
       />
       <ul class="cards cards--3 rail" role="list" data-reveal="stagger">
         {
@@ -164,6 +163,10 @@ const secondary = showWorks
         }
       </ul>
       <ServiceIdea {...home.services.idea} href="#cta-title" class="services-idea" />
+      <!-- ссылка на все услуги — под «Вашей идеей» (решение владельца), по оси блока -->
+      <div class="services-more" data-reveal>
+        <ArrowLink href="/uslugi/" label={home.services.link} />
+      </div>
     </div>
   </section>
 
@@ -434,6 +437,12 @@ const secondary = showWorks
   /* «Ваша идея» — под карточками услуг, с тем же шагом, что между карточками */
   :global(.services-idea) {
     margin-top: var(--space-3);
+  }
+
+  .services-more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-7);
   }
 
   /* ---------- Работы ---------- */
