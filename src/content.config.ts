@@ -10,21 +10,31 @@ const iconNames = new Set(iconManifest.map((icon) => icon.name));
 /** Услуги — 6 файлов Markdown */
 const services = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/services' }),
-  schema: z.object({
-    title: z.string(),
-    order: z.number().int().min(1),
-    short: z.string(),
-    lead: z.string(),
-    includes: z.array(z.string()).min(3),
-    forWhom: z.array(z.string()).length(3),
-    priceKey: z.string(),
-    /** Иконка карточки — имя из src/assets/icons/manifest.json */
-    icon: z.string().refine((name) => iconNames.has(name), { message: 'нет такой иконки в src/assets/icons/manifest.json' }),
-    image: z.string().optional(),
-    faqTags: z.array(z.string()).default([]),
-    seoTitle: z.string(),
-    seoDescription: z.string().max(160),
-  }),
+  schema: z
+    .object({
+      title: z.string(),
+      order: z.number().int().min(1),
+      short: z.string(),
+      lead: z.string(),
+      includes: z.array(z.string()).min(3),
+      /** 3 ключевых пункта для карточки на главной — дословно из includes */
+      highlights: z.array(z.string()).length(3),
+      forWhom: z.array(z.string()).length(3),
+      priceKey: z.string(),
+      /** Иконка карточки — имя из src/assets/icons/manifest.json */
+      icon: z.string().refine((name) => iconNames.has(name), { message: 'нет такой иконки в src/assets/icons/manifest.json' }),
+      image: z.string().optional(),
+      faqTags: z.array(z.string()).default([]),
+      seoTitle: z.string(),
+      seoDescription: z.string().max(160),
+    })
+    .superRefine((data, ctx) => {
+      for (const item of data.highlights) {
+        if (!data.includes.includes(item)) {
+          ctx.addIssue({ code: 'custom', path: ['highlights'], message: `пункта «${item}» нет в includes` });
+        }
+      }
+    }),
 });
 
 /** Цены: число без «₽» или null; срок — в родительном падеже («2 недель») или null */

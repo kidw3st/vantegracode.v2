@@ -1,0 +1,102 @@
+---
+/**
+ * «Ваша идея» — под карточками услуг (решение владельца, PLAN.md, п. 39): задачу не из списка тоже
+ * рассматриваем. Пунктирная рамка — свободное место в ряду услуг; при наведении пунктир бежит по кругу.
+ * Не карточка ряда: на телефоне стоит под лентой услуг, видна без пролистывания.
+ */
+import Button from './Button.astro';
+import Icon from './Icon.astro';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  title: string;
+  text: string;
+  cta: string;
+  href: string;
+  class?: string;
+}
+
+const { title, text, cta, href, class: className } = Astro.props;
+---
+
+<div class:list={['idea', className]} data-reveal>
+  <svg class="idea__frame" aria-hidden="true" focusable="false">
+    <rect width="100%" height="100%"></rect>
+  </svg>
+  <Icon name="plus" size={28} class="idea__icon" />
+  <h3 class="idea__title">{t(title)}</h3>
+  <p class="idea__text">{t(text)}</p>
+  <Button href={href} label={cta} class="idea__cta" />
+</div>
+
+<style>
+  .idea {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-5) var(--space-4);
+    padding: var(--card-pad);
+  }
+
+  .idea__text {
+    grid-column: 1 / -1;
+    max-width: 46ch;
+    font-size: var(--fs-list);
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .idea :global(.idea__cta) {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .idea :global(.idea__icon) {
+    color: var(--chalk);
+  }
+
+  /* Пунктир — рамка в размер блока, половина штриха снаружи срезана: внутри волос; бежит при наведении */
+  .idea__frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    fill: none;
+    stroke: var(--chalk);
+    stroke-width: 2;
+    stroke-dasharray: 8 7;
+    animation: idea-march 1.5s linear infinite paused;
+  }
+
+  @keyframes idea-march {
+    to {
+      stroke-dashoffset: -15;
+    }
+  }
+
+  .idea:hover .idea__frame,
+  .idea:focus-within .idea__frame {
+    animation-play-state: running;
+  }
+
+  @media (min-width: 1024px) {
+    .idea {
+      grid-template-columns: auto minmax(0, 0.8fr) minmax(0, 1.4fr) auto;
+      gap: var(--space-6);
+    }
+
+    .idea__text,
+    .idea :global(.idea__cta) {
+      grid-column: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .idea__frame {
+      animation: none;
+    }
+  }
+</style>

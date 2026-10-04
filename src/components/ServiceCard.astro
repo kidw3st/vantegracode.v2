@@ -1,5 +1,12 @@
 ---
-/** Карточка услуги для главной: сверху номер и иконка, снизу название, строка short и стрелка. Вся карточка — ссылка. */
+/**
+ * Карточка услуги на главной («Наши услуги», PLAN.md, п. 39): рамка мелом, как у фактов «О студии»;
+ * сверху иконка и стрелка, ниже название и строка short, внизу три ключевых пункта состава (highlights)
+ * по волосным линиям. Без номеров. Ссылка — на названии и растянута на всю карточку: имя ссылки для
+ * диктора — только название, а не весь текст карточки.
+ * При наведении по рамке бегут два импульса — ход «Neon Border» из референса владельца, но чистой линией
+ * мела, без свечения (свечение на сайте — только у линии под VANTEGRA). При reduced motion импульсы стоят.
+ */
 import Arrow from './Arrow.astro';
 import Icon, { type IconName } from './Icon.astro';
 import { t } from '../lib/typograf.ts';
@@ -7,47 +14,51 @@ import type { Service } from '../lib/content.ts';
 
 interface Props {
   service: Service;
-  index: number;
   class?: string;
 }
 
-const { service, index, class: className } = Astro.props;
-const num = String(index + 1).padStart(2, '0');
+const { service, class: className } = Astro.props;
 ---
 
-<a class:list={['service-card', className]} href={`/uslugi/${service.id}/`}>
-  <span class="service-card__num num" aria-hidden="true">{num}</span>
-  <Icon name={service.data.icon as IconName} size={32} class="service-card__icon" />
-  <span class="service-card__body">
-    <h3 class="service-card__title">{t(service.data.title)}</h3>
-    <span class="service-card__short">{t(service.data.short)}</span>
-    <Arrow class="service-card__arrow" />
-  </span>
-</a>
+<article class:list={['sc', className]}>
+  <div class="sc__top">
+    <Icon name={service.data.icon as IconName} size={32} class="sc__icon" />
+    <Arrow direction="up-right" class="sc__arrow" />
+  </div>
+  <h3 class="sc__title">
+    <a class="sc__link" href={`/uslugi/${service.id}/`}>{t(service.data.title)}</a>
+  </h3>
+  <p class="sc__short">{t(service.data.short)}</p>
+  <ul class="sc__list" role="list">
+    {service.data.highlights.map((item) => <li>{t(item)}</li>)}
+  </ul>
+  <svg class="sc__trace" aria-hidden="true" focusable="false">
+    <rect width="100%" height="100%" pathLength="100"></rect>
+  </svg>
+</article>
 
 <style>
-  .service-card {
+  .sc {
     position: relative;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr;
-    align-content: space-between;
-    gap: var(--space-8) var(--space-5);
-    min-height: clamp(240px, 22vw, 320px);
+    display: flex;
+    flex-direction: column;
     height: 100%;
     padding: var(--card-pad);
-    border: var(--hairline) solid var(--graphite);
-    transition: border-color var(--dur-fast) var(--ease-out);
+    border: var(--hairline) solid var(--chalk);
   }
 
-  .service-card__num {
-    font-size: clamp(2rem, 1.6rem + 1.2vw, 2.75rem);
-    line-height: 1;
-    color: var(--ash);
+  .sc__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-7);
   }
 
-  .service-card :global(.service-card__arrow) {
-    align-self: end;
+  .sc :global(.sc__icon) {
+    color: var(--chalk);
+  }
+
+  .sc :global(.sc__arrow) {
     font-size: 1.25rem;
     color: var(--ash);
     transition:
@@ -55,63 +66,112 @@ const num = String(index + 1).padStart(2, '0');
       color var(--dur-fast) var(--ease-out);
   }
 
-  /* Название — на всю ширину; описание и стрелка — в одной строке, стрелка по нижнему краю */
-  .service-card__body {
-    grid-column: 1 / -1;
-    align-self: end;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--space-3) var(--space-5);
+  /* название — в коробке на две строки, прижато к низу: в ряду описания и списки начинаются на одной линии */
+  .sc__title {
+    display: flex;
+    align-items: flex-end;
+    min-height: 2lh;
+    margin-bottom: var(--space-3);
   }
 
-  .service-card__title {
-    grid-column: 1 / -1;
+  .sc__link {
+    color: inherit;
+    text-decoration: none;
   }
 
-  /* Иконка — в правом верхнем углу, на одной линии с номером; пеплом, при наведении мелом */
-  .service-card :global(.service-card__icon) {
-    align-self: center;
-    color: var(--ash);
-    transition: color var(--dur-fast) var(--ease-out);
+  /* вся карточка — ссылка; фокус рисуется на карточке, а не вокруг названия */
+  .sc__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
   }
 
-  .service-card__short {
-    color: var(--ash);
-    font-size: var(--fs-small);
-    line-height: 1.55;
+  .sc__link:focus-visible {
+    outline: none;
+  }
+
+  .sc:has(.sc__link:focus-visible) {
+    outline: 2px solid var(--chalk);
+    outline-offset: 3px;
+  }
+
+  .sc__short {
     max-width: 34ch;
+    font-size: var(--fs-list);
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  /* пункты прижаты к низу: в ряду карточек списки стоят на одной линии */
+  .sc__list {
+    margin-top: auto;
+    padding-top: var(--space-7);
+  }
+
+  .sc__list li {
+    padding-block: var(--space-3);
+    border-top: var(--hairline) solid var(--graphite);
+    font-size: var(--fs-list);
+    line-height: 1.45;
+  }
+
+  .sc__list li:last-child {
+    padding-bottom: 0;
+  }
+
+  /* Импульсы по рамке: рамка в размер карточки вместе с её линией; половина штриха снаружи срезана —
+     внутри остаётся полоса шириной в два волоса поверх рамки. Два штриха на круг (12 + 38 = 50) */
+  .sc__trace {
+    position: absolute;
+    inset: calc(var(--hairline) * -1);
+    width: calc(100% + 2 * var(--hairline));
+    height: calc(100% + 2 * var(--hairline));
+    overflow: hidden;
+    pointer-events: none;
+    fill: none;
+    stroke: var(--chalk);
+    stroke-width: 4;
+    stroke-dasharray: 12 38;
+    opacity: 0;
+    animation: sc-trace 4.8s linear infinite paused;
+    transition: opacity var(--dur) var(--ease-out);
+  }
+
+  @keyframes sc-trace {
+    to {
+      stroke-dashoffset: -100;
+    }
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .service-card:hover {
-      border-color: var(--ash);
+    .sc:hover .sc__trace {
+      opacity: 1;
+      animation-play-state: running;
     }
 
-    .service-card:hover :global(.service-card__arrow) {
-      translate: var(--arrow-shift) 0;
-      color: var(--chalk);
-    }
-
-    .service-card:hover :global(.service-card__icon) {
+    .sc:hover :global(.sc__arrow) {
+      translate: calc(var(--arrow-shift) * 0.7) calc(var(--arrow-shift) * -0.7);
       color: var(--chalk);
     }
   }
 
-  .service-card.is-hover {
-    border-color: var(--ash);
+  .sc:has(.sc__link:focus-visible) .sc__trace,
+  .sc.is-hover .sc__trace {
+    opacity: 1;
+    animation-play-state: running;
   }
 
-  .service-card.is-hover :global(.service-card__arrow) {
-    translate: var(--arrow-shift) 0;
-    color: var(--chalk);
-  }
-
-  .service-card.is-hover :global(.service-card__icon) {
+  .sc.is-hover :global(.sc__arrow) {
     color: var(--chalk);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .service-card :global(.service-card__arrow) {
+    .sc__trace {
+      animation: none;
+    }
+
+    .sc :global(.sc__arrow) {
       transition: color var(--dur-fast) linear;
     }
   }

@@ -9,6 +9,7 @@ import PriceCard from '../components/PriceCard.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import FactCard from '../components/FactCard.astro';
 import ServiceCard from '../components/ServiceCard.astro';
+import ServiceIdea from '../components/ServiceIdea.astro';
 import ProcessScreen from '../components/ProcessScreen.astro';
 import WorkCard from '../components/WorkCard.astro';
 import Icon from '../components/Icon.astro';
@@ -155,13 +156,14 @@ const secondary = showWorks
       />
       <ul class="cards cards--3 rail" role="list" data-reveal="stagger">
         {
-          services.map((service, i) => (
+          services.map((service) => (
             <li>
-              <ServiceCard service={service} index={i} />
+              <ServiceCard service={service} />
             </li>
           ))
         }
       </ul>
+      <ServiceIdea {...home.services.idea} href="#cta-title" class="services-idea" />
     </div>
   </section>
 
@@ -427,6 +429,11 @@ const secondary = showWorks
   .prices-note {
     margin-top: var(--space-6);
     color: var(--ash);
+  }
+
+  /* «Ваша идея» — под карточками услуг, с тем же шагом, что между карточками */
+  :global(.services-idea) {
+    margin-top: var(--space-3);
   }
 
   /* ---------- Работы ---------- */

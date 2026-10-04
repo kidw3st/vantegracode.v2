@@ -238,8 +238,8 @@ const priceMeta = (price: (typeof prices)[number]) =>
       <section class="sg__block" aria-labelledby="sg-cards">
         <h2 class="eyebrow" id="sg-cards">07 — Карточки</h2>
         <div class="sg__cards">
-          <ServiceCard service={firstService} index={0} />
-          <ServiceCard service={firstService} index={0} class="is-hover" />
+          <ServiceCard service={firstService} />
+          <ServiceCard service={firstService} class="is-hover" />
           <PriceCard title={firstPrice.data.title} price={firstPrice.data.price} term={firstPrice.data.term} />
         </div>
         <p class="sg__caption">Услуга · услуга при наведении · цена (незаполненная — [ ])</p>
