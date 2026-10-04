@@ -130,7 +130,7 @@ const secondary = showWorks
   <section class="section about" aria-labelledby="about-title">
     <div class="container">
       {/* без подписи «01 — О студии» (решение владельца); у остальных блоков подписи пока остаются */}
-      <SectionHeader id="about-title" title={home.about.title} neon />
+      <SectionHeader id="about-title" title={home.about.title} text={home.about.note} neon />
       <ul class="facts rail" role="list" data-reveal="stagger" data-facts>
         {
           home.about.facts.map((fact, i) => (
@@ -143,17 +143,14 @@ const secondary = showWorks
 
   <section class="section" aria-labelledby="process-title">
     <div class="container">
-      <SectionHeader id="process-title" title={home.process.title} />
+      <SectionHeader id="process-title" title={home.process.title} text={home.process.note} />
       <ProcessScreen steps={filledSteps} resultLabel={home.process.result} screen={home.process.screen} />
     </div>
   </section>
 
   <section class="section" aria-labelledby="services-title">
     <div class="container">
-      <SectionHeader
-        id="services-title"
-        title={home.services.title}
-      />
+      <SectionHeader id="services-title" title={home.services.title} text={home.services.note} />
       <ul class="cards cards--3 rail" role="list" data-reveal="stagger">
         {
           services.map((service) => (
@@ -173,7 +170,7 @@ const secondary = showWorks
 
   <section class="section" aria-labelledby="works-title">
     <div class="container">
-      <SectionHeader id="works-title" title={home.works.title} />
+      <SectionHeader id="works-title" title={home.works.title} text={showWorks ? home.works.note : undefined} />
       {
         showWorks ? (
           <div class="home-works rail" data-reveal="stagger">
