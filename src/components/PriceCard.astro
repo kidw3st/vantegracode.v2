@@ -1,7 +1,9 @@
 ---
 /**
- * Позиция прайса. Цена — Geologica 300, --fs-num-xl. Незаполненная цена — «от [ ] ₽».
- * compact — главная (название, цена, срок); full — /ceny/ (ещё состав и ссылка на услугу).
+ * Позиция прайса — в языке карточек услуг (PLAN.md, п. 41): рамка мелом, сверху название, крупно
+ * «от … ₽» (Geologica 300, --fs-num-xl), под ней срок; внизу — что входит в цену, по волосным линиям
+ * (пункты — из includes услуги, проверяются при сборке). Незаполненная цена или срок — «[ ]».
+ * full — /ceny/: ещё ссылка на услугу.
  */
 import ArrowLink from './ArrowLink.astro';
 import { formatNumber, PLACEHOLDER } from '../lib/fill.ts';
@@ -14,52 +16,59 @@ interface Props {
   term: string | null;
   perMonth?: boolean;
   items?: string[];
+  /** подпись над списком состава */
+  itemsLabel?: string;
   serviceHref?: string;
   variant?: 'compact' | 'full';
 }
 
-const { title, price, term, perMonth = false, items = [], serviceHref, variant = 'compact' } = Astro.props;
+const { title, price, term, perMonth = false, items = [], itemsLabel, serviceHref, variant = 'compact' } = Astro.props;
 const value = price == null ? PLACEHOLDER : formatNumber(price);
 const termText = perMonth ? null : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
 ---
 
 <article class:list={['price-card', `price-card--${variant}`]}>
   <h3 class="price-card__title">{t(title)}</h3>
-  <p class="price-card__price num">
-    <span class="price-card__from">от</span>
-    <span class="price-card__value">{value}</span>
-    <span class="price-card__currency">₽</span>
-    {perMonth && <span class="price-card__unit tech">{text.perMonth}</span>}
-  </p>
-  {termText && <p class="price-card__term tech">{t(termText)}</p>}
+  <div class="price-card__cost">
+    <p class="price-card__price num">
+      <span class="price-card__from">от</span>
+      <span class="price-card__value">{value}</span>
+      <span class="price-card__currency">₽</span>
+      {perMonth && <span class="price-card__unit tech">{text.perMonth}</span>}
+    </p>
+    {termText && <p class="price-card__term tech">{t(termText)}</p>}
+  </div>
   {
-    variant === 'full' && items.length > 0 && (
-      <ul class="price-card__items" role="list">
-        {items.map((item) => (
-          <li>{t(item)}</li>
-        ))}
-      </ul>
+    items.length > 0 && (
+      <div class="price-card__includes">
+        {itemsLabel && <p class="eyebrow">{t(itemsLabel)}</p>}
+        <ul class="price-card__items" role="list">
+          {items.map((item) => (
+            <li>{t(item)}</li>
+          ))}
+        </ul>
+      </div>
     )
   }
-  {
-    variant === 'full' && serviceHref && (
-      <ArrowLink class="price-card__link" href={serviceHref} label={text.serviceLink} />
-    )
-  }
+  {variant === 'full' && serviceHref && <ArrowLink class="price-card__link" href={serviceHref} label={text.serviceLink} />}
 </article>
 
 <style>
   .price-card {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
     height: 100%;
     padding: var(--card-pad);
-    border: var(--hairline) solid var(--graphite);
+    border: var(--hairline) solid var(--chalk);
   }
 
   .price-card__title {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-7);
+  }
+
+  .price-card__cost {
+    display: grid;
+    gap: var(--space-3);
   }
 
   .price-card__price {
@@ -81,42 +90,42 @@ const termText = perMonth ? null : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
   .price-card__unit {
     flex-basis: 100%;
     margin-top: var(--space-3);
-    font-size: var(--fs-small);
+    font-size: var(--fs-list);
     color: var(--ash);
   }
 
   .price-card__term {
-    font-size: var(--fs-small);
+    font-size: var(--fs-list);
     color: var(--ash);
   }
 
-  .price-card__items {
+  /* состав сразу под ценой; с планшета — прижат к низу, и в ряду карточек списки стоят на одной линии
+     (на телефоне карточки идут лентой по одной — пустота посередине карточки там ни к чему) */
+  .price-card__includes {
     display: grid;
-    gap: var(--space-3);
-    margin-top: var(--space-5);
-    padding-top: var(--space-5);
-    border-top: var(--hairline) solid var(--graphite);
-    font-size: var(--fs-small);
-    line-height: 1.5;
+    gap: var(--space-2);
+    padding-top: var(--space-7);
+  }
+
+  @media (min-width: 768px) {
+    .price-card__includes {
+      margin-top: auto;
+    }
   }
 
   .price-card__items li {
-    position: relative;
-    padding-left: 1.5em;
+    padding-block: var(--space-3);
+    border-top: var(--hairline) solid var(--graphite);
+    font-size: var(--fs-list);
+    line-height: 1.45;
   }
 
-  .price-card__items li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.75em;
-    width: 0.875em;
-    border-top: var(--hairline) solid var(--ash);
+  .price-card__items li:last-child {
+    padding-bottom: 0;
   }
 
   .price-card :global(.price-card__link) {
-    margin-top: auto;
-    padding-top: var(--space-5);
+    margin-top: var(--space-6);
     align-self: flex-start;
   }
 </style>

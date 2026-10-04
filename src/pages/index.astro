@@ -29,18 +29,18 @@ const featured = works.filter((work) => work.featured);
 const homeWorks = (featured.length ? featured : works).slice(0, 3);
 const showWorks = homeWorks.length > 0;
 
-// Номера в подписях идут подряд по блокам, которые реально выводятся
-// Структура владельца: О студии → Процесс → Что делаем → Работы → Цены → Контакты («Работы» всегда, без кейсов — заглушки).
-// Процесс сразу за фактами «О студии» показывает, как выполняются их обещания; услуги, работы и цены — подряд, одним блоком предложения
+// Структура владельца: О студии → Процесс работы → Наши услуги → Избранные проекты → Цены → Контакты
+// («Работы» всегда, без кейсов — заглушки). Процесс сразу за фактами «О студии» показывает, как выполняются
+// их обещания; услуги, работы и цены — подряд, одним блоком предложения.
+// Подписи «01 — …» над блоками владелец убрал; номер по порядку остался только у блока с формой («06 — Контакт»)
 const order = ['about', 'process', 'services', 'works', 'prices', 'contact'];
 const num = (key: string) => order.indexOf(key) + 1;
-const eyebrow = (key: string, label: string) => `${String(num(key)).padStart(2, '0')} — ${label}`;
 
 const priceById = new Map(prices.map((price) => [price.id, price]));
 const priceCards = home.prices.cards.map((card) => {
   const price = priceById.get(card.price);
   if (!price) throw new Error(`Главная: нет позиции «${card.price}» в prices.yaml`);
-  return { title: card.title, price: price.data.price, term: price.data.term };
+  return { title: card.title, price: price.data.price, term: price.data.term, items: price.data.items };
 });
 
 // Внутренний край пылевого диска = первая эхо-орбита вокруг вертикального блока (в ширинах логотипа)
@@ -201,22 +201,20 @@ const secondary = showWorks
 
   <section class="section" aria-labelledby="prices-title">
     <div class="container">
-      <SectionHeader
-        id="prices-title"
-        eyebrow={eyebrow('prices', home.prices.label)}
-        title={home.prices.title}
-        link={{ href: '/ceny/', label: home.prices.link }}
-      />
+      <SectionHeader id="prices-title" title={home.prices.title} text={home.prices.note} />
       <ul class="cards cards--3 rail" role="list" data-reveal="stagger">
         {
           priceCards.map((card) => (
             <li>
-              <PriceCard title={card.title} price={card.price} term={card.term} />
+              <PriceCard title={card.title} price={card.price} term={card.term} items={card.items} itemsLabel={home.prices.includes} />
             </li>
           ))
         }
       </ul>
-      <p class="prices-note" data-reveal>{t(home.prices.note)}</p>
+      <!-- все цены — кнопка с заливкой под карточками, по оси блока (как у услуг и работ) -->
+      <div class="block-more" data-reveal>
+        <Button href="/ceny/" variant="secondary" fill label={home.prices.link} />
+      </div>
     </div>
   </section>
 
@@ -423,11 +421,6 @@ const secondary = showWorks
     .cards--3 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-  }
-
-  .prices-note {
-    margin-top: var(--space-6);
-    color: var(--ash);
   }
 
   /* «Ваша идея» — под карточками услуг, с тем же шагом, что между карточками */
