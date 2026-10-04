@@ -330,6 +330,11 @@
     "label": "Орбита"
   },
   {
+    "name": "cursor",
+    "group": "ui",
+    "label": "Курсор"
+  },
+  {
     "name": "sun",
     "group": "ui",
     "label": "Дневная тема"

@@ -1,0 +1,828 @@
+---
+/**
+ * «Как работаем» на главной — «Экран собирается» (решение владельца): справа окно сайта прилипает
+ * и собирается по нашим этапам, пока слева листаются их тексты.
+ *   01 Разбираем задачу — бриф: галочки «Цели, ограничения, объём и сроки, смета».
+ *   02 Прототип — рисуется каркас страницы, курсор проходит сценарий.
+ *   03 Дизайн и разработка — каркас наполняется за три итерации, каждую отмечает «Демо».
+ *   04 Запуск и поддержка — в адресной строке печатается адрес, статус «Онлайн», значок «Поддержка».
+ * Состояния и прогресс выставляет scripts/process-screen.ts по прокрутке. Подписи — из data/pages.ts.
+ * Без JS — только этапы (окно — иллюстрация, текст этапов — содержание); при reduced motion
+ * каждый этап показывает окно уже собранным, без промежуточной анимации.
+ */
+import Icon from './Icon.astro';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  /** шаги с уже подставленными значениями */
+  steps: { title: string; text: string }[];
+  screen: { brief: string; checks: string[]; product: string; demo: string; url: string; online: string; support: string };
+}
+
+const { steps, screen } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Каркас страницы в окне — координаты в сетке 640 × 400 (как пропорции окна 16 : 10);
+// d — очередь прорисовки
+const WIRE = [
+  { x: 32, y: 26, w: 64, h: 14, d: 0 },
+  { x: 32, y: 92, w: 300, h: 24, d: 0.08 },
+  { x: 32, y: 124, w: 220, h: 24, d: 0.12 },
+  { x: 32, y: 164, w: 250, h: 8, d: 0.16 },
+  { x: 32, y: 178, w: 190, h: 8, d: 0.18 },
+  { x: 32, y: 204, w: 112, h: 30, d: 0.22 },
+  { x: 368, y: 84, w: 240, h: 156, d: 0.14 },
+  { x: 32, y: 264, w: 176, h: 88, d: 0.28 },
+  { x: 232, y: 264, w: 176, h: 88, d: 0.32 },
+  { x: 432, y: 264, w: 176, h: 88, d: 0.36 },
+];
+const NAV = [384, 440, 496, 552];
+const pct = (value: number, of: number) => `${((value / of) * 100).toFixed(3)}%`;
+const box = (x: number, y: number, w: number, h: number) =>
+  `left: ${pct(x, 640)}; top: ${pct(y, 400)}; width: ${pct(w, 640)}; height: ${pct(h, 400)}`;
+---
+
+<div class="pscreen" data-pscreen>
+  <div class="pscreen__stage" aria-hidden="true" data-pscreen-stage data-step="1">
+    <div class="win">
+      <div class="win__bar">
+        <span class="win__dots"><i></i><i></i><i></i></span>
+        <span class="win__url">
+          <Icon name="lock" size={12} class="win__lock" />
+          <span class="win__address" data-pscreen-url data-text={screen.url}></span>
+          <span class="win__caret"></span>
+        </span>
+        <span class="win__status"><i class="win__live"></i>{t(screen.online)}</span>
+      </div>
+
+      <div class="win__body">
+        <!-- 01 — бриф -->
+        <div class="win__brief">
+          <p class="win__brief-head">{t(screen.brief)}</p>
+          <ul class="win__checks" role="list">
+            {
+              screen.checks.map((check) => (
+                <li class="win__check" data-pscreen-check>
+                  <span class="win__check-label">{t(check)}</span>
+                  <span class="win__leader" />
+                  <span class="win__box">
+                    <Icon name="check" size={14} class="win__tick" />
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <!-- 02–04 — страница: каркас → дизайн → запуск -->
+        <div class="win__page">
+          <svg class="win__wire" viewBox="0 0 640 400" focusable="false">
+            {WIRE.map((r) => <rect x={r.x} y={r.y} width={r.w} height={r.h} pathLength="1" style={`--d: ${r.d}`} />)}
+            {NAV.map((x, i) => <line x1={x} y1="33" x2={x + 40} y2="33" pathLength="1" style={`--d: ${0.04 + i * 0.02}`} />)}
+          </svg>
+
+          <div class="ui">
+            <span class="ui__logo" style={box(32, 26, 64, 14)}><i></i><b></b></span>
+            {NAV.map((x) => <span class="ui__nav" style={box(x, 31, 40, 4)} />)}
+            <span class="ui__title" style={box(32, 96, 330, 40)}>{t(screen.product)}</span>
+            <span class="ui__sub" style={box(32, 164, 250, 8)} />
+            <span class="ui__sub ui__sub--short" style={box(32, 178, 190, 8)} />
+            <span class="ui__btn" style={box(32, 204, 112, 30)}><b></b></span>
+            <span class="ui__media" style={box(368, 84, 240, 156)}><Icon name="factor-content" size={28} class="ui__media-icon" /></span>
+            {
+              [32, 232, 432].map((x) => (
+                <span class="ui__card" style={box(x, 264, 176, 88)}>
+                  <i />
+                  <b />
+                  <b class="is-short" />
+                </span>
+              ))
+            }
+            <span class="ui__sweep"></span>
+          </div>
+
+          <span class="win__cursor" data-pscreen-cursor><Icon name="cursor" size={18} /></span>
+
+          <span class="win__chip win__chip--demo" data-pscreen-demo>
+            <i class="win__pulse"></i>{t(screen.demo)}
+            <span class="win__iters"><i></i><i></i><i></i></span>
+          </span>
+          <span class="win__chip win__chip--support"><Icon name="monitoring" size={12} />{t(screen.support)}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pscreen__progress">
+      {
+        steps.map((_, i) => (
+          <span class="pscreen__seg" data-pscreen-seg>
+            <span class="pscreen__seg-num num">{pad(i + 1)}</span>
+          </span>
+        ))
+      }
+    </div>
+  </div>
+
+  <ol class="pscreen__steps" role="list" data-pscreen-steps>
+    {
+      steps.map((step, i) => (
+        <li class="pscreen__step" data-pscreen-step={i}>
+          <span class="pscreen__num num" aria-hidden="true">
+            {pad(i + 1)}
+          </span>
+          <h3 class="pscreen__title">{t(step.title)}</h3>
+          <p class="pscreen__text">{t(step.text)}</p>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<style>
+  /* ---------- Раскладка: этапы слева листаются, окно справа прилипает ---------- */
+
+  .pscreen {
+    position: relative;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .pscreen__stage {
+    display: none;
+  }
+
+  :global(.js) .pscreen__stage {
+    display: block;
+  }
+
+  .pscreen__steps {
+    display: grid;
+  }
+
+  .pscreen__step {
+    display: grid;
+    align-content: center;
+    gap: var(--space-3);
+    padding-block: var(--space-6);
+  }
+
+  .pscreen__num {
+    margin-bottom: var(--space-3);
+    font-size: var(--fs-num-xl);
+    line-height: 1;
+    color: var(--ash);
+    transition: color 400ms var(--ease-out);
+  }
+
+  .pscreen__title {
+    font-size: clamp(1.375rem, 1rem + 1.2vw, 2.125rem);
+    line-height: 1.2;
+  }
+
+  .pscreen__text {
+    color: var(--text-muted);
+    max-width: 36ch;
+  }
+
+  /* С JS этап под чтением — в фокусе, остальные притушены */
+  :global(.js) .pscreen__step {
+    opacity: 0.28;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  :global(.js) .pscreen__step.is-active {
+    opacity: 1;
+  }
+
+  .pscreen__step.is-active .pscreen__num {
+    color: var(--chalk);
+  }
+
+  @media (min-width: 1024px) {
+    .pscreen {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-areas: 'steps stage';
+      column-gap: clamp(32px, 5vw, 96px);
+      align-items: start;
+    }
+
+    .pscreen__steps {
+      grid-area: steps;
+    }
+
+    :global(.js) .pscreen__stage {
+      grid-area: stage;
+      position: sticky;
+      top: var(--stage-top, 18vh);
+    }
+
+    /* каждый этап занимает часть экрана — окно успевает собраться, пока его читают;
+       после последнего — запас, чтобы собранное окно постояло на экране */
+    :global(.js) .pscreen__step {
+      min-height: 62vh;
+    }
+
+    :global(.js) .pscreen__steps {
+      padding-bottom: 26vh;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    :global(.js) .pscreen__stage {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-3));
+      z-index: 1;
+      padding-bottom: var(--space-4);
+      background: var(--soot);
+    }
+
+    /* Пока окно прилипло — фон закрывает щель до верха экрана, уезжающий текст не просвечивает */
+    .pscreen__stage:global(.is-stuck)::before {
+      content: '';
+      position: absolute;
+      right: calc(var(--gutter) * -1);
+      bottom: 100%;
+      left: calc(var(--gutter) * -1);
+      height: calc(var(--header-h) + var(--space-3));
+      background: var(--soot);
+    }
+
+    :global(.js) .pscreen__step {
+      min-height: 64vh;
+    }
+
+    .pscreen__num {
+      font-size: clamp(2.25rem, 1.8rem + 2vw, 3rem);
+    }
+  }
+
+  /* ---------- Окно ---------- */
+
+  .win {
+    border: var(--hairline) solid var(--graphite);
+    background: var(--soot);
+  }
+
+  .win__bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-4);
+    height: 40px;
+    padding: 0 14px;
+    border-bottom: var(--hairline) solid var(--graphite);
+  }
+
+  .win__dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .win__dots i {
+    width: 8px;
+    height: 8px;
+    border: var(--hairline) solid var(--graphite);
+    border-radius: 50%;
+  }
+
+  .win__url {
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: min(100%, 300px);
+    height: 24px;
+    padding: 0 10px;
+    border: var(--hairline) solid var(--graphite);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--chalk);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .win__url :global(.win__lock) {
+    flex: none;
+    color: var(--ash);
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  .win__caret {
+    width: 1px;
+    height: 12px;
+    background: var(--chalk);
+    opacity: 0;
+  }
+
+  .win__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 10px;
+    border: var(--hairline) solid var(--chalk);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 400ms var(--ease-out),
+      transform 400ms var(--ease-out);
+  }
+
+  .win__live {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--chalk);
+  }
+
+  .win__body {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    container-type: inline-size;
+  }
+
+  /* ---------- 01 Бриф ---------- */
+
+  .win__brief {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: center;
+    gap: 5cqw;
+    padding: 0 12cqw;
+    transition:
+      opacity 500ms var(--ease-out),
+      transform 500ms var(--ease-out);
+  }
+
+  .win__brief-head {
+    font-family: var(--font-display);
+    font-size: 4.4cqw;
+    letter-spacing: var(--ls-heading);
+    text-transform: uppercase;
+  }
+
+  .win__checks {
+    display: grid;
+    gap: 3.4cqw;
+  }
+
+  .win__check {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2cqw;
+  }
+
+  .win__check-label {
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: clamp(10px, 2cqw, 14px);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ash);
+    transition: color 300ms var(--ease-out);
+  }
+
+  /* пунктир до галочки прорисовывается, когда пункт отмечен */
+  .win__leader {
+    height: 0;
+    border-bottom: var(--hairline) dotted var(--graphite);
+    transform: scaleX(0.2);
+    transform-origin: left;
+    transition: transform 600ms var(--ease-out);
+  }
+
+  .win__box {
+    display: grid;
+    place-items: center;
+    width: clamp(16px, 3cqw, 22px);
+    aspect-ratio: 1;
+    border: var(--hairline) solid var(--graphite);
+    transition: border-color 300ms var(--ease-out);
+  }
+
+  .win__box :global(.win__tick) {
+    color: var(--chalk);
+    opacity: 0;
+    transform: scale(0.4);
+    transition:
+      opacity 250ms var(--ease-out),
+      transform 450ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .win__check:global(.is-on) .win__check-label {
+    color: var(--chalk);
+  }
+
+  .win__check:global(.is-on) .win__leader {
+    transform: none;
+  }
+
+  .win__check:global(.is-on) .win__box {
+    border-color: var(--chalk);
+  }
+
+  .win__check:global(.is-on) :global(.win__tick) {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---------- 02–04 Страница ---------- */
+
+  .win__page {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  /* каркас: тонкие контуры прорисовываются по очереди (--draw ведёт прокрутка) */
+  .win__wire {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--chalk);
+    stroke-opacity: 0.4;
+    stroke-width: 0.9;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .win__wire rect,
+  .win__wire line {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: calc((1 - clamp(0, (var(--draw, 0) - var(--d)) * 2.2, 1)) * 1px);
+  }
+
+  .ui > * {
+    position: absolute;
+    opacity: 0;
+    transition:
+      opacity 600ms var(--ease-out),
+      transform 600ms var(--ease-out);
+  }
+
+  .ui__logo {
+    display: flex;
+    align-items: center;
+    gap: 8%;
+  }
+
+  .ui__logo i {
+    flex: none;
+    height: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--chalk);
+  }
+
+  .ui__logo b {
+    flex: 1;
+    height: 30%;
+    background: var(--chalk);
+  }
+
+  .ui__nav {
+    background: var(--ash);
+  }
+
+  .ui__title {
+    display: flex;
+    align-items: flex-start;
+    font-family: var(--font-display);
+    font-size: 4.6cqw;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: var(--chalk);
+    transform: translateY(6px);
+  }
+
+  .ui__sub {
+    background: var(--ash);
+    opacity: 0;
+  }
+
+  .ui__btn {
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--chalk);
+  }
+
+  .ui__btn b {
+    width: 52%;
+    height: 14%;
+    background: var(--soot);
+  }
+
+  .ui__media {
+    display: grid;
+    place-items: center;
+    background: var(--graphite);
+  }
+
+  .ui__media :global(.ui__media-icon) {
+    color: var(--ash);
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .ui__card {
+    display: grid;
+    align-content: end;
+    gap: 9%;
+    padding: 6%;
+    border: var(--hairline) solid var(--graphite);
+  }
+
+  .ui__card i {
+    position: absolute;
+    top: 14%;
+    left: 6%;
+    width: 9%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: var(--hairline) solid var(--chalk);
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .ui__card b {
+    height: 6px;
+    width: 80%;
+    background: var(--ash);
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .ui__card b.is-short {
+    width: 55%;
+  }
+
+  /* световая полоса запуска проходит по странице слева направо */
+  .ui__sweep {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 22%;
+    background: var(--chalk);
+    opacity: 0;
+    transform: translateX(calc(var(--sweep, 0) * 560% - 120%)) skewX(-12deg);
+    transition: none;
+    will-change: transform, opacity;
+  }
+
+  .win__cursor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--chalk);
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out);
+    will-change: transform;
+  }
+
+  .win__chip {
+    position: absolute;
+    bottom: 2.6%;
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(4px, 1.1cqw, 8px);
+    height: clamp(16px, 3.6cqw, 26px);
+    padding: 0 clamp(6px, 1.7cqw, 12px);
+    border: var(--hairline) solid var(--chalk);
+    border-radius: var(--radius-pill);
+    background: var(--soot);
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: clamp(7px, 1.45cqw, 10px);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--chalk);
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 400ms var(--ease-out),
+      transform 400ms var(--ease-out);
+  }
+
+  .win__chip--demo {
+    right: 4%;
+  }
+
+  .win__chip--support {
+    left: 4%;
+  }
+
+  .win__pulse {
+    position: relative;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--chalk);
+  }
+
+  .win__pulse::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border: var(--hairline) solid var(--chalk);
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  .win__chip--demo:global(.is-pulse) .win__pulse::after {
+    animation: win-ping 900ms var(--ease-out);
+  }
+
+  .win__iters {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .win__iters i {
+    width: 5px;
+    height: 5px;
+    border: var(--hairline) solid var(--chalk);
+    border-radius: 50%;
+    transition: background-color 300ms var(--ease-out);
+  }
+
+  @keyframes win-ping {
+    from {
+      opacity: 0.8;
+      transform: scale(0.6);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(1.8);
+    }
+  }
+
+  /* ---------- Состояния по этапам ---------- */
+
+  .pscreen__stage:not([data-step='1']) .win__brief {
+    opacity: 0;
+    transform: translateY(-4%);
+    pointer-events: none;
+  }
+
+  .pscreen__stage:is([data-step='2'], [data-step='3'], [data-step='4']) .win__page {
+    opacity: 1;
+  }
+
+  .pscreen__stage[data-step='2'] .win__cursor {
+    opacity: 1;
+  }
+
+  /* дизайн по итерациям: 1 — блоки, 2 — типографика, 3 — детали; каркас уходит */
+  .pscreen__stage:is([data-iter='1'], [data-iter='2'], [data-iter='3']) :is(.ui__media, .ui__card) {
+    opacity: 1;
+  }
+
+  .pscreen__stage:is([data-iter='2'], [data-iter='3']) :is(.ui__title, .ui__sub, .ui__nav, .ui__logo) {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pscreen__stage[data-iter='3'] :is(.ui__btn) {
+    opacity: 1;
+  }
+
+  .pscreen__stage[data-iter='3'] :is(.ui__card i, .ui__card b, .ui__media :global(.ui__media-icon)) {
+    opacity: 1;
+  }
+
+  .pscreen__stage:is([data-iter='2'], [data-iter='3']) .win__wire {
+    opacity: 0.35;
+  }
+
+  .pscreen__stage[data-iter='3'] .win__wire {
+    opacity: 0;
+  }
+
+  .pscreen__stage[data-step='3'] .win__chip--demo {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pscreen__stage:is([data-iter='1'], [data-iter='2'], [data-iter='3']) .win__iters i:nth-child(1),
+  .pscreen__stage:is([data-iter='2'], [data-iter='3']) .win__iters i:nth-child(2),
+  .pscreen__stage[data-iter='3'] .win__iters i:nth-child(3) {
+    background: var(--chalk);
+  }
+
+  /* запуск: адрес, «Онлайн», полоса света, «Поддержка» */
+  .pscreen__stage[data-step='4'] :global(.win__lock) {
+    opacity: 1;
+  }
+
+  .pscreen__stage[data-step='4']:not([data-live]) .win__caret {
+    opacity: 1;
+    animation: win-blink 1s steps(1) infinite;
+  }
+
+  .pscreen__stage[data-live] .win__status {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pscreen__stage[data-live] .win__live {
+    animation: win-live 1.8s var(--ease-out) infinite;
+  }
+
+  .pscreen__stage[data-step='4'] .ui__sweep {
+    opacity: var(--sweep-a, 0);
+  }
+
+  .pscreen__stage[data-support] .win__chip--support {
+    opacity: 1;
+    transform: none;
+  }
+
+  @keyframes win-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes win-live {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  /* ---------- Прогресс под окном ---------- */
+
+  .pscreen__progress {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+
+  .pscreen__seg {
+    position: relative;
+    display: block;
+    padding-top: var(--space-3);
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .pscreen__seg::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--hairline) * -1);
+    left: 0;
+    right: 0;
+    border-top: var(--hairline) solid var(--chalk);
+    transform: scaleX(var(--f, 0));
+    transform-origin: left;
+  }
+
+  .pscreen__seg-num {
+    font-size: 11px;
+    letter-spacing: var(--ls-label);
+    color: var(--ash);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .win__brief,
+    .win__page,
+    .ui > *,
+    .win__wire,
+    .win__status,
+    .win__chip,
+    :global(.js) .pscreen__step {
+      transition: none;
+    }
+
+    .pscreen__stage[data-live] .win__live,
+    .pscreen__stage[data-step='4']:not([data-live]) .win__caret {
+      animation: none;
+    }
+  }
+</style>

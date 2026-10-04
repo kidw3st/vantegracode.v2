@@ -83,6 +83,7 @@ const MAP = {
   notification: 'bell',
   booking: 'calendar-check',
   orbit: 'orbit',
+  cursor: 'mouse-pointer-2',
   sun: 'sun',
   moon: 'moon',
 };

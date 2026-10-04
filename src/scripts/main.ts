@@ -10,7 +10,7 @@ import './disc.ts';
 import './brand.ts';
 import './neon.ts';
 import './facts.ts';
-import './process-chart.ts';
+import './process-screen.ts';
 import './to-top.ts';
 import './rails.ts';
 import './accordion.ts';

@@ -9,7 +9,7 @@ import PriceCard from '../components/PriceCard.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import FactCard from '../components/FactCard.astro';
 import ServiceCard from '../components/ServiceCard.astro';
-import ProcessChart from '../components/ProcessChart.astro';
+import ProcessScreen from '../components/ProcessScreen.astro';
 import WorkCard from '../components/WorkCard.astro';
 import Icon from '../components/Icon.astro';
 import { home, steps } from '../data/pages.ts';
@@ -135,7 +135,7 @@ const secondary = showWorks
   <section class="section" aria-labelledby="process-title">
     <div class="container">
       <SectionHeader id="process-title" eyebrow={eyebrow('process', home.process.label)} title={home.process.title} />
-      <ProcessChart steps={filledSteps} marks={home.process.marks} />
+      <ProcessScreen steps={filledSteps} screen={home.process.screen} />
     </div>
   </section>
 
