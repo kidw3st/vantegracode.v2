@@ -2,8 +2,9 @@
 /**
  * Кнопка: основная — мел на саже, вторичная — прозрачная с рамкой пепла.
  * Geologica 13 px, заглавные, разрядка 0,24em, высота 52 px (малая — 44 px), скругление pill.
- * neon — вторичная с рамкой мелом, по контуру капсулы бегут неоновые импульсы, как на линии под VANTEGRA
- * (решение владельца; рисует scripts/neon-pill.ts на canvas): в покое медленно, при наведении быстрее и ярче.
+ * fill — вторичная с рамкой мелом, при наведении заливается мелом кругом из точки, где курсор вошёл
+ * в кнопку, и стекает в точку выхода (решение владельца; точки ставит scripts/button-fill.ts).
+ * Надпись под заливкой — сажей ровно по краю круга: копия надписи внутри круга с обратным масштабом.
  */
 import { t } from '../lib/typograf.ts';
 
@@ -19,8 +20,8 @@ interface Props {
   [key: `aria-${string}`]: string | boolean | undefined;
   id?: string;
   disabled?: boolean;
-  /** неоновые импульсы по контуру капсулы — только у вторичной */
-  neon?: boolean;
+  /** заливка от точки входа курсора — только у вторичной */
+  fill?: boolean;
 }
 
 const {
@@ -31,11 +32,11 @@ const {
   label,
   class: className,
   external = false,
-  neon = false,
+  fill = false,
   ...rest
 } = Astro.props;
 
-const classes = ['btn', `btn--${variant}`, `btn--${size}`, neon && 'btn--neon', className];
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, fill && 'btn--fill', className];
 const text = label ? t(label) : undefined;
 const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 ---
@@ -47,7 +48,15 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
         {text}
         <slot />
       </span>
-      {neon && <canvas class="btn__neon" aria-hidden="true" data-neon-pill />}
+      {
+        fill && (
+          <span class="btn__flood" aria-hidden="true">
+            <span class="btn__flood-text">
+              <span class="btn__label">{text}</span>
+            </span>
+          </span>
+        )
+      }
     </a>
   ) : (
     <button class:list={classes} type={type} {...rest}>
@@ -55,12 +64,26 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
         {text}
         <slot />
       </span>
-      {neon && <canvas class="btn__neon" aria-hidden="true" data-neon-pill />}
+      {
+        fill && (
+          <span class="btn__flood" aria-hidden="true">
+            <span class="btn__flood-text">
+              <span class="btn__label">{text}</span>
+            </span>
+          </span>
+        )
+      }
     </button>
   )
 }
 
 <style>
+  @property --fill {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
   .btn {
     --btn-fg: var(--soot);
     --btn-bg: var(--chalk);
@@ -175,20 +198,52 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
     }
   }
 
-  /* ---------- Неоновая капсула: рамка мелом, импульсы рисует canvas с запасом под свечение ---------- */
+  /* ---------- Заливка от точки входа курсора ----------
+     --fill (0…1) плавно меняется переходом; круг заливки масштабируется от точки входа (--fx, --fy),
+     его диаметр --fd накрывает кнопку целиком; копия надписи внутри круга масштабируется обратно
+     и стоит на месте — под заливкой надпись сажей ровно по краю круга. Точки и размеры — button-fill.ts */
 
-  .btn--neon {
+  .btn--fill {
     --btn-line: var(--chalk);
-    --neon-bleed: 36px;
+
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      --fill 560ms var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
   }
 
-  .btn__neon {
+  .btn--fill.is-filled {
+    --fill: 1;
+  }
+
+  .btn__flood {
     position: absolute;
-    top: calc(var(--neon-bleed) * -1 - var(--hairline));
-    left: calc(var(--neon-bleed) * -1 - var(--hairline));
-    width: calc(100% + 2 * (var(--neon-bleed) + var(--hairline)));
-    height: calc(100% + 2 * (var(--neon-bleed) + var(--hairline)));
+    top: calc(var(--fy, 50%) - var(--fd, 0px) / 2);
+    left: calc(var(--fx, 50%) - var(--fd, 0px) / 2);
+    z-index: 1;
+    width: var(--fd, 0px);
+    height: var(--fd, 0px);
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--chalk);
+    transform: scale(var(--fill));
     pointer-events: none;
+  }
+
+  .btn__flood-text {
+    position: absolute;
+    top: calc(var(--fd, 0px) / 2 - var(--fy, 0px));
+    left: calc(var(--fd, 0px) / 2 - var(--fx, 0px));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--bw, 100%);
+    height: var(--bh, 100%);
+    color: var(--soot);
+    transform-origin: var(--fx, 50%) var(--fy, 50%);
+    /* обратный масштаб; у самого начала ограничен, чтобы не растить надпись в сотни раз — круг там в точку */
+    transform: scale(calc(1 / max(var(--fill), 0.05)));
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -196,8 +251,8 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
       transform: none;
     }
 
-    .btn__neon {
-      display: none;
+    .btn--fill {
+      transition: none;
     }
   }
 </style>
