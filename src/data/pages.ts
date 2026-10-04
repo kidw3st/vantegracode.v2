@@ -21,10 +21,10 @@ export const home = {
     label: 'О студии',
     title: 'Делаем цифровые продукты для бизнеса',
     facts: [
-      { label: 'Полный цикл', text: 'От первой встречи до поддержки после запуска', icon: 'factor-integrations' as const },
-      { label: 'Прозрачно', text: 'Фиксированный объём и смета, регулярные демо', icon: 'document' as const },
+      { label: 'Полный цикл', text: 'От первой встречи до поддержки после запуска', icon: 'route' as const },
+      { label: 'Прозрачно', text: 'Фиксированный объём и смета, регулярные демо', icon: 'estimate' as const },
       { label: 'SEO и GEO', text: 'Вас находят в поиске и в ответах нейросетей', icon: 'seo' as const },
-      { label: 'По всей России', text: 'Работаем удалённо, встречи — по видеосвязи', icon: 'globe' as const },
+      { label: 'По всей России', text: 'Работаем удалённо, встречи — по видеосвязи', icon: 'earth' as const },
     ],
   },
   services: { label: 'Услуги', title: 'Что делаем', link: 'Все услуги' },

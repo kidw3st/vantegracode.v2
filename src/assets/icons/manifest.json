@@ -130,6 +130,11 @@
     "label": "Мир"
   },
   {
+    "name": "earth",
+    "group": "contact",
+    "label": "Земной шар"
+  },
+  {
     "name": "clock",
     "group": "contact",
     "label": "Время"
@@ -230,6 +235,16 @@
     "label": "Контент"
   },
   {
+    "name": "route",
+    "group": "process",
+    "label": "Путь проекта"
+  },
+  {
+    "name": "estimate",
+    "group": "process",
+    "label": "Смета"
+  },
+  {
     "name": "crm",
     "group": "feature",
     "label": "CRM"
@@ -313,11 +328,6 @@
     "name": "orbit",
     "group": "brand",
     "label": "Орбита"
-  },
-  {
-    "name": "orbit-planet",
-    "group": "brand",
-    "label": "Планета на орбите"
   },
   {
     "name": "sun",

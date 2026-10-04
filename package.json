@@ -29,6 +29,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@playwright/test": "^1.63.0",
+    "lucide-static": "^1.51.0",
     "typescript": "^6.0.3"
   }
 }

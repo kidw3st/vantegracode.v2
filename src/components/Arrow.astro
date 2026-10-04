@@ -1,5 +1,5 @@
 ---
-/** Тонкая стрелка ссылок: линия 1,25 px */
+/** Тонкая стрелка ссылок — форма arrow-right из Lucide (как иконки сайта), линия ~1,25 px */
 interface Props {
   class?: string;
   direction?: 'right' | 'up-right' | 'down';
@@ -9,13 +9,13 @@ const { class: className, direction = 'right' } = Astro.props;
 
 <svg
   class:list={['arrow', `arrow--${direction}`, className]}
-  viewBox="0 0 20 20"
+  viewBox="0 0 24 24"
   width="20"
   height="20"
   aria-hidden="true"
   focusable="false"
 >
-  <path d="M2.5 10H16M11.5 4.5L17 10l-5.5 5.5"></path>
+  <path d="M5 12h14M12 5l7 7-7 7"></path>
 </svg>
 
 <style>
@@ -26,9 +26,9 @@ const { class: className, direction = 'right' } = Astro.props;
     height: 1.25em;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.25;
-    stroke-linecap: square;
-    stroke-linejoin: miter;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .arrow--up-right {

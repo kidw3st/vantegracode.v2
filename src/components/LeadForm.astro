@@ -4,6 +4,7 @@
  * С JS — проверка при потере фокуса и при отправке, отправка JSON, успех с прорисовкой орбиты.
  */
 import Button from './Button.astro';
+import Icon from './Icon.astro';
 import OrbitField from './OrbitField.astro';
 import { site } from '../data/site.ts';
 import { ui } from '../data/ui.ts';
@@ -74,9 +75,7 @@ const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) 
         <select class="field__input" id="lf-need" name="need" required>
           {f.needOptions.map((option, i) => <option value={option} selected={i === 0}>{t(option)}</option>)}
         </select>
-        <svg class="field__chevron" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true" focusable="false">
-          <path d="M1 1.5l5 5 5-5"></path>
-        </svg>
+        <Icon name="chevron-down" size={16} class="field__chevron" />
       </div>
     </div>
 

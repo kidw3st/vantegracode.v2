@@ -1,5 +1,6 @@
 ---
-/** Иконки Vantegra: инлайн-SVG, декоративные или с доступной подписью. */
+/** Иконки — набор Lucide (решение владельца, лицензия ISC, src/assets/icons/LICENSE-lucide.txt; файлы собирает
+ * tools/icons-lucide.mjs): инлайн-SVG, декоративные или с доступной подписью. */
 import manifest from '../assets/icons/manifest.json';
 
 /** Имена из manifest.json; синхронизацию проверяет icons:check. */
@@ -30,6 +31,7 @@ export type IconName =
   | 'chat'
   | 'location'
   | 'globe'
+  | 'earth'
   | 'clock'
   | 'calendar'
   | 'document'
@@ -50,6 +52,8 @@ export type IconName =
   | 'factor-logic'
   | 'factor-integrations'
   | 'factor-content'
+  | 'route'
+  | 'estimate'
   | 'crm'
   | 'payment'
   | 'analytics'
@@ -67,7 +71,6 @@ export type IconName =
   | 'notification'
   | 'booking'
   | 'orbit'
-  | 'orbit-planet'
   | 'sun'
   | 'moon';
 
@@ -84,9 +87,14 @@ if (!manifest.some((icon) => icon.name === name) || typeof source !== 'string') 
   throw new Error(`Icon: неизвестная иконка «${name}».`);
 }
 if (!Number.isFinite(size) || size <= 0) throw new Error('Icon: size должен быть положительным числом.');
+// Толщина линии на экране — около 1,5 px при любом размере (как absoluteStrokeWidth у Lucide): крупные иконки
+// не толстеют рядом с тонкими линиями сайта; на мелких — не тоньше 2 единиц сетки, чтобы не рассыпались
+const stroke = +Math.min(2, (1.5 * 24) / size).toFixed(3);
 const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const attributes = ` width="${size}" height="${size}" class="${escape(['icon', className].filter(Boolean).join(' '))}" focusable="false"${label ? ' role="img"' : ' aria-hidden="true"'}`;
-const svg = source.replace('<svg ', `<svg${attributes} `).replace(/(<svg[^>]*>)/, (root) => root + (label ? `<title>${escape(label)}</title>` : ''));
+const svg = source
+  .replace(/stroke-width="[^"]*"/, `stroke-width="${stroke}"`)
+  .replace('<svg ', `<svg${attributes} `).replace(/(<svg[^>]*>)/, (root) => root + (label ? `<title>${escape(label)}</title>` : ''));
 ---
 
 <Fragment set:html={svg} />
