@@ -7,8 +7,9 @@
  *
  * Надпись не «приезжает снизу»: пока она ниже центра, её не видно; когда встаёт в центр экрана,
  * останавливается (sticky) на время прорисовки. Прорисовку ведёт прокрутка (scripts/brand.ts):
- * вихрь пыли взрывается, из вспышки выстреливает линия → контуры букв обводятся от середины слова к краям →
- * буквы заливаются мелом, контур и линия гаснут → надпись уходит вверх, сразу за ней «О студии».
+ * вихрь пыли взрывается → контуры букв обводятся от середины слова к краям → буквы заливаются мелом,
+ * контур гаснет → надпись уходит вверх, сразу за ней «О студии». Линии через середину букв нет
+ * (решение владельца: слово появлялось будто перечёркнутым).
  * Без JS и при prefers-reduced-motion надпись стоит целиком, без остановки.
  */
 import raw from '../assets/brand/logo/vantegra-wordmark-chalk.svg?raw';
@@ -43,9 +44,6 @@ for (const part of parts) {
 }
 
 const [, , vbWidth, vbHeight] = viewBox.split(/\s+/).map(Number);
-const top = Math.min(...parts.map((part) => part.y0));
-const bottom = Math.max(...parts.map((part) => part.y1));
-const mid = (top + bottom) / 2; // средняя линия букв: сюда ложится пыль
 const center = (letters.length - 1) / 2;
 const ratio = ((vbHeight ?? 1) / (vbWidth ?? 1)).toFixed(5);
 ---
@@ -54,7 +52,6 @@ const ratio = ((vbHeight ?? 1) / (vbWidth ?? 1)).toFixed(5);
   <div class="brand-stage" data-brand-stage>
     <div class="brand-mark" data-brand data-vb-width={vbWidth}>
       <svg viewBox={viewBox} role="img" aria-label="Vantegra" focusable="false">
-        <line class="brand-mark__line" x1="0" x2={vbWidth} y1={mid} y2={mid} data-brand-line />
         {
           letters.map((letter, i) => (
             <g data-letter data-order={Math.floor(Math.abs(i - center))}>
@@ -112,27 +109,6 @@ const ratio = ((vbHeight ?? 1) / (vbWidth ?? 1)).toFixed(5);
     stroke-width: var(--sw, 2);
     stroke-linejoin: miter;
     opacity: 0;
-  }
-
-  .brand-mark__line {
-    stroke: var(--chalk);
-    stroke-width: var(--sw, 2);
-    opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-
-  /* Линия выстреливает из вспышки взрыва (класс ставит scripts/brand.ts), гаснет по прокрутке (--line-fade) */
-  :global(.js) .brand-mark__line {
-    transform: scaleX(0);
-    transition:
-      transform 700ms var(--ease-out),
-      opacity var(--dur-fast) linear;
-  }
-
-  :global(.js) .brand-mark__line.is-on {
-    transform: none;
-    opacity: calc(0.5 * var(--line-fade, 1));
   }
 
   /* ---------- Остановка в центре и прорисовка (только с JS и без reduced motion) ---------- */

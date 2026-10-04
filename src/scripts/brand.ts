@@ -1,10 +1,10 @@
 /**
  * Надпись VANTEGRA после первого экрана (BrandWordmark.astro). Прорисовку ведёт прокрутка:
- * - в момент остановки линия выстреливает из вспышки (взрыв вихря пыли рисует disc.ts);
+ * - в момент остановки вихрь пыли взрывается (рисует disc.ts);
  * - во время остановки в центре экрана (доля q): контуры букв обводятся от середины слова к краям,
- *   буквы заливаются мелом, контур и линия гаснут.
- * Толщина контура и линии — 1 px экрана при любой ширине надписи (--sw в единицах viewBox).
- * Двигаем только transform (линия), stroke-dashoffset и opacity.
+ *   буквы заливаются мелом, контур гаснет. Линии через середину букв нет — решение владельца.
+ * Толщина контура — 1 px экрана при любой ширине надписи (--sw в единицах viewBox).
+ * Двигаем только stroke-dashoffset и opacity.
  */
 import { landingScroll, smooth } from './hero-scroll.ts';
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
@@ -27,7 +27,6 @@ onPage(() => {
   strokes.observe(svg);
   if (prefersReducedMotion()) return () => strokes.disconnect();
 
-  const line = svg.querySelector<SVGElement>('[data-brand-line]');
   const letters = [...svg.querySelectorAll<SVGGElement>('[data-letter]')].map((group) => ({
     order: Number(group.dataset.order) || 0,
     fill: group.querySelector<SVGElement>('.brand-mark__fill'),
@@ -44,11 +43,6 @@ onPage(() => {
   const apply = () => {
     raf = 0;
     const q = clamp((window.scrollY - landingScroll()) / pin);
-    if (line) {
-      // линия выстреливает из вспышки, как только надпись встала (взрыв — disc.ts), и гаснет, когда буквы залиты
-      line.classList.toggle('is-on', window.scrollY >= landingScroll());
-      line.style.setProperty('--line-fade', (1 - ease((q - 0.7) / 0.25)).toFixed(3));
-    }
     for (const letter of letters) {
       const shift = 0.09 * letter.order;
       const drawn = ease((q - 0.04 - shift) / 0.36);
