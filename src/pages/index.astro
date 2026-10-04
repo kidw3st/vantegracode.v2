@@ -121,7 +121,7 @@ const secondary = showWorks
     <div class="container">
       {/* без подписи «01 — О студии» (решение владельца); у остальных блоков подписи пока остаются */}
       <SectionHeader id="about-title" title={home.about.title} neon />
-      <ul class="facts rail" role="list" data-reveal="stagger">
+      <ul class="facts rail" role="list" data-reveal="stagger" data-facts>
         {
           home.about.facts.map((fact, i) => (
             <FactCard index={i} total={home.about.facts.length} title={fact.label} text={fact.text} icon={fact.icon} />

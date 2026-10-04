@@ -9,6 +9,7 @@ import './hero-scroll.ts';
 import './disc.ts';
 import './brand.ts';
 import './neon.ts';
+import './facts.ts';
 import './to-top.ts';
 import './rails.ts';
 import './accordion.ts';

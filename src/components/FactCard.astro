@@ -4,7 +4,9 @@
  * фон — как у страницы, яркая рамка; в центре иконка внутри орбиты знака (эллипс −12°, ry/rx = 0,306),
  * по орбите всё время крутится планета с коротким хвостом. Планеты четырёх карточек разнесены
  * на равные доли круга. При появлении орбита прорисовывается, затем проявляется планета.
- * Движение — только stroke-dashoffset и opacity; при reduced motion планеты стоят.
+ * Наведение мышью (scripts/facts.ts): планета разгоняется, хвост вытягивается в комету, орбита ярче;
+ * увели — плавно тормозит. Карточка не кнопка: ни подъёма, ни тени, ни смены курсора.
+ * Движение — только stroke-dashoffset и opacity; без JS орбита крутится на CSS, при reduced motion планеты стоят.
  */
 import Icon, { type IconName } from './Icon.astro';
 import { t } from '../lib/typograf.ts';
@@ -18,7 +20,6 @@ interface Props {
 }
 
 const { index, total, title, text, icon } = Astro.props;
-const pad = (n: number) => String(n).padStart(2, '0');
 /** Где на орбите планета этой карточки (доля круга): карточки разнесены на равные доли */
 const phase = index / total;
 
@@ -28,16 +29,20 @@ const CY = 56;
 const RX = 100;
 const RY = +(RX * 0.306).toFixed(2);
 const TILT = -12;
+const ring = { cx: CX, cy: CY, rx: RX, ry: RY, pathLength: '1' };
 ---
 
-<li class="fact" style={`--phase: ${phase}`}>
-  <span class="fact__num num" aria-hidden="true">{pad(index + 1)}<span class="fact__total"> / {pad(total)}</span></span>
+<li class="fact" style={`--phase: ${phase}`} data-fact data-phase={phase}>
   <div class="fact__figure" aria-hidden="true">
     <svg class="fact__orbit" viewBox="0 0 240 112" width="240" height="112" focusable="false">
       <g transform={`rotate(${TILT} ${CX} ${CY})`} fill="none">
-        <ellipse class="fact__track" cx={CX} cy={CY} rx={RX} ry={RY} pathLength="1" />
-        <ellipse class="fact__trail" cx={CX} cy={CY} rx={RX} ry={RY} pathLength="1" />
-        <ellipse class="fact__planet" cx={CX} cy={CY} rx={RX} ry={RY} pathLength="1" />
+        <ellipse class="fact__track" {...ring} data-fact-track />
+        <ellipse class="fact__glow" {...ring} data-fact-glow />
+        <g class="fact__body">
+          <ellipse class="fact__streak" {...ring} data-fact-streak />
+          <ellipse class="fact__trail" {...ring} data-fact-trail />
+          <ellipse class="fact__planet" {...ring} data-fact-planet />
+        </g>
       </g>
     </svg>
     <Icon name={icon} size={36} class="fact__icon" />
@@ -48,7 +53,7 @@ const TILT = -12;
 
 <style>
   .fact {
-    /* круг планеты */
+    /* круг планеты без JS (с JS скорость ведёт scripts/facts.ts — те же 12 с) */
     --lap: 12s;
 
     position: relative;
@@ -58,24 +63,10 @@ const TILT = -12;
     justify-items: center;
     align-content: start;
     height: 100%;
-    padding: var(--space-8) var(--space-5) var(--space-7);
+    padding: var(--space-7) var(--space-5);
     /* яркая рамка — решение владельца (днём токены меняются местами — рамка сажей) */
     border: var(--hairline) solid var(--chalk);
     text-align: center;
-  }
-
-  /* Номер — в левом верхнем углу, как метка на чертеже */
-  .fact__num {
-    position: absolute;
-    top: var(--space-5);
-    left: var(--space-5);
-    font-size: var(--fs-label);
-    letter-spacing: var(--ls-label);
-    color: var(--chalk);
-  }
-
-  .fact__total {
-    color: var(--ash);
   }
 
   .fact__figure {
@@ -101,13 +92,31 @@ const TILT = -12;
     color: var(--chalk);
   }
 
-  /* Орбита — тонко (12 %); хвост за планетой — ярче (20 %); планета — точка мелом
-     (штрих почти нулевой длины с круглым концом). Планета и хвост едут сдвигом штриха по орбите */
-  .fact__track {
-    stroke: var(--orbit);
+  /* Орбита — тонко (12 %); при наведении её сменяет яркая (20 %). Хвост за планетой — 20 %;
+     на разгоне к нему добавляется длинная «комета». Планета — точка мелом (штрих почти нулевой длины
+     с круглым концом). Планета и хвосты едут сдвигом штриха по орбите */
+  .fact__track,
+  .fact__glow {
     stroke-width: var(--orbit-stroke);
     stroke-dasharray: 1 1;
     stroke-dashoffset: 0;
+  }
+
+  .fact__track {
+    stroke: var(--orbit);
+  }
+
+  .fact__glow {
+    stroke: var(--orbit-strong);
+    opacity: 0;
+  }
+
+  .fact__streak {
+    stroke: var(--orbit-strong);
+    stroke-width: 1.5;
+    stroke-dasharray: 0.34 0.66;
+    stroke-dashoffset: calc(0.34px - var(--phase) * 1px);
+    opacity: 0;
   }
 
   .fact__trail {
@@ -127,6 +136,12 @@ const TILT = -12;
     stroke-dashoffset: calc(var(--phase) * -1px);
     animation: fact-orbit var(--lap) linear infinite;
     animation-delay: calc(var(--phase) * var(--lap) * -1);
+  }
+
+  /* С JS планету ведёт scripts/facts.ts (плавный разгон и торможение), CSS-анимация не нужна */
+  :global(.js) .fact__trail,
+  :global(.js) .fact__planet {
+    animation: none;
   }
 
   /* В кадрах — числа без переменных: с var() внутри кадров браузер перескакивает, а не ведёт плавно */
@@ -164,21 +179,21 @@ const TILT = -12;
 
   /* ---------- Появление: орбита прорисовывается, затем проявляется планета ---------- */
 
-  :global(.js) .fact__track {
+  :global(.js) .fact__track,
+  :global(.js) .fact__glow {
     transition: stroke-dashoffset 1100ms var(--ease-in-out) calc(200ms + var(--i, 0) * var(--stagger-orbit));
   }
 
-  :global(.js) .fact__trail,
-  :global(.js) .fact__planet {
+  :global(.js) .fact__body {
     transition: opacity 500ms var(--ease-out) calc(900ms + var(--i, 0) * var(--stagger-orbit));
   }
 
-  :global(.js [data-reveal]:not(.is-in)) .fact__track {
+  :global(.js [data-reveal]:not(.is-in)) .fact__track,
+  :global(.js [data-reveal]:not(.is-in)) .fact__glow {
     stroke-dashoffset: 1;
   }
 
-  :global(.js [data-reveal]:not(.is-in)) .fact__trail,
-  :global(.js [data-reveal]:not(.is-in)) .fact__planet {
+  :global(.js [data-reveal]:not(.is-in)) .fact__body {
     opacity: 0;
   }
 
@@ -189,8 +204,8 @@ const TILT = -12;
     }
 
     :global(.js) .fact__track,
-    :global(.js) .fact__trail,
-    :global(.js) .fact__planet {
+    :global(.js) .fact__glow,
+    :global(.js) .fact__body {
       transition: none;
     }
 
@@ -198,8 +213,7 @@ const TILT = -12;
       stroke-dashoffset: 0;
     }
 
-    :global(.js [data-reveal]:not(.is-in)) .fact__trail,
-    :global(.js [data-reveal]:not(.is-in)) .fact__planet {
+    :global(.js [data-reveal]:not(.is-in)) .fact__body {
       opacity: 1;
     }
   }
