@@ -1,0 +1,173 @@
+---
+/**
+ * «Как работаем» на главной — график «Траектория» (решение владельца, по мотивам примеров Highcharts:
+ * spline с полосами и «неоновая» линия). Свой canvas и SVG в стиле бренда, без библиотек и без выдуманных
+ * чисел: ось — путь от идеи до запуска, а не проценты и недели.
+ * Светящаяся линия «готовность продукта» идёт через четыре зоны-этапа, под ней мерцает пыль, как на первом
+ * экране; отметки — смета, структура, демо, запуск, пунктир поддержки. Под графиком — этапы с крупными номерами.
+ * Рисует scripts/process-chart.ts. Без JS — только этапы (график — украшение, текст этапов — содержание).
+ */
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  /** шаги с уже подставленными значениями */
+  steps: { title: string; text: string }[];
+  /** подписи отметок на линии */
+  marks: { estimate: string; structure: string; demo: string; launch: string; support: string };
+}
+
+const { steps, marks } = Astro.props;
+const labels = Object.fromEntries(Object.entries(marks).map(([key, value]) => [key, t(value)]));
+---
+
+<div class="pchart" data-pchart data-marks={JSON.stringify(labels)}>
+  <div class="pchart__plot" data-pchart-plot>
+    <canvas class="pchart__canvas" aria-hidden="true" data-pchart-canvas></canvas>
+    <svg class="pchart__svg" aria-hidden="true" focusable="false" data-pchart-svg></svg>
+  </div>
+  <ol class="pchart__steps" role="list" data-reveal="stagger" data-pchart-steps>
+    {
+      steps.map((step, i) => (
+        <li class="pchart__step" data-pchart-step={i}>
+          <span class="pchart__num num" aria-hidden="true">
+            {String(i + 1).padStart(2, '0')}
+          </span>
+          <h3 class="pchart__title h3">{t(step.title)}</h3>
+          <p class="pchart__text">{t(step.text)}</p>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<style>
+  .pchart {
+    --plot-h: clamp(260px, 23vw, 340px);
+
+    position: relative;
+  }
+
+  .pchart__plot {
+    position: relative;
+    display: none;
+    height: var(--plot-h);
+    margin-bottom: var(--space-7);
+  }
+
+  :global(.js) .pchart__plot {
+    display: block;
+  }
+
+  .pchart__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Холст шире графика на запас (--bleed): свечение планеты на конце линии не обрезается краем */
+  .pchart__canvas {
+    --bleed: 16px;
+
+    position: absolute;
+    inset: calc(var(--bleed) * -1.5) calc(var(--bleed) * -1);
+    width: calc(100% + var(--bleed) * 2);
+    height: calc(100% + var(--bleed) * 3);
+    pointer-events: none;
+  }
+
+  .pchart__svg {
+    overflow: visible;
+  }
+
+  .pchart__steps {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  .pchart__step {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+  }
+
+  /* Крупный номер этапа: пеплом, у этапа под кончиком линии или под курсором — мелом */
+  .pchart__num {
+    margin-bottom: var(--space-3);
+    font-size: var(--fs-num-xl);
+    line-height: 1;
+    color: var(--ash);
+    transition: color 400ms var(--ease-out);
+  }
+
+  .pchart__step:global(.is-active) .pchart__num {
+    color: var(--chalk);
+  }
+
+  .pchart__text {
+    color: var(--text-muted);
+    max-width: 34ch;
+  }
+
+  @media (max-width: 1023px) {
+    .pchart {
+      --plot-h: clamp(170px, 46vw, 260px);
+    }
+
+    .pchart__plot {
+      margin-bottom: var(--space-6);
+    }
+
+    .pchart__num {
+      font-size: clamp(2.25rem, 1.8rem + 2vw, 3rem);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .pchart__steps {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--column-gap);
+    }
+
+    .pchart__step {
+      padding-right: var(--space-5);
+    }
+  }
+
+  /* ---------- Разметка поверх холста (рисует scripts/process-chart.ts) ---------- */
+
+  .pchart :global(.pchart__axis) {
+    stroke: var(--orbit-strong);
+    stroke-width: 1;
+    fill: none;
+  }
+
+  .pchart :global(.pchart__zone) {
+    stroke: var(--graphite);
+    stroke-width: 1;
+    fill: none;
+  }
+
+  .pchart :global(.pchart__label) {
+    font-family: var(--font-tech);
+    font-variation-settings: var(--tech-variation);
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    fill: var(--ash);
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .pchart :global(.pchart__label.is-on) {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pchart :global(.pchart__label) {
+      transition: none;
+    }
+  }
+</style>
