@@ -1,91 +1,69 @@
 ---
-/** Карточка кейса: обложка 16:10, название, клиент или «Под NDA», год, теги услуг. */
+/**
+ * Работа на главной («Избранные проекты»): скриншот главной страницы сайта (обложка кейса `cover.*`,
+ * 16:10) в рамке мелом, под ним название, кто клиент и год. Решение владельца: пока только скриншоты —
+ * без ссылок на сайты и без страниц кейсов.
+ */
 import { Picture } from 'astro:assets';
-import Tag from './Tag.astro';
 import { works as text } from '../data/pages.ts';
 import type { Work } from '../lib/content.ts';
 import { t } from '../lib/typograf.ts';
 
 interface Props {
   work: Work;
-  /** названия услуг по слагам */
-  serviceNames: Record<string, string>;
-  size?: 'lg' | 'md';
   headingLevel?: 'h2' | 'h3';
   eager?: boolean;
 }
 
-const { work, serviceNames, size = 'md', headingLevel: Heading = 'h3', eager = false } = Astro.props;
-const sizes = size === 'lg' ? '(min-width: 1024px) 58vw, 100vw' : '(min-width: 1024px) 42vw, 100vw';
+const { work, headingLevel: Heading = 'h3', eager = false } = Astro.props;
 ---
 
-<article class:list={['work-card', `work-card--${size}`]} data-services={work.services.join(' ')}>
-  <a class="work-card__link" href={`/raboty/${work.id}/`}>
-    <div class="work-card__media">
-      <Picture
-        src={work.cover}
-        alt=""
-        formats={['avif', 'webp']}
-        widths={[480, 800, 1200, 1600]}
-        sizes={sizes}
-        loading={eager ? 'eager' : 'lazy'}
-        class="work-card__img"
-      />
-    </div>
-    <div class="work-card__body">
-      <Heading class="work-card__title h3">{t(work.title)}</Heading>
-      <p class="work-card__meta eyebrow">
-        <span>{t(work.client ?? text.nda)}</span>
-        <span aria-hidden="true">·</span>
-        <span>{work.year}</span>
-      </p>
-      <div class="work-card__tags">
-        {work.services.map((slug) => <Tag label={serviceNames[slug] ?? slug} />)}
-      </div>
-    </div>
-  </a>
+<article class="work" data-services={work.services.join(' ')}>
+  <div class="work__shot">
+    <Picture
+      src={work.cover}
+      alt={`${text.shotAlt} ${work.title}`}
+      formats={['avif', 'webp']}
+      widths={[480, 800, 1200, 1600]}
+      sizes="(min-width: 1024px) 31vw, (min-width: 768px) 46vw, 84vw"
+      loading={eager ? 'eager' : 'lazy'}
+    />
+  </div>
+  <div class="work__body">
+    <Heading class="work__title h3">{t(work.title)}</Heading>
+    <!-- год приклеен неразрывным пробелом: «· 2026» не уходит в начало строки -->
+    <p class="work__meta eyebrow">
+      {t(work.client ?? text.nda)}<span class="work__year">&nbsp;·&nbsp;{work.year}</span>
+    </p>
+  </div>
 </article>
 
 <style>
-  .work-card__link {
+  .work {
     display: grid;
+    align-content: start;
     gap: var(--space-5);
   }
 
-  .work-card__media {
+  .work__shot {
     overflow: hidden;
     aspect-ratio: 16 / 10;
-    border: var(--hairline) solid var(--graphite);
+    border: var(--hairline) solid var(--chalk);
   }
 
-  .work-card__media :global(img) {
+  .work__shot :global(img) {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: scale var(--dur) var(--ease-out);
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .work-card__link:hover .work-card__media :global(img) {
-      scale: 1.03;
-    }
-  }
-
-  .work-card__body {
+  .work__body {
     display: grid;
     gap: var(--space-3);
   }
 
-  .work-card__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    color: var(--ash);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .work-card__media :global(img) {
-      transition: none;
-    }
+  .work__year {
+    white-space: nowrap;
   }
 </style>

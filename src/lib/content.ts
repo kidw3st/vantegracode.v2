@@ -93,6 +93,7 @@ export interface Work {
   stack: string[];
   cover: ImageMetadata;
   gallery: ImageMetadata[];
+  order: number | null;
 }
 
 const images = import.meta.glob<ImageMetadata>('/cases/*/*.{jpg,jpeg,png,webp,avif}', {
@@ -181,8 +182,12 @@ export async function getWorks(): Promise<Work[]> {
         .filter(Boolean),
       cover,
       gallery,
+      order: entry.data.order ?? null,
     });
   }
 
-  return works.sort((a, b) => b.year - a.year || a.title.localeCompare(b.title, 'ru'));
+  // порядок владельца, затем новые первыми
+  return works.sort(
+    (a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || b.year - a.year || a.title.localeCompare(b.title, 'ru'),
+  );
 }

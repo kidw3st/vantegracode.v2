@@ -28,7 +28,6 @@ const [services, prices, works, text] = await Promise.all([getServices(), getPri
 const featured = works.filter((work) => work.featured);
 const homeWorks = (featured.length ? featured : works).slice(0, 3);
 const showWorks = homeWorks.length > 0;
-const serviceNames = Object.fromEntries(services.map((service) => [service.id, service.data.title]));
 
 // Номера в подписях идут подряд по блокам, которые реально выводятся
 // Структура владельца: О студии → Процесс → Что делаем → Работы → Цены → Контакты («Работы» всегда, без кейсов — заглушки).
@@ -163,7 +162,7 @@ const secondary = showWorks
       </ul>
       <ServiceIdea {...home.services.idea} href="#cta-title" class="services-idea" />
       <!-- все услуги — кнопка-капсула под «Вашей идеей», по оси блока (решение владельца) -->
-      <div class="services-more" data-reveal>
+      <div class="block-more" data-reveal>
         <Button href="/uslugi/" variant="secondary" fill label={home.services.link} />
       </div>
     </div>
@@ -171,17 +170,12 @@ const secondary = showWorks
 
   <section class="section" aria-labelledby="works-title">
     <div class="container">
-      <SectionHeader
-        id="works-title"
-        eyebrow={eyebrow('works', home.works.label)}
-        title={home.works.title}
-        link={{ href: '/raboty/', label: home.works.link }}
-      />
+      <SectionHeader id="works-title" eyebrow={eyebrow('works', home.works.label)} title={home.works.title} />
       {
         showWorks ? (
-          <div class="home-works" data-reveal="stagger">
-            {homeWorks.map((work, i) => (
-              <WorkCard work={work} serviceNames={serviceNames} size={i === 0 ? 'lg' : 'md'} />
+          <div class="home-works rail" data-reveal="stagger">
+            {homeWorks.map((work) => (
+              <WorkCard work={work} />
             ))}
           </div>
         ) : (
@@ -198,9 +192,12 @@ const secondary = showWorks
           </ul>
         )
       }
+      <!-- все работы — кнопка с заливкой под работами, по оси блока (как «Все услуги») -->
+      <div class="block-more" data-reveal>
+        <Button href="/raboty/" variant="secondary" fill label={home.works.link} />
+      </div>
     </div>
   </section>
-
 
   <section class="section" aria-labelledby="prices-title">
     <div class="container">
@@ -438,26 +435,28 @@ const secondary = showWorks
     margin-top: var(--space-3);
   }
 
-  .services-more {
+  .block-more {
     display: flex;
     justify-content: center;
     margin-top: var(--space-7);
   }
 
-  /* ---------- Работы ---------- */
+  /* ---------- Работы: скриншоты главных страниц — три в ряд, на телефоне лентой ---------- */
 
   .home-works {
     display: grid;
     gap: var(--space-7) var(--column-gap);
   }
 
+  @media (min-width: 768px) {
+    .home-works {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   @media (min-width: 1024px) {
     .home-works {
-      grid-template-columns: 7fr 5fr;
-    }
-
-    .home-works > :first-child {
-      grid-row: span 2;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 </style>

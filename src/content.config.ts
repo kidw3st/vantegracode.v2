@@ -81,7 +81,7 @@ const blog = defineCollection({
 
 /**
  * Кейсы читаются прямо из папки владельца `cases/`: одна подпапка — один проект,
- * описание в `index.md`, обложка `cover.*`, галерея `01–06.*`.
+ * описание в `index.md`, обложка `cover.*` (скриншот главной страницы, 16:10), галерея `01–06.*`.
  * Папки на `_` игнорируются. Нет папки или кейсов — коллекция пустая, это не ошибка.
  */
 const CASES_DIR = './cases';
@@ -110,6 +110,8 @@ const works = defineCollection({
     url: z.url().nullable().optional(),
     duration: z.string().nullable().optional(),
     featured: z.boolean().default(false),
+    /** Порядок на сайте (меньше — раньше); без него — новые первыми */
+    order: z.number().int().optional(),
   }),
 });
 
