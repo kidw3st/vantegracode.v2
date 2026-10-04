@@ -76,7 +76,7 @@ onPage(() => {
     stage.style.setProperty('--draw', draw.toFixed(3));
 
     // 03 — три итерации дизайна, каждую отмечает вспышка «Демо»:
-    // 1 — сетка и типографика (кегль заголовка тянут за угол), 2 — гравюра, 3 — детали
+    // 1 — типографика (кегль заголовка тянут за угол), 2 — гравюра, 3 — детали
     const iter = step < 3 ? 0 : step > 3 ? 3 : p < 0.1 ? 0 : p < 0.42 ? 1 : p < 0.74 ? 2 : 3;
     if (iter) stage.dataset.iter = String(iter);
     else delete stage.dataset.iter;

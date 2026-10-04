@@ -2,8 +2,8 @@
 /**
  * Сайт, который собирается в окне блока «Процесс работы» (ProcessScreen.astro):
  *   02 — каркас: контуры блоков прорисовываются по очереди;
- *   03 — дизайн за три итерации: 1 — сетка и типографика (дизайнер тянет кегль заголовка за угол рамки),
- *        2 — графика (гравюра проходит доску в несколько проходов), 3 — детали, сетка и каркас уходят;
+ *   03 — дизайн за три итерации: 1 — типографика (дизайнер тянет кегль заголовка за угол рамки),
+ *        2 — графика (гравюра проходит доску в несколько проходов), 3 — детали, каркас уходит;
  *   04 — готовый сайт: шапка прилипает, страница листается до коллекции и подвала.
  * Сайт нарисован в «настоящих» пикселях страницы шириной 1280 (lib/process-site.ts) и уменьшен в окно:
  * --u — ширина окна / 1280, поэтому на любом экране это один и тот же макет.
@@ -52,7 +52,6 @@ const atRight = (right: number, y: number) => `right: ${u(SITE.w - right)}; top:
 const hero = sphereOnPedestal();
 // по порядку названий в site.shapes: шар, цилиндр, куб
 const cards = [sphereCard(), cylinderCard(), cubeCard()];
-const columns = Array.from({ length: GRID.count }, (_, i) => GRID.margin + i * (GRID.column + GRID.gap));
 const cardX = (i: number) => GRID.margin + i * 4 * (GRID.column + GRID.gap);
 
 // Каркас первого экрана (этап 02): блоки там же, где встанет дизайн; d — очередь прорисовки
@@ -161,10 +160,6 @@ const WIRE_LINES: [x1: number, y1: number, x2: number, y2: number, d: number][] 
     <span class="m m-fine m-navline" style={`top: ${u(76)}`}></span>
   </div>
 
-  <!-- 03 — модульная сетка дизайнера: 12 колонок -->
-  <svg class="site__grid" viewBox={`0 0 ${SITE.w} ${SITE.h}`} focusable="false">
-    {columns.map((x) => <rect x={x} y="0" width={GRID.column} height={SITE.h} />)}
-  </svg>
 </div>
 
 <style>
@@ -197,7 +192,7 @@ const WIRE_LINES: [x1: number, y1: number, x2: number, y2: number, d: number][] 
     stroke-dashoffset: calc((1 - clamp(0, (var(--draw, 0) - var(--d)) * 2.2, 1)) * 1px);
   }
 
-  /* ---------- Страница, шапка, сетка ---------- */
+  /* ---------- Страница и шапка ---------- */
 
   .site__page {
     position: absolute;
@@ -214,17 +209,6 @@ const WIRE_LINES: [x1: number, y1: number, x2: number, y2: number, d: number][] 
     right: 0;
     left: 0;
     height: calc(76 * var(--u));
-  }
-
-  .site__grid {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    fill: var(--chalk);
-    fill-opacity: 0.05;
-    opacity: 0;
-    transition: opacity 600ms var(--ease-out);
   }
 
   .m,
@@ -481,7 +465,7 @@ const WIRE_LINES: [x1: number, y1: number, x2: number, y2: number, d: number][] 
 
   /* ---------- Состояния ---------- */
 
-  /* итерации дизайна: 1 — сетка и типографика, 2 — графика, 3 — детали; каркас и сетка уходят */
+  /* итерации дизайна: 1 — типографика, 2 — графика, 3 — детали; каркас уходит */
   :global(.pscreen__stage[data-iter]) .m-type {
     opacity: 1;
   }
@@ -506,7 +490,6 @@ const WIRE_LINES: [x1: number, y1: number, x2: number, y2: number, d: number][] 
     opacity: 0;
   }
 
-  :global(.pscreen__stage:is([data-iter='1'], [data-iter='2'])) .site__grid,
   :global(.pscreen__stage[data-iter='1']) .m-select {
     opacity: 1;
   }
@@ -523,7 +506,6 @@ const WIRE_LINES: [x1: number, y1: number, x2: number, y2: number, d: number][] 
   @media (prefers-reduced-motion: reduce) {
     .m,
     .site__wire,
-    .site__grid,
     .m-select,
     .m-btn__fill {
       transition: none;
