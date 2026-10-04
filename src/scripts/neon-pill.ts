@@ -1,8 +1,9 @@
 /**
  * Неон по контуру кнопки-капсулы (Button neon, решение владельца: «как на линии под VANTEGRA», neon.ts).
- * Два импульса обегают капсулу по линии рамки: в покое медленно, при наведении и фокусе — быстрее и ярче
- * (как планеты в фактах «О студии»). Импульс — сердцевина и ореолы вдоль контура, к концам гаснет;
- * ночью свет складывается, днём — тёмный штрих без широкого ореола (тёмное свечение на светлом — тень).
+ * Два импульса обегают капсулу по линии рамки: в покое медленно, при наведении и фокусе — быстрее и ярче.
+ * Импульс — как на линии под VANTEGRA: длинная полоса света, яркая к середине и гаснущая к концам,
+ * с мягким размытым ореолом (тень canvas), без точек; ночью свет складывается, днём — тёмный штрих
+ * с узким ореолом (тёмное свечение на светлом читается как тень).
  * Canvas шире кнопки на запас под свечение (--neon-bleed в Button.astro), плотность — пиксели экрана.
  * Рисуем, только пока кнопка на экране; при prefers-reduced-motion неона нет.
  */
@@ -10,26 +11,31 @@ import { onPage, prefersReducedMotion } from './lifecycle.ts';
 
 const CHALK = '244, 242, 238'; // те же тона, что у неона под VANTEGRA
 const SOOT = '17, 17, 17';
-const LENGTH = 0.22; // длина импульса — доля контура
+const LENGTH = 0.3; // длина импульса — доля контура (у линии под VANTEGRA — 0,34 длины)
 const CALM = 1 / 7; // кругов в секунду в покое
 const FAST = 1 / 2.2; // при наведении
 const RISE = 0.35; // разгон, с
 const FALL = 1.1; // торможение, с
-const BANDS = 5; // ступени угасания к концам импульса
+const BANDS = 6; // ступени угасания к концам импульса
 const isLight = () => document.documentElement.dataset.theme === 'light';
 
-/** Слои импульса: ширина линии и яркость в центре; ночью — с широким ореолом, днём — без */
+/**
+ * Проходы импульса: толщина полосы, размытие (px; 0 — сама линия без ореола), яркость в середине,
+ * доля длины импульса. Ночью — широкий мягкий ореол, ближний ореол и сердцевина с вытянутым бликом
+ * в середине; днём — узкий ореол и тёмная сердцевина
+ */
 const NIGHT = [
-  { width: 18, alpha: 0.06 },
-  { width: 8, alpha: 0.16 },
-  { width: 3.2, alpha: 0.38 },
-  { width: 1.2, alpha: 0.95 },
+  { width: 14, blur: 26, alpha: 0.4, span: 1 },
+  { width: 5, blur: 10, alpha: 0.62, span: 1 },
+  { width: 1.3, blur: 0, alpha: 1, span: 1 },
+  { width: 2.2, blur: 0, alpha: 0.55, span: 0.35 },
 ];
 const DAY = [
-  { width: 5, alpha: 0.07 },
-  { width: 2.4, alpha: 0.3 },
-  { width: 1.3, alpha: 0.9 },
+  { width: 6, blur: 8, alpha: 0.18, span: 1 },
+  { width: 1.4, blur: 0, alpha: 0.95, span: 1 },
 ];
+/** Ореол рисуем тенью полосы, вынесенной за край холста: в кадре остаётся только мягкая тень */
+const AWAY = 10000;
 
 interface Pill {
   x: number;
@@ -69,28 +75,33 @@ function trace(ctx: CanvasRenderingContext2D, pill: Pill, center: number, length
   ctx.stroke();
 }
 
-function pulse(ctx: CanvasRenderingContext2D, pill: Pill, center: number, power: number, light: boolean) {
+function pulse(ctx: CanvasRenderingContext2D, pill: Pill, center: number, power: number, light: boolean, ratio: number) {
   const tone = light ? SOOT : CHALK;
   const length = pill.total * LENGTH;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  for (const layer of light ? DAY : NIGHT) {
-    ctx.lineWidth = layer.width;
-    // вложенные отрезки короче к центру: свет складывается и к концам гаснет ступенями
+  for (const pass of light ? DAY : NIGHT) {
+    ctx.lineWidth = pass.width;
     for (let band = 0; band < BANDS; band++) {
-      ctx.strokeStyle = `rgba(${tone}, ${((layer.alpha * power) / BANDS).toFixed(4)})`;
-      trace(ctx, pill, center, length * (1 - band / BANDS));
+      // вложенные отрезки короче к середине: свет складывается к центру и гаснет к концам
+      const alpha = ((pass.alpha * power) / BANDS).toFixed(4);
+      const span = length * pass.span * (1 - band / BANDS);
+      if (pass.blur) {
+        // размытие и сдвиг тени — в пикселях холста, преобразование на них не действует
+        ctx.save();
+        ctx.translate(-AWAY, 0);
+        ctx.shadowOffsetX = AWAY * ratio;
+        ctx.shadowBlur = pass.blur * ratio;
+        ctx.shadowColor = `rgba(${tone}, ${alpha})`;
+        ctx.strokeStyle = '#000';
+        trace(ctx, pill, center, span);
+        ctx.restore();
+      } else {
+        ctx.strokeStyle = `rgba(${tone}, ${alpha})`;
+        trace(ctx, pill, center, span);
+      }
     }
   }
-  // горячая точка в центре импульса
-  const [hx, hy] = at(pill, center);
-  const hot = ctx.createRadialGradient(hx, hy, 0, hx, hy, light ? 4 : 7);
-  hot.addColorStop(0, `rgba(${tone}, ${(0.85 * power).toFixed(3)})`);
-  hot.addColorStop(1, `rgba(${tone}, 0)`);
-  ctx.fillStyle = hot;
-  ctx.beginPath();
-  ctx.arc(hx, hy, light ? 4 : 7, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 onPage(() => {
@@ -146,8 +157,8 @@ onPage(() => {
       ctx.clearRect(0, 0, width, height);
       const light = isLight();
       ctx.globalCompositeOperation = light ? 'source-over' : 'lighter';
-      pulse(ctx, pill, phase * pill.total, power, light);
-      pulse(ctx, pill, (phase + 0.5) * pill.total, power, light);
+      pulse(ctx, pill, phase * pill.total, power, light, ratio);
+      pulse(ctx, pill, (phase + 0.5) * pill.total, power, light, ratio);
       raf = requestAnimationFrame(frame);
     };
 
