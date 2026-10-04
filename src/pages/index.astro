@@ -118,12 +118,8 @@ const secondary = showWorks
 
   <section class="section about" aria-labelledby="about-title">
     <div class="container">
-      <SectionHeader
-        id="about-title"
-        eyebrow={eyebrow('about', home.about.label)}
-        title={home.about.title}
-        neon
-      />
+      {/* без подписи «01 — О студии» (решение владельца); у остальных блоков подписи пока остаются */}
+      <SectionHeader id="about-title" title={home.about.title} neon />
       <dl class="facts" data-reveal="stagger">
         {
           home.about.facts.map((fact, i) => (

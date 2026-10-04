@@ -1,14 +1,14 @@
 ---
 /**
- * Заголовок секции — по центру блока (решение владельца): подпись «02 — Услуги»,
- * крупный заголовок, под ним поясняющий текст и ссылка «Все …».
+ * Заголовок секции — по центру блока (решение владельца): подпись «02 — Услуги» (необязательна:
+ * у «О студии» её нет — решение владельца), крупный заголовок, под ним поясняющий текст и ссылка «Все …».
  * neon — по линии-разделителю ездят два светящихся импульса (только блок под надписью VANTEGRA).
  */
 import ArrowLink from './ArrowLink.astro';
 import { t } from '../lib/typograf.ts';
 
 interface Props {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   text?: string;
   link?: { href: string; label: string };
@@ -23,7 +23,7 @@ const { eyebrow, title, text, link, as: Heading = 'h2', id, class: className, ne
 ---
 
 <header class:list={['sh', className]} data-reveal="stagger">
-  <p class="eyebrow sh__eyebrow">{t(eyebrow)}</p>
+  {eyebrow && <p class="eyebrow sh__eyebrow">{t(eyebrow)}</p>}
   <Heading class="sh__title" id={id}>{t(title)}</Heading>
   {
     (text || link) && (
