@@ -63,9 +63,22 @@
     - Оплата в боте
     - Интеграции с CRM и таблицами
 
+# Mini App — веб-приложение внутри Telegram, отдельная позиция (ресёрч цен, docs/research)
+- id: miniapp
+  title: Telegram Mini App
+  order: 6
+  price: null
+  term: null
+  service: telegram-boty
+  items:
+    - Mini Apps — приложения внутри Telegram
+    - Каталог, запись или приём заявок
+    - Интеграции с CRM и таблицами
+    - Аналитика
+
 - id: game
   title: Мобильная игра
-  order: 6
+  order: 7
   price: null
   term: null
   service: mobilnye-igry
@@ -77,7 +90,7 @@
 
 - id: audit
   title: Аудит сайта
-  order: 7
+  order: 8
   price: null
   term: null
   service: audit-sajta
@@ -90,7 +103,7 @@
 # Поддержка — цена в месяц, срока нет
 - id: support
   title: Поддержка и развитие
-  order: 8
+  order: 9
   price: null
   term: null
   perMonth: true

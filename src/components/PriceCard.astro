@@ -62,8 +62,10 @@ const termText = perMonth ? null : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
     border: var(--hairline) solid var(--chalk);
   }
 
+  /* название — место под две строки: в ряду цены стоят на одной линии */
   .price-card__title {
-    margin-bottom: var(--space-7);
+    min-height: 2lh;
+    margin-bottom: var(--space-6);
   }
 
   .price-card__cost {

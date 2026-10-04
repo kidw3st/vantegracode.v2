@@ -36,12 +36,14 @@ const showWorks = homeWorks.length > 0;
 const order = ['about', 'process', 'services', 'works', 'prices', 'contact'];
 const num = (key: string) => order.indexOf(key) + 1;
 
-const priceById = new Map(prices.map((price) => [price.id, price]));
-const priceCards = home.prices.cards.map((card) => {
-  const price = priceById.get(card.price);
-  if (!price) throw new Error(`Главная: нет позиции «${card.price}» в prices.yaml`);
-  return { title: card.title, price: price.data.price, term: price.data.term, items: price.data.items };
-});
+// Все позиции прайса — по порядку из prices.yaml (решение владельца: на главной все карточки)
+const priceCards = prices.map((price) => ({
+  title: price.data.title,
+  price: price.data.price,
+  term: price.data.term,
+  perMonth: price.data.perMonth,
+  items: price.data.items,
+}));
 
 // Внутренний край пылевого диска = первая эхо-орбита вокруг вертикального блока (в ширинах логотипа)
 const verticalBox = protectedBox('vertical');
@@ -206,13 +208,21 @@ const secondary = showWorks
         {
           priceCards.map((card) => (
             <li>
-              <PriceCard title={card.title} price={card.price} term={card.term} items={card.items} itemsLabel={home.prices.includes} />
+              <PriceCard
+                title={card.title}
+                price={card.price}
+                term={card.term}
+                perMonth={card.perMonth}
+                items={card.items}
+                itemsLabel={home.prices.includes}
+              />
             </li>
           ))
         }
       </ul>
-      <!-- все цены — кнопка с заливкой под карточками, по оси блока (как у услуг и работ) -->
+      <!-- все цены — приписка про вкладку «Цены» и кнопка с заливкой под карточками, по оси блока -->
       <div class="block-more" data-reveal>
+        <p class="block-more__note">{t(home.prices.more)}</p>
         <Button href="/ceny/" variant="secondary" fill label={home.prices.link} />
       </div>
     </div>
@@ -417,6 +427,13 @@ const secondary = showWorks
     }
   }
 
+  /* на планшете по две: нечётная последняя карточка — на всю ширину ряда, не стоит одна */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .cards--3 > li:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+
   @media (min-width: 1024px) {
     .cards--3 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -428,10 +445,19 @@ const secondary = showWorks
     margin-top: var(--space-3);
   }
 
+  /* под блоком — кнопка «Все …» по оси блока; у цен над ней приписка про вкладку «Цены» */
   .block-more {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
     margin-top: var(--space-7);
+  }
+
+  .block-more__note {
+    max-width: 52ch;
+    text-align: center;
+    color: var(--text-muted);
   }
 
   /* ---------- Работы: скриншоты главных страниц — три в ряд, на телефоне лентой ---------- */
