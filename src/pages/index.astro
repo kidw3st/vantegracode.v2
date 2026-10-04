@@ -48,7 +48,13 @@ const verticalBox = protectedBox('vertical');
 const [innerOrbit] = logoRings({ hw: verticalBox.hw, hh: verticalBox.hh, rings: 1 });
 const discRim = innerOrbit?.rx ?? 2.6;
 
-const filledSteps = steps.map((step) => ({ title: step.title, text: text(step.text), icon: step.icon }));
+const filledSteps = steps.map((step) => ({
+  title: step.title,
+  text: text(step.text),
+  more: text(step.more),
+  result: step.result.map(text),
+  icon: step.icon,
+}));
 const secondary = showWorks
   ? { href: site.cta.worksHref, label: site.cta.works }
   : { href: site.cta.servicesHref, label: site.cta.services };
@@ -135,7 +141,7 @@ const secondary = showWorks
   <section class="section" aria-labelledby="process-title">
     <div class="container">
       <SectionHeader id="process-title" title={home.process.title} />
-      <ProcessScreen steps={filledSteps} screen={home.process.screen} />
+      <ProcessScreen steps={filledSteps} resultLabel={home.process.result} screen={home.process.screen} />
     </div>
   </section>
 
