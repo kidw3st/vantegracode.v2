@@ -3,7 +3,9 @@
  * Логотип — только SVG владельца через <img> (файл кешируется, пути внутри SVG не меняются).
  * Версия × цвет × ширина. Не поворачивать, не растягивать, не перекрашивать, без эффектов.
  * color='auto' (по умолчанию) — оба файла владельца: мел для тёмной темы, сажа для дневной;
- * лишний скрывает theme.css. Скрытый дневной файл грузится лениво — только когда нужен.
+ * лишний скрывает theme.css. Дневной файл грузится заранее, но с низким приоритетом: иначе при первой
+ * смене темы логотип на миг пропадал (ленивая картинка начинала грузиться только в момент смены).
+ * Логотип ниже первого экрана (loading='lazy') — лениво оба файла.
  */
 import markChalk from '../assets/brand/logo/vantegra-mark-chalk.svg';
 import markSoot from '../assets/brand/logo/vantegra-mark-soot.svg';
@@ -83,8 +85,9 @@ const height = Math.round((width * geometry.h) / geometry.w);
         width={width}
         height={height}
         alt={alt}
-        loading="lazy"
+        loading={loading}
         decoding="async"
+        fetchpriority="low"
         draggable="false"
         style={`--logo-w: ${cssWidth ?? `${width}px`}`}
         {...rest}
