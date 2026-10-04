@@ -1,0 +1,206 @@
+---
+/**
+ * Карточка факта блока «О студии» — свой рисунок, не как карточки услуг (решение владельца):
+ * фон — как у страницы, яркая рамка; в центре иконка внутри орбиты знака (эллипс −12°, ry/rx = 0,306),
+ * по орбите всё время крутится планета с коротким хвостом. Планеты четырёх карточек разнесены
+ * на равные доли круга. При появлении орбита прорисовывается, затем проявляется планета.
+ * Движение — только stroke-dashoffset и opacity; при reduced motion планеты стоят.
+ */
+import Icon, { type IconName } from './Icon.astro';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  index: number;
+  total: number;
+  title: string;
+  text: string;
+  icon: IconName;
+}
+
+const { index, total, title, text, icon } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+/** Где на орбите планета этой карточки (доля круга): карточки разнесены на равные доли */
+const phase = index / total;
+
+// Орбита в рамке 240 × 112: центр, полуоси (ry/rx как у знака), наклон как у знака
+const CX = 120;
+const CY = 56;
+const RX = 100;
+const RY = +(RX * 0.306).toFixed(2);
+const TILT = -12;
+---
+
+<li class="fact" style={`--phase: ${phase}`}>
+  <span class="fact__num num" aria-hidden="true">{pad(index + 1)}<span class="fact__total"> / {pad(total)}</span></span>
+  <div class="fact__figure" aria-hidden="true">
+    <svg class="fact__orbit" viewBox="0 0 240 112" width="240" height="112" focusable="false">
+      <g transform={`rotate(${TILT} ${CX} ${CY})`} fill="none">
+        <ellipse class="fact__track" cx={CX} cy={CY} rx={RX} ry={RY} pathLength="1" />
+        <ellipse class="fact__trail" cx={CX} cy={CY} rx={RX} ry={RY} pathLength="1" />
+        <ellipse class="fact__planet" cx={CX} cy={CY} rx={RX} ry={RY} pathLength="1" />
+      </g>
+    </svg>
+    <Icon name={icon} size={36} class="fact__icon" />
+  </div>
+  <h3 class="fact__title">{t(title)}</h3>
+  <p class="fact__text">{t(text)}</p>
+</li>
+
+<style>
+  .fact {
+    /* круг планеты */
+    --lap: 12s;
+
+    position: relative;
+    display: grid;
+    /* рисунок, заголовок, текст; свободное место — под текстом, отступ заголовок → текст везде один */
+    grid-template-rows: auto auto 1fr;
+    justify-items: center;
+    align-content: start;
+    height: 100%;
+    padding: var(--space-8) var(--space-5) var(--space-7);
+    /* яркая рамка — решение владельца (днём токены меняются местами — рамка сажей) */
+    border: var(--hairline) solid var(--chalk);
+    text-align: center;
+  }
+
+  /* Номер — в левом верхнем углу, как метка на чертеже */
+  .fact__num {
+    position: absolute;
+    top: var(--space-5);
+    left: var(--space-5);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    color: var(--chalk);
+  }
+
+  .fact__total {
+    color: var(--ash);
+  }
+
+  .fact__figure {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: min(100%, 264px);
+    margin-bottom: var(--space-6);
+  }
+
+  .fact__orbit {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Иконка — в центре орбиты, орбита её не пересекает */
+  .fact__figure :global(.fact__icon) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    color: var(--chalk);
+  }
+
+  /* Орбита — тонко (12 %); хвост за планетой — ярче (20 %); планета — точка мелом
+     (штрих почти нулевой длины с круглым концом). Планета и хвост едут сдвигом штриха по орбите */
+  .fact__track {
+    stroke: var(--orbit);
+    stroke-width: var(--orbit-stroke);
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 0;
+  }
+
+  .fact__trail {
+    stroke: var(--orbit-strong);
+    stroke-width: 1.5;
+    stroke-dasharray: 0.14 0.86;
+    stroke-dashoffset: calc(0.14px - var(--phase) * 1px);
+    animation: fact-trail var(--lap) linear infinite;
+    animation-delay: calc(var(--phase) * var(--lap) * -1);
+  }
+
+  .fact__planet {
+    stroke: var(--chalk);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-dasharray: 0.001 0.999;
+    stroke-dashoffset: calc(var(--phase) * -1px);
+    animation: fact-orbit var(--lap) linear infinite;
+    animation-delay: calc(var(--phase) * var(--lap) * -1);
+  }
+
+  /* В кадрах — числа без переменных: с var() внутри кадров браузер перескакивает, а не ведёт плавно */
+  @keyframes fact-orbit {
+    from {
+      stroke-dashoffset: 0px;
+    }
+
+    to {
+      stroke-dashoffset: -1px;
+    }
+  }
+
+  @keyframes fact-trail {
+    from {
+      stroke-dashoffset: 0.14px;
+    }
+
+    to {
+      stroke-dashoffset: -0.86px;
+    }
+  }
+
+  .fact__title {
+    margin-bottom: var(--space-3);
+    padding-inline-start: var(--ls-heading);
+  }
+
+  .fact__text {
+    max-width: 26ch;
+    color: var(--ash);
+    font-size: var(--fs-small);
+    line-height: 1.55;
+  }
+
+  /* ---------- Появление: орбита прорисовывается, затем проявляется планета ---------- */
+
+  :global(.js) .fact__track {
+    transition: stroke-dashoffset 1100ms var(--ease-in-out) calc(200ms + var(--i, 0) * var(--stagger-orbit));
+  }
+
+  :global(.js) .fact__trail,
+  :global(.js) .fact__planet {
+    transition: opacity 500ms var(--ease-out) calc(900ms + var(--i, 0) * var(--stagger-orbit));
+  }
+
+  :global(.js [data-reveal]:not(.is-in)) .fact__track {
+    stroke-dashoffset: 1;
+  }
+
+  :global(.js [data-reveal]:not(.is-in)) .fact__trail,
+  :global(.js [data-reveal]:not(.is-in)) .fact__planet {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fact__trail,
+    .fact__planet {
+      animation: none;
+    }
+
+    :global(.js) .fact__track,
+    :global(.js) .fact__trail,
+    :global(.js) .fact__planet {
+      transition: none;
+    }
+
+    :global(.js [data-reveal]:not(.is-in)) .fact__track {
+      stroke-dashoffset: 0;
+    }
+
+    :global(.js [data-reveal]:not(.is-in)) .fact__trail,
+    :global(.js [data-reveal]:not(.is-in)) .fact__planet {
+      opacity: 1;
+    }
+  }
+</style>

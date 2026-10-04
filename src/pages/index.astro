@@ -7,6 +7,7 @@ import Logo from '../components/Logo.astro';
 import OrbitField from '../components/OrbitField.astro';
 import PriceCard from '../components/PriceCard.astro';
 import SectionHeader from '../components/SectionHeader.astro';
+import FactCard from '../components/FactCard.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 import Steps from '../components/Steps.astro';
 import WorkCard from '../components/WorkCard.astro';
@@ -120,21 +121,13 @@ const secondary = showWorks
     <div class="container">
       {/* без подписи «01 — О студии» (решение владельца); у остальных блоков подписи пока остаются */}
       <SectionHeader id="about-title" title={home.about.title} neon />
-      <dl class="facts" data-reveal="stagger">
+      <ul class="facts rail" role="list" data-reveal="stagger">
         {
           home.about.facts.map((fact, i) => (
-            <div class="facts__item">
-              <dt class="facts__label">
-                <span class="facts__num num" aria-hidden="true">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                {t(fact.label)}
-              </dt>
-              <dd class="facts__text">{t(fact.text)}</dd>
-            </div>
+            <FactCard index={i} total={home.about.facts.length} title={fact.label} text={fact.text} icon={fact.icon} />
           ))
         }
-      </dl>
+      </ul>
     </div>
   </section>
 
@@ -365,48 +358,19 @@ const secondary = showWorks
     padding-top: var(--space-6);
   }
 
-  /* Четыре коротких факта: на десктопе в ряд, на телефоне 2 × 2 */
-  .facts {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-6) var(--column-gap);
-    margin: 0;
+  /* Четыре факта — карточки FactCard: на десктопе в ряд, на планшете 2 × 2, на телефоне лентой вправо (.rail) */
+  @media (min-width: 768px) {
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
   }
 
   @media (min-width: 1024px) {
     .facts {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
-  }
-
-  .facts__item {
-    display: grid;
-    align-content: start;
-    gap: var(--space-3);
-    padding-top: var(--space-5);
-    border-top: var(--hairline) solid var(--graphite);
-  }
-
-  .facts__label {
-    display: grid;
-    gap: var(--space-4);
-    font-family: var(--font-display);
-    font-size: var(--fs-h3);
-    line-height: 1.25;
-    letter-spacing: var(--ls-heading);
-    text-transform: uppercase;
-  }
-
-  .facts__num {
-    font-size: var(--fs-label);
-    letter-spacing: var(--ls-label);
-    color: var(--ash);
-  }
-
-  .facts__text {
-    margin: 0;
-    color: var(--ash);
-    max-width: 30ch;
   }
 
   /* ---------- «Работы»: заглушки, пока нет кейсов ---------- */
