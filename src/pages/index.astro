@@ -30,8 +30,9 @@ const showWorks = homeWorks.length > 0;
 const serviceNames = Object.fromEntries(services.map((service) => [service.id, service.data.title]));
 
 // Номера в подписях идут подряд по блокам, которые реально выводятся
-// Структура владельца: О студии → Что делаем → Процесс → Работы → Цены → Контакты («Работы» всегда, без кейсов — заглушки)
-const order = ['about', 'services', 'process', 'works', 'prices', 'contact'];
+// Структура владельца: О студии → Процесс → Что делаем → Работы → Цены → Контакты («Работы» всегда, без кейсов — заглушки).
+// Процесс сразу за фактами «О студии» показывает, как выполняются их обещания; услуги, работы и цены — подряд, одним блоком предложения
+const order = ['about', 'process', 'services', 'works', 'prices', 'contact'];
 const num = (key: string) => order.indexOf(key) + 1;
 const eyebrow = (key: string, label: string) => `${String(num(key)).padStart(2, '0')} — ${label}`;
 
@@ -131,6 +132,13 @@ const secondary = showWorks
     </div>
   </section>
 
+  <section class="section" aria-labelledby="process-title">
+    <div class="container">
+      <SectionHeader id="process-title" eyebrow={eyebrow('process', home.process.label)} title={home.process.title} />
+      <Steps steps={filledSteps} />
+    </div>
+  </section>
+
   <section class="section" aria-labelledby="services-title">
     <div class="container">
       <SectionHeader
@@ -148,13 +156,6 @@ const secondary = showWorks
           ))
         }
       </ul>
-    </div>
-  </section>
-
-  <section class="section" aria-labelledby="process-title">
-    <div class="container">
-      <SectionHeader id="process-title" eyebrow={eyebrow('process', home.process.label)} title={home.process.title} />
-      <Steps steps={filledSteps} />
     </div>
   </section>
 
