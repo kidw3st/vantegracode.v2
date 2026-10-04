@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BrandWordmark from '../components/BrandWordmark.astro';
-import ArrowLink from '../components/ArrowLink.astro';
 import Button from '../components/Button.astro';
 import CtaSection from '../components/CtaSection.astro';
 import Logo from '../components/Logo.astro';
@@ -163,9 +162,9 @@ const secondary = showWorks
         }
       </ul>
       <ServiceIdea {...home.services.idea} href="#cta-title" class="services-idea" />
-      <!-- ссылка на все услуги — под «Вашей идеей» (решение владельца), по оси блока -->
+      <!-- все услуги — кнопка-капсула под «Вашей идеей», по оси блока (решение владельца) -->
       <div class="services-more" data-reveal>
-        <ArrowLink href="/uslugi/" label={home.services.link} />
+        <Button href="/uslugi/" variant="secondary" orbit label={home.services.link} />
       </div>
     </div>
   </section>
