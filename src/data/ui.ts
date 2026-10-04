@@ -17,6 +17,8 @@ export const ui = {
   privacy: 'Политика конфиденциальности',
   consentDoc: 'Согласие на обработку персональных данных',
   copyright: '© {year} Vantegra',
+  ribbonPrev: 'Листать назад',
+  ribbonNext: 'Листать вперёд',
   contacts: {
     telegram: 'Telegram',
     email: 'Почта',

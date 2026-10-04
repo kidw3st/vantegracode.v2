@@ -1,7 +1,8 @@
 ---
 /**
  * Позиция прайса — в языке карточек услуг (PLAN.md, п. 41): рамка мелом, сверху название, крупно
- * «от … ₽» (Geologica 300, --fs-num-xl), под ней срок; внизу — что входит в цену, по волосным линиям
+ * «от … ₽» (Geologica 300, --fs-num-xl), под ней срок (у поддержки — «в месяц», на той же высоте,
+ * что срок у соседних карточек); внизу — что входит в цену, по волосным линиям
  * (пункты — из includes услуги, проверяются при сборке). Незаполненная цена или срок — «[ ]».
  * full — /ceny/: ещё ссылка на услугу.
  */
@@ -24,7 +25,7 @@ interface Props {
 
 const { title, price, term, perMonth = false, items = [], itemsLabel, serviceHref, variant = 'compact' } = Astro.props;
 const value = price == null ? PLACEHOLDER : formatNumber(price);
-const termText = perMonth ? null : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
+const note = perMonth ? text.perMonth : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
 ---
 
 <article class:list={['price-card', `price-card--${variant}`]}>
@@ -34,9 +35,8 @@ const termText = perMonth ? null : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
       <span class="price-card__from">от</span>
       <span class="price-card__value">{value}</span>
       <span class="price-card__currency">₽</span>
-      {perMonth && <span class="price-card__unit tech">{text.perMonth}</span>}
     </p>
-    {termText && <p class="price-card__term tech">{t(termText)}</p>}
+    <p class="price-card__term tech">{t(note)}</p>
   </div>
   {
     items.length > 0 && (
@@ -86,13 +86,6 @@ const termText = perMonth ? null : `${text.termPrefix} ${term ?? PLACEHOLDER}`;
   .price-card__from,
   .price-card__currency {
     font-size: 0.5em;
-    color: var(--ash);
-  }
-
-  .price-card__unit {
-    flex-basis: 100%;
-    margin-top: var(--space-3);
-    font-size: var(--fs-list);
     color: var(--ash);
   }
 

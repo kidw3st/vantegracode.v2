@@ -12,7 +12,9 @@ onPage(() => {
   if (!rails.length) return;
 
   const update = (rail: HTMLElement) => {
-    const scrollable = rail.scrollWidth > rail.clientWidth + 1;
+    // лента Ribbon с JS не прокручивается, а едет целиком — ей фокус не нужен
+    const { overflowX } = getComputedStyle(rail);
+    const scrollable = (overflowX === 'auto' || overflowX === 'scroll') && rail.scrollWidth > rail.clientWidth + 1;
     const needsFocus = scrollable && !rail.querySelector(FOCUSABLE);
     if (needsFocus) rail.setAttribute('tabindex', '0');
     else rail.removeAttribute('tabindex');

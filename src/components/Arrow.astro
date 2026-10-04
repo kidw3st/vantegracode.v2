@@ -2,7 +2,7 @@
 /** Тонкая стрелка ссылок — форма arrow-right из Lucide (как иконки сайта), линия ~1,25 px */
 interface Props {
   class?: string;
-  direction?: 'right' | 'up-right' | 'down';
+  direction?: 'right' | 'left' | 'up-right' | 'down';
 }
 const { class: className, direction = 'right' } = Astro.props;
 ---
@@ -29,6 +29,10 @@ const { class: className, direction = 'right' } = Astro.props;
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .arrow--left {
+    rotate: 180deg;
   }
 
   .arrow--up-right {

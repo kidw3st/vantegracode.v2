@@ -175,6 +175,11 @@ const priceMeta = (price: (typeof prices)[number]) =>
         </div>
         <p class="sg__caption">Вторичная 52 px и малая 44 px: обычная · наведение</p>
         <div class="sg__row">
+          <Button variant="secondary" size="sm" fill arrow="left" aria-label={t(ui.ribbonPrev)} />
+          <Button variant="secondary" size="sm" fill arrow="right" aria-label={t(ui.ribbonNext)} />
+        </div>
+        <p class="sg__caption">Круглая со стрелкой 44 px (лента цен): назад · вперёд, заливка от точки входа курсора</p>
+        <div class="sg__row">
           <a class="link" href="#sg-buttons">Текстовая ссылка</a>
           <a class="link is-hover" href="#sg-buttons">Наведение</a>
           <ArrowLink href="#sg-buttons" label="Все услуги" />

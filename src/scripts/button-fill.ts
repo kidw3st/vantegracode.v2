@@ -14,22 +14,28 @@ onPage(() => {
   const { signal } = ac;
 
   for (const button of buttons) {
-    /** Центр круга в координатах кнопки и диаметр, при котором круг накрывает все четыре угла */
+    /**
+     * Центр круга и диаметр, при котором круг накрывает все четыре угла. Считаем от внутреннего края
+     * рамки: от него ставятся круг и копия надписи (position: absolute), по нему же обрезает overflow —
+     * иначе копия надписи под заливкой съезжает на толщину рамки
+     */
     const aim = (clientX: number, clientY: number) => {
       const box = button.getBoundingClientRect();
-      const x = Math.min(box.width, Math.max(0, clientX - box.left));
-      const y = Math.min(box.height, Math.max(0, clientY - box.top));
+      const width = button.clientWidth;
+      const height = button.clientHeight;
+      const x = Math.min(width, Math.max(0, clientX - box.left - button.clientLeft));
+      const y = Math.min(height, Math.max(0, clientY - box.top - button.clientTop));
       const reach = Math.max(
         Math.hypot(x, y),
-        Math.hypot(box.width - x, y),
-        Math.hypot(x, box.height - y),
-        Math.hypot(box.width - x, box.height - y),
+        Math.hypot(width - x, y),
+        Math.hypot(x, height - y),
+        Math.hypot(width - x, height - y),
       );
       button.style.setProperty('--fx', `${x.toFixed(1)}px`);
       button.style.setProperty('--fy', `${y.toFixed(1)}px`);
       button.style.setProperty('--fd', `${(reach * 2 + 2).toFixed(1)}px`);
-      button.style.setProperty('--bw', `${box.width.toFixed(1)}px`);
-      button.style.setProperty('--bh', `${box.height.toFixed(1)}px`);
+      button.style.setProperty('--bw', `${width}px`);
+      button.style.setProperty('--bh', `${height}px`);
     };
     const filled = () => parseFloat(getComputedStyle(button).getPropertyValue('--fill')) || 0;
 

@@ -5,7 +5,9 @@
  * fill — вторичная с рамкой мелом, при наведении заливается мелом кругом из точки, где курсор вошёл
  * в кнопку, и стекает в точку выхода (решение владельца; точки ставит scripts/button-fill.ts).
  * Надпись под заливкой — сажей ровно по краю круга: копия надписи внутри круга с обратным масштабом.
+ * arrow — круглая кнопка со стрелкой вместо надписи (лента «назад / вперёд»), имя — через aria-label.
  */
+import Arrow from './Arrow.astro';
 import { t } from '../lib/typograf.ts';
 
 interface Props {
@@ -22,6 +24,8 @@ interface Props {
   disabled?: boolean;
   /** заливка от точки входа курсора — только у вторичной */
   fill?: boolean;
+  /** круглая кнопка со стрелкой вместо надписи */
+  arrow?: 'left' | 'right';
 }
 
 const {
@@ -33,10 +37,11 @@ const {
   class: className,
   external = false,
   fill = false,
+  arrow,
   ...rest
 } = Astro.props;
 
-const classes = ['btn', `btn--${variant}`, `btn--${size}`, fill && 'btn--fill', className];
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, fill && 'btn--fill', arrow && 'btn--icon', className];
 const text = label ? t(label) : undefined;
 const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 ---
@@ -45,6 +50,7 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
   href ? (
     <a class:list={classes} href={href} {...externalAttrs} {...rest}>
       <span class="btn__label">
+        {arrow && <Arrow direction={arrow} />}
         {text}
         <slot />
       </span>
@@ -52,7 +58,10 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
         fill && (
           <span class="btn__flood" aria-hidden="true">
             <span class="btn__flood-text">
-              <span class="btn__label">{text}</span>
+              <span class="btn__label">
+                {arrow && <Arrow direction={arrow} />}
+                {text}
+              </span>
             </span>
           </span>
         )
@@ -61,6 +70,7 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
   ) : (
     <button class:list={classes} type={type} {...rest}>
       <span class="btn__label">
+        {arrow && <Arrow direction={arrow} />}
         {text}
         <slot />
       </span>
@@ -68,7 +78,10 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
         fill && (
           <span class="btn__flood" aria-hidden="true">
             <span class="btn__flood-text">
-              <span class="btn__label">{text}</span>
+              <span class="btn__label">
+                {arrow && <Arrow direction={arrow} />}
+                {text}
+              </span>
             </span>
           </span>
         )
@@ -126,6 +139,22 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
   .btn--sm {
     min-height: var(--btn-h-sm);
     padding: 0 var(--btn-px-sm);
+  }
+
+  /* круглая со стрелкой: ширина равна высоте, стрелка 20 px */
+  .btn--icon {
+    width: var(--btn-h);
+    padding: 0;
+    font-size: var(--fs-list);
+  }
+
+  .btn--icon.btn--sm {
+    width: var(--btn-h-sm);
+  }
+
+  .btn--icon .btn__label {
+    display: flex;
+    margin-right: 0;
   }
 
   .btn--secondary {

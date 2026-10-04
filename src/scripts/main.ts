@@ -14,6 +14,7 @@ import './facts.ts';
 import './process-screen.ts';
 import './to-top.ts';
 import './rails.ts';
+import './ribbon.ts';
 import './accordion.ts';
 import './form.ts';
 import './filters.ts';

@@ -1,0 +1,157 @@
+---
+/**
+ * Лента карточек с кнопками «назад / вперёд» (решение владельца: цены на главной). Лента замкнута:
+ * за последней карточкой сразу идёт первая, без отката назад. Едет вся лента целиком (transform),
+ * на одну карточку за шаг; копии карточек по краям и незаметный перескок на настоящие — scripts/ribbon.ts.
+ * Видно три карточки, на планшете две; на телефоне — одна по центру, соседи видны с обеих сторон
+ * (лента замкнута), листается и пальцем.
+ * Между кнопками — номер карточки у левого края: «01 / 09».
+ * Без JS — обычная сетка карточек (на телефоне — .rail), кнопок нет.
+ */
+import Button from './Button.astro';
+import { ui } from '../data/ui.ts';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  /** id списка — для aria-controls кнопок */
+  id: string;
+  /** сколько карточек — для счётчика */
+  count: number;
+  class?: string;
+}
+
+const { id, count, class: className } = Astro.props;
+const pad = (value: number) => String(value).padStart(2, '0');
+---
+
+<div class:list={['ribbon', className]} data-ribbon>
+  <div class="ribbon__viewport" data-reveal>
+    <ul class="ribbon__track rail" id={id} role="list">
+      <slot />
+    </ul>
+  </div>
+  <div class="ribbon__controls" data-reveal>
+    <Button variant="secondary" size="sm" fill arrow="left" aria-label={t(ui.ribbonPrev)} aria-controls={id} data-ribbon-prev />
+    <p class="ribbon__count eyebrow" aria-hidden="true">
+      <span class="ribbon__current" data-ribbon-current>{pad(1)}</span>
+      <span>/</span>
+      <span>{pad(count)}</span>
+    </p>
+    <Button variant="secondary" size="sm" fill arrow="right" aria-label={t(ui.ribbonNext)} aria-controls={id} data-ribbon-next />
+  </div>
+</div>
+
+<style>
+  /* ---------- Без JS — сетка: по три, на планшете по две (нечётная последняя — на всю ширину ряда),
+     на телефоне — лента .rail (base.css) ---------- */
+  .ribbon__track {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 768px) {
+    .ribbon__track {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .ribbon__track > :global(li:last-child:nth-child(odd)) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ribbon__track {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .ribbon__controls {
+    display: none;
+  }
+
+  /* ---------- С JS — лента ----------
+     --slide — ширина карточки, шаг — карточка и зазор. Проценты считаются от ширины ленты и в ширине
+     карточек, и в сдвиге самой ленты — при смене ширины экрана пересчитывать нечего.
+     --pos — номер карточки у левого края, ставит ribbon.ts; --lead — отступ первой карточки: на телефоне
+     она по центру, и соседи видны поровну с обеих сторон */
+  :global(.js) .ribbon {
+    --gap: var(--space-3);
+    --slide: min(84%, 340px);
+    --lead: calc((100% - var(--slide)) / 2);
+  }
+
+  @media (min-width: 768px) {
+    :global(.js) .ribbon {
+      --slide: calc((100% - var(--gap)) / 2);
+      --lead: 0px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    :global(.js) .ribbon {
+      --slide: calc((100% - 2 * var(--gap)) / 3);
+    }
+  }
+
+  /* обрезка только по горизонтали: при появлении лента поднимается снизу, низ не срезаем;
+     вертикальная прокрутка страницы пальцем — браузеру, горизонтальная — ленте */
+  :global(.js) .ribbon__viewport {
+    overflow-x: clip;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  /* на телефоне лента до краёв экрана */
+  @media (max-width: 767px) {
+    :global(.js) .ribbon__viewport {
+      margin-inline: calc(var(--gutter) * -1);
+      padding-inline: var(--gutter);
+    }
+  }
+
+  :global(.js) .ribbon__track {
+    display: flex;
+    gap: var(--gap);
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+    /* отступ — отдельным translate, без перехода; ход ленты — transform (его и читает ribbon.ts) */
+    translate: var(--lead) 0;
+    transform: translateX(calc((var(--slide) + var(--gap)) * var(--pos, 0) * -1));
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  :global(.js) .ribbon__track > :global(li) {
+    flex: none;
+    width: var(--slide);
+  }
+
+  :global(.js) .ribbon__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+
+  /* цифры одной ширины — счётчик не дёргается; разрядка после последней цифры возвращена */
+  .ribbon__count {
+    display: flex;
+    gap: 0.6em;
+    margin-right: calc(var(--ls-label) * -1);
+    font-variant-numeric: tabular-nums lining-nums;
+    white-space: nowrap;
+  }
+
+  .ribbon__current {
+    color: var(--chalk);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .ribbon__track {
+      transition: none;
+    }
+  }
+</style>
