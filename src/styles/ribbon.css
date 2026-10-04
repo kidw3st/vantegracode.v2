@@ -1,0 +1,99 @@
+/* ==========================================================================
+   Ленты (решение владельца): ряд карточек едет целиком (transform) на одну карточку за шаг, замкнут
+   по кругу — за последней сразу первая, без отката; под рядом — кнопки «назад / вперёд» и номер «01 / 09»
+   (RibbonControls), на телефоне листается и пальцем. Режим ленты включает scripts/ribbon.ts классом
+   .is-ribbon: цены — всегда, остальные ряды карточек главной — только на телефоне (до 767 px),
+   шире — их обычная сетка. Без JS — обычная разметка блока (сетка, на телефоне — .rail).
+
+   --slide — ширина карточки, шаг — карточка и зазор; проценты считаются от ширины ряда и в ширине
+   карточек, и в сдвиге самого ряда — при смене ширины экрана пересчитывать нечего.
+   --pos — номер карточки у левого края (ставит ribbon.ts); --lead — отступ первой карточки:
+   на телефоне она по центру, соседи видны поровну с обеих сторон.
+   ========================================================================== */
+
+.ribbon__controls {
+  display: none;
+}
+
+.ribbon.is-ribbon {
+  --gap: var(--space-3);
+  --slide: min(84%, 340px);
+  --lead: calc((100% - var(--slide)) / 2);
+}
+
+@media (min-width: 768px) {
+  .ribbon.is-ribbon {
+    --slide: calc((100% - var(--gap)) / 2);
+    --lead: 0px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ribbon.is-ribbon {
+    --slide: calc((100% - 2 * var(--gap)) / 3);
+  }
+}
+
+/* обрезка только по горизонтали: при появлении ряд поднимается снизу, низ не срезаем;
+   вертикальная прокрутка страницы пальцем — браузеру, горизонтальная — ленте */
+.ribbon.is-ribbon .ribbon__viewport {
+  overflow-x: clip;
+  touch-action: pan-y pinch-zoom;
+}
+
+/* на телефоне лента до краёв экрана */
+@media (max-width: 767px) {
+  .ribbon.is-ribbon .ribbon__viewport {
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+  }
+}
+
+/* сам ряд: вместо сетки или .rail — строка карточек; отступ — отдельным translate, без перехода,
+   ход ленты — transform (его и читает ribbon.ts) */
+.ribbon.is-ribbon .ribbon__track {
+  display: flex;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  scroll-snap-type: none;
+  translate: var(--lead) 0;
+  transform: translateX(calc((var(--slide) + var(--gap)) * var(--pos, 0) * -1));
+  transition: transform var(--dur) var(--ease-out);
+}
+
+/* карточки проявляются разом: по номеру в ряду задержки были бы у копий, а не у видимых */
+.ribbon.is-ribbon .ribbon__track > * {
+  --i: 0;
+
+  flex: none;
+  width: var(--slide);
+}
+
+.ribbon.is-ribbon .ribbon__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+}
+
+/* цифры одной ширины — номер не дёргается; разрядка после последней цифры возвращена */
+.ribbon__count {
+  display: flex;
+  gap: 0.6em;
+  margin-right: calc(var(--ls-label) * -1);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.ribbon__current {
+  color: var(--chalk);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ribbon.is-ribbon .ribbon__track {
+    transition: none;
+  }
+}

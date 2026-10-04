@@ -30,7 +30,7 @@ export const ui = {
   form: {
     name: 'Имя',
     contact: 'Как с вами связаться',
-    contactHint: 'Телефон, Telegram или почта',
+    contactHint: 'Телефон, Telegram, почта',
     need: 'Что нужно',
     needOptions: [
       'Сайт',

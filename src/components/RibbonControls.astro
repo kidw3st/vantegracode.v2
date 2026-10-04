@@ -1,0 +1,29 @@
+---
+/**
+ * Кнопки ленты «назад / вперёд» и номер карточки «01 / 09» между ними (styles/ribbon.css, scripts/ribbon.ts).
+ * Видны только в режиме ленты (.is-ribbon): без JS и там, где ряд — обычная сетка, их нет.
+ */
+import Button from './Button.astro';
+import { ui } from '../data/ui.ts';
+import { t } from '../lib/typograf.ts';
+
+interface Props {
+  /** id ряда — для aria-controls кнопок */
+  id: string;
+  /** сколько карточек — для номера */
+  count: number;
+}
+
+const { id, count } = Astro.props;
+const pad = (value: number) => String(value).padStart(2, '0');
+---
+
+<div class="ribbon__controls" data-reveal>
+  <Button variant="secondary" size="sm" fill arrow="left" aria-label={t(ui.ribbonPrev)} aria-controls={id} data-ribbon-prev />
+  <p class="ribbon__count eyebrow" aria-hidden="true">
+    <span class="ribbon__current" data-ribbon-current>{pad(1)}</span>
+    <span>/</span>
+    <span>{pad(count)}</span>
+  </p>
+  <Button variant="secondary" size="sm" fill arrow="right" aria-label={t(ui.ribbonNext)} aria-controls={id} data-ribbon-next />
+</div>

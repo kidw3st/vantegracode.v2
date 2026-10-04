@@ -169,6 +169,8 @@ onPage(() => {
         if (submitLabel) submitLabel.textContent = idleLabel;
 
         if (ok && success) {
+          // успех встаёт на место формы той же высоты — блок и страница под ним не прыгают
+          success.style.minHeight = `${form.offsetHeight}px`;
           form.hidden = true;
           success.hidden = false;
           success.focus();

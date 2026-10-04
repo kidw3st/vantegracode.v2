@@ -18,7 +18,7 @@ import { ui } from '../data/ui.ts';
 <style>
   .to-top {
     position: fixed;
-    right: max(var(--gutter), calc(env(safe-area-inset-right) + 16px));
+    right: max(12px, (var(--gutter) - 48px) / 2, calc(env(safe-area-inset-right) + 12px));
     bottom: calc(24px + env(safe-area-inset-bottom));
     z-index: calc(var(--z-header) - 5);
     display: grid;

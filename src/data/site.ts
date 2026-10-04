@@ -68,8 +68,6 @@ export const site = {
   cta: {
     discuss: 'Обсудить проект',
     discussHref: '/kontakty/#form',
-    footer: 'Обсудим проект',
-    footerHref: '/kontakty/',
     works: 'Смотреть работы',
     worksHref: '/raboty/',
     services: 'Все услуги',

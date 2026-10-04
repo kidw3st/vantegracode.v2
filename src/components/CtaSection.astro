@@ -1,63 +1,132 @@
 ---
-/** Финальный блок: заголовок по центру (как у всех блоков), под ним слева контакты, справа форма. Бледные орбиты на фоне. */
+/**
+ * Финальный блок «Обсудим проект» (решение владельца 04.10.2026: «карточка формы с тенью», на всю ширину,
+ * контакты — внутри, орбит на фоне нет). Заголовок по центру, под ним — карточка: рамка мелом, мягкая тень.
+ * Слева в карточке — «Быстрее всего — в Telegram», Telegram, почта и телефон капсулами с заливкой,
+ * внизу — «Работаем по всей России»; справа, за тонкой линией, — форма заявки.
+ * На телефоне и планшете сначала форма, контакты — под ней (решение владельца: «сначала заполнение»);
+ * в разметке форма тоже первая — с неё начинается и обход с клавиатуры.
+ * eyebrow={false} — без подписи над заголовком (главная: подписи блоков владелец убрал).
+ */
 import ContactList from './ContactList.astro';
-import SectionHeader from './SectionHeader.astro';
+import Icon from './Icon.astro';
 import LeadForm from './LeadForm.astro';
-import OrbitField from './OrbitField.astro';
+import SectionHeader from './SectionHeader.astro';
 import { contactBlock } from '../data/pages.ts';
+import { site } from '../data/site.ts';
 import { getText } from '../lib/fill.ts';
+import { t } from '../lib/typograf.ts';
 
 interface Props {
   /** номер секции на странице: «06 — Контакт» */
   num?: number;
+  /** подпись над заголовком */
+  eyebrow?: boolean;
 }
 
-const { num } = Astro.props;
+const { num, eyebrow: withEyebrow = true } = Astro.props;
 const text = await getText();
-const eyebrow = num ? `${String(num).padStart(2, '0')} — ${contactBlock.label}` : contactBlock.label;
+const label = num ? `${String(num).padStart(2, '0')} — ${contactBlock.label}` : contactBlock.label;
 ---
 
 <section class="section cta" aria-labelledby="cta-title">
-  <OrbitField mode="block" rings={3} tone="faint" start={0.3} />
-  <div class="container cta__inner">
-    <SectionHeader id="cta-title" eyebrow={text(eyebrow)} title={text(contactBlock.title)} text={text(contactBlock.text)} />
-    <div class="grid cta__grid">
-      <div class="cta__info" data-reveal>
-        <ContactList class="cta__contacts" />
-      </div>
-      <div class="cta__form" data-reveal>
+  <div class="container">
+    <SectionHeader
+      id="cta-title"
+      eyebrow={withEyebrow ? text(label) : undefined}
+      title={text(contactBlock.title)}
+      text={text(contactBlock.text)}
+    />
+    <div class="cta__card" data-reveal>
+      <div class="cta__form">
         <LeadForm />
+      </div>
+      <div class="cta__side">
+        <p class="cta__fastest">{t(contactBlock.fastest)}</p>
+        <ContactList pills copy />
+        <p class="cta__geo eyebrow">
+          <Icon name="earth" size={18} />
+          {t(site.geography)}
+        </p>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  .cta {
-    overflow: hidden;
+  /* Карточка: тонкая приглушённая рамка (мел 22 %) и мягкая тень — не выделяются (правка владельца);
+     внутри — контакты и форма */
+  .cta__card {
+    display: grid;
+    border: var(--hairline) solid color-mix(in srgb, var(--chalk) 22%, transparent);
+    background: var(--soot);
+    box-shadow: var(--card-shadow);
   }
 
-  .cta__inner {
-    position: relative;
-    z-index: var(--z-content);
-  }
-
-  .cta__grid {
-    row-gap: var(--space-9);
-  }
-
-  .cta__info,
+  .cta__side,
   .cta__form {
-    grid-column: 1 / -1;
+    padding: var(--space-5);
   }
 
+  /* узкие телефоны: поля по бокам карточки меньше — капсулы контактов и поля формы не тесно */
+  @media (max-width: 389px) {
+    .cta__side,
+    .cta__form {
+      padding-inline: var(--space-4);
+    }
+  }
+
+  /* контакты: фраза сверху, капсулы — посередине колонки, география — внизу; промежутки поровну.
+     В одну колонку — под формой, с обычными отступами */
+  .cta__side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-7);
+    border-top: var(--hairline) solid var(--graphite);
+  }
+
+  .cta__fastest {
+    font-size: var(--fs-lead);
+    line-height: 1.35;
+  }
+
+  .cta__geo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  /* узкий телефон: разрядка подписи меньше, как у тегов, — «Работаем по всей России» в одну строку */
+  @media (max-width: 479px) {
+    .cta__geo {
+      letter-spacing: 0.2em;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .cta__side,
+    .cta__form {
+      padding: var(--space-7);
+    }
+  }
+
+  /* с десктопа — рядом: контакты слева, форма справа */
   @media (min-width: 1024px) {
-    .cta__info {
-      grid-column: 1 / span 5;
+    .cta__card {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    }
+
+    .cta__side {
+      grid-row: 1;
+      grid-column: 1;
+      border-top: 0;
+      border-right: var(--hairline) solid var(--graphite);
     }
 
     .cta__form {
-      grid-column: 7 / -1;
+      grid-row: 1;
+      grid-column: 2;
     }
   }
 </style>

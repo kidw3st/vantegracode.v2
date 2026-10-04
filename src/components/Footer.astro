@@ -1,9 +1,15 @@
 ---
 /**
- * Подвал: крупная строка «Обсудим проект →», колонки — логотип и подпись, разделы, услуги, контакты;
- * нижняя строка — ©, политика, реквизиты (если заполнены). Подписи — Geologica, пепел.
+ * Подвал (решение владельца 04.10.2026, по его наброску): слева — вертикальный логотип, знак вращается
+ * 3D-моделью первого экрана (scripts/mark-3d.ts), под ним надпись VANTEGRA; справа, по верхней линии
+ * с логотипом, — колонки «Разделы», «Услуги», «Контакты» (капсулы с заливкой, как в блоке с формой);
+ * внизу — строка «© год Vantegra · Политика конфиденциальности».
+ * На телефоне и планшете логотип — по центру над колонками.
+ * Строки «Обсудим проект →» нет: блок с формой стоит прямо над подвалом. Подписи — Geologica, пепел.
+ * Верхняя линия подвала — во всю ширину экрана, с неоновыми импульсами, как линия под VANTEGRA:
+ * ощущается как конец листа (решение владельца 04.10.2026; рисует scripts/neon.ts).
  */
-import Arrow from './Arrow.astro';
+import ContactList from './ContactList.astro';
 import Logo from './Logo.astro';
 import { nav, site } from '../data/site.ts';
 import { ui } from '../data/ui.ts';
@@ -15,19 +21,32 @@ const services = await getServices();
 const text = await getText();
 ---
 
-<footer class="footer">
+<footer class="footer" data-neon-host>
+  <canvas class="footer__neon" aria-hidden="true" data-neon></canvas>
   <div class="container">
-    <a class="footer__cta" href={site.cta.footerHref}>
-      <span class="footer__cta-text h2">{t(site.cta.footer)}</span>
-      <Arrow class="footer__cta-arrow" />
-    </a>
-
-    <div class="footer__grid grid">
+    <div class="footer__grid">
       <div class="footer__brand">
         <a class="footer__logo" href="/" aria-label={ui.homeLabel}>
-          <Logo variant="horizontal" width={180} loading="lazy" />
+          {/* знак — 3D-модель первого экрана; до первого кадра, без WebGL и при reduced motion — плоский SVG */}
+          <span class="footer__art" data-mark-art>
+            <Logo variant="mark" width={200} cssWidth="var(--footer-logo)" minWidth={140} loading="lazy" class="footer__mark" />
+            <canvas
+              class="footer__canvas"
+              width="450"
+              height="350"
+              aria-hidden="true"
+              data-mark-canvas="footer"
+              data-src="/media/hero-mark.bin"></canvas>
+            <Logo
+              variant="wordmark"
+              width={198}
+              cssWidth="calc(var(--footer-logo) * 0.99009)"
+              minWidth={138}
+              loading="lazy"
+              class="footer__wordmark"
+            />
+          </span>
         </a>
-        <p class="footer__tagline">{t(site.tagline)}</p>
       </div>
 
       <nav class="footer__col footer__col--nav" id="footer-nav" aria-labelledby="footer-sections">
@@ -62,25 +81,21 @@ const text = await getText();
 
       <div class="footer__col footer__col--contacts">
         <p class="eyebrow footer__heading">{ui.footerContacts}</p>
-        <ul role="list">
-          <li>
-            <a class="footer__link" href={site.telegram.url} target="_blank" rel="noopener noreferrer">
-              {ui.contacts.telegram} {site.telegram.handle}
-            </a>
-          </li>
-          <li><a class="footer__link" href={`mailto:${site.email}`}>{site.email}</a></li>
-          <li><a class="footer__link footer__nowrap" href={`tel:${site.phone.tel}`}>{site.phone.display}</a></li>
-          {site.hours && <li class="footer__note">{t(site.hours)}</li>}
-          {
-            site.socials.map((social) => (
-              <li>
-                <a class="footer__link" href={social.url} target="_blank" rel="noopener noreferrer">
-                  {social.name}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
+        <ContactList pills labels={false} />
+        {site.hours && <p class="footer__note">{t(site.hours)}</p>}
+        {
+          site.socials.length > 0 && (
+            <ul class="footer__socials" role="list">
+              {site.socials.map((social) => (
+                <li>
+                  <a class="footer__link" href={social.url} target="_blank" rel="noopener noreferrer">
+                    {social.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
       </div>
     </div>
 
@@ -89,71 +104,120 @@ const text = await getText();
       <a class="footer__link footer__link--small" href="/politika-konfidencialnosti/">{t(ui.privacy)}</a>
       {site.requisites && <span>{t(site.requisites)}</span>}
     </div>
+
   </div>
 </footer>
 
 <style>
   .footer {
-    padding-block: var(--section-y) var(--space-7);
+    position: relative;
+    padding-block: var(--space-9) var(--space-7);
     border-top: var(--hairline) solid var(--graphite);
   }
 
-  .footer__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-5);
-    margin-bottom: clamp(var(--space-8), 8vw, var(--space-10));
-  }
-
-  .footer__cta-text {
-    position: relative;
-  }
-
-  .footer__cta :global(.footer__cta-arrow) {
-    font-size: var(--fs-h2);
-    width: 0.8em;
-    height: 0.8em;
-    stroke-width: 1.25;
-    transition: translate var(--dur-fast) var(--ease-out);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .footer__cta:hover :global(.footer__cta-arrow) {
-      translate: var(--arrow-shift) 0;
+  /* до 767 px кнопка «Наверх» заходит на колонку текста: в самом низу страницы она встаёт
+     под строкой ©, а не поверх (24 px от низа + 48 px кнопка + зазор) */
+  @media (max-width: 767px) {
+    .footer {
+      padding-bottom: calc(24px + 48px + var(--space-5) + env(safe-area-inset-bottom));
     }
   }
 
-  .footer__grid {
-    row-gap: var(--space-8);
-    padding-bottom: var(--space-9);
+  /* холст импульсов: 80 px по высоте, линия — ровно посередине, как у заголовка с неоном */
+  .footer__neon {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    pointer-events: none;
   }
 
-  .footer__brand,
-  .footer__col {
+  @media (prefers-reduced-motion: reduce) {
+    .footer__neon {
+      display: none;
+    }
+  }
+
+  /* ---------- Вертикальный логотип: знак, под ним надпись — как на первом экране ----------
+     Геометрия из SVG владельца: блок 962,81 × 939,71; знак — сверху во всю ширину, надпись — со сдвигом
+     0,004955 и 0,75985 ширины; холст 3D — кадр камеры 2,25 × 1,75 ед. при ширине знака 2 ед. */
+  .footer__brand {
+    display: flex;
+    justify-content: center;
     grid-column: 1 / -1;
   }
 
-  .footer__brand {
-    display: grid;
-    gap: var(--space-5);
-    align-content: start;
-  }
-
   .footer__logo {
-    display: inline-flex;
-    width: fit-content;
-    min-height: var(--tap);
-    align-items: center;
+    --footer-logo: clamp(140px, 12vw, 190px);
+
+    display: block;
   }
 
-  .footer__tagline {
-    color: var(--ash);
-    font-size: var(--fs-small);
-    max-width: 30ch;
+  .footer__art {
+    position: relative;
+    display: block;
+    width: var(--footer-logo);
+    aspect-ratio: 962.81 / 939.71;
+  }
+
+  .footer__art :global(.footer__mark) {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .footer__canvas {
+    position: absolute;
+    left: calc(var(--footer-logo) * -0.0625);
+    top: calc(var(--footer-logo) * -0.05683);
+    width: calc(var(--footer-logo) * 1.125);
+    height: calc(var(--footer-logo) * 0.875);
+    max-width: none;
+    pointer-events: none;
+  }
+
+  .footer__art:not(.is-3d) .footer__canvas,
+  .footer__art.is-3d :global(.footer__mark) {
+    visibility: hidden;
+  }
+
+  .footer__art :global(.footer__wordmark) {
+    position: absolute;
+    left: calc(var(--footer-logo) * 0.004955);
+    top: calc(var(--footer-logo) * 0.75985);
+  }
+
+  /* ---------- Колонки: телефон и планшет — логотип по центру, разделы и услуги рядом, контакты под ними;
+     десктоп — логотип и три колонки в ряд, по верхней линии ---------- */
+  .footer__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8) var(--column-gap);
+    padding-bottom: var(--space-9);
+  }
+
+  .footer__col--contacts {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 1024px) {
+    .footer__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .footer__brand,
+    .footer__col--contacts {
+      grid-column: auto;
+    }
+
+    .footer__brand {
+      justify-content: flex-start;
+    }
   }
 
   .footer__heading {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
   }
 
   .footer__col ul {
@@ -164,14 +228,11 @@ const text = await getText();
   .footer__link {
     display: inline-flex;
     align-items: center;
+    gap: var(--space-2);
     min-height: 36px;
-    font-size: var(--fs-small);
+    font-size: var(--fs-list);
     color: var(--ash);
     transition: color var(--dur-fast) var(--ease-out);
-  }
-
-  .footer__nowrap {
-    white-space: nowrap;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -180,12 +241,17 @@ const text = await getText();
     }
   }
 
-  .footer__note {
-    font-size: var(--fs-small);
-    color: var(--ash);
-    padding-top: var(--space-2);
+  .footer__note,
+  .footer__socials {
+    margin-top: var(--space-5);
   }
 
+  .footer__note {
+    font-size: var(--fs-list);
+    color: var(--ash);
+  }
+
+  /* ---------- Нижняя строка: ©, политика ---------- */
   .footer__bottom {
     display: flex;
     flex-wrap: wrap;
@@ -199,33 +265,5 @@ const text = await getText();
   .footer__link--small {
     min-height: var(--tap);
     font-size: inherit;
-  }
-
-  @media (min-width: 768px) {
-    .footer__brand {
-      grid-column: 1 / -1;
-    }
-
-    .footer__col {
-      grid-column: span 4;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .footer__brand {
-      grid-column: 1 / span 4;
-    }
-
-    .footer__col--nav {
-      grid-column: 5 / span 2;
-    }
-
-    .footer__col--services {
-      grid-column: 7 / span 3;
-    }
-
-    .footer__col--contacts {
-      grid-column: 10 / -1;
-    }
   }
 </style>

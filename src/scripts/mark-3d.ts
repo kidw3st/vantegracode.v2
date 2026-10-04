@@ -1,8 +1,9 @@
 /**
- * Вращающийся знак на первом экране (правки владельца 03.10.2026).
+ * Вращающийся знак: первый экран (правки владельца 03.10.2026) и логотип в подвале (решение владельца
+ * 04.10.2026). Холст — [data-mark-canvas], обёртка с плоским SVG-знаком — [data-mark-art].
  * Модель из Blender (tools/hero-mark.py → public/media/hero-mark.bin) рисуется в реальном времени:
  * прозрачный фон, все грани — мел #F4F2EE, оборот за 10 с вокруг вертикальной оси,
- * плавно на частоте экрана и без остановок, пока первый экран виден.
+ * плавно на частоте экрана и без остановок, пока холст виден.
  * До первого кадра и без WebGL / при reduced motion стоит плоский SVG-знак — в анфас они совпадают.
  */
 import { onPage, prefersReducedMotion } from './lifecycle.ts';
@@ -19,8 +20,8 @@ const CHALK: [number, number, number] = [244 / 255, 242 / 255, 238 / 255];
 const SOOT: [number, number, number] = [17 / 255, 17 / 255, 17 / 255];
 const markColor = () => (document.documentElement.dataset.theme === 'light' ? SOOT : CHALK);
 
-/** Угол сохраняется между кадрами и паузами — вращение продолжается с того же места */
-let angle = 0;
+/** Угол каждого холста сохраняется между кадрами и паузами — вращение продолжается с того же места */
+const angles = new Map<string, number>();
 
 const VERTEX = `
 attribute vec3 a_position;
@@ -77,9 +78,16 @@ function compile(gl: WebGLRenderingContext, type: number, source: string): WebGL
 }
 
 onPage(() => {
-  const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-canvas]');
-  const art = canvas?.closest<HTMLElement>('.hero__art');
-  if (!canvas || !art || prefersReducedMotion()) return;
+  if (prefersReducedMotion()) return;
+  const cleanups = [...document.querySelectorAll<HTMLCanvasElement>('[data-mark-canvas]')].map(spin);
+  return () => cleanups.forEach((cleanup) => cleanup?.());
+});
+
+function spin(canvas: HTMLCanvasElement): (() => void) | undefined {
+  const art = canvas.closest<HTMLElement>('[data-mark-art]');
+  if (!art) return;
+  const key = canvas.dataset.markCanvas || 'mark';
+  let angle = angles.get(key) ?? 0;
 
   const gl = canvas.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: true, powerPreference: 'low-power' });
   if (!gl) return;
@@ -114,6 +122,7 @@ onPage(() => {
     const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
     last = now;
     angle = (angle + dt * SPEED) % (2 * Math.PI);
+    angles.set(key, angle);
     draw();
     raf = requestAnimationFrame(frame);
   };
@@ -202,4 +211,4 @@ onPage(() => {
     window.removeEventListener('vantegra:theme', onTheme);
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
-});
+}

@@ -1,7 +1,9 @@
 /* ==========================================================================
-   Поля формы: подложки нет, только нижняя линия 1 px пепла, при фокусе — мел.
-   Подпись — eyebrow над полем, текст Manrope 17 px, ошибка — текстом под полем
-   (Manrope 14 px, мел, с маркером «—»). Красного нет.
+   Поля формы — в рамках (решение владельца 04.10.2026: «карточка формы, поля в рамках»):
+   рамка 1 px пепла без скругления, подложки нет; при наведении чуть светлее, в фокусе и с ошибкой —
+   ещё светлее, но мягко, без яркого мела и второй линии (правка владельца: «рамка выделяется»).
+   Подпись — eyebrow над полем, текст Manrope 17 px, ошибка — текстом под полем (Manrope 14 px, мел,
+   с маркером «—»). Красного нет.
    ========================================================================== */
 
 .field {
@@ -9,17 +11,12 @@
   gap: var(--space-2);
 }
 
-.field__optional {
-  letter-spacing: var(--ls-button);
-}
-
 .field__input {
   display: block;
   width: 100%;
-  min-height: 48px;
-  padding: var(--space-3) 0;
-  border: 0;
-  border-bottom: var(--hairline) solid var(--ash);
+  min-height: 52px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--hairline) solid var(--ash);
   border-radius: 0;
   background: transparent;
   color: var(--chalk);
@@ -37,9 +34,17 @@
   opacity: 1;
 }
 
-.field__input:focus,
+@media (hover: hover) and (pointer: fine) {
+  .field__input:hover {
+    border-color: color-mix(in srgb, var(--chalk) 30%, var(--ash));
+  }
+}
+
+/* фокус — та же тонкая рамка, светлее пепла; без обводки */
+.field__input:focus-visible,
 .field__input.is-focus {
-  border-bottom-color: var(--chalk);
+  border-color: color-mix(in srgb, var(--chalk) 65%, var(--ash));
+  outline: none;
 }
 
 .field__input:-webkit-autofill {
@@ -51,17 +56,18 @@
 
 .field__textarea {
   resize: none;
-  min-height: 80px;
+  min-height: 128px;
   field-sizing: content;
   max-height: 320px;
 }
 
+/* выпадающий список: стрелка — в отдельной ячейке у правого края, за линией */
 .field__select {
   position: relative;
 }
 
 .field__select .field__input {
-  padding-right: var(--space-7);
+  padding-right: calc(var(--tap) + var(--space-4));
   cursor: pointer;
 }
 
@@ -72,11 +78,98 @@
 
 .field__chevron {
   position: absolute;
-  right: var(--space-2);
-  top: 50%;
-  translate: 0 -50%;
+  top: var(--hairline);
+  right: var(--hairline);
+  bottom: var(--hairline);
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  border-left: var(--hairline) solid var(--ash);
   color: var(--ash);
   pointer-events: none;
+}
+
+.field__chevron svg {
+  transition: rotate var(--dur-fast) var(--ease-out);
+}
+
+/* Открытый список (решение владельца 04.10.2026: «вот это как-то красиво сделай»). Где браузер умеет
+   настраиваемый select (Chrome, Яндекс Браузер, Edge), список — в стиле поля: панель цвета страницы
+   с тонкой рамкой вплотную под полем, пункты с отступами, наведение и выбор с клавиатуры — графитом,
+   у выбранного — галочка справа; стрелка в ячейке переворачивается. Поведение и доступность — родные.
+   Остальные браузеры показывают системный список (в тёмной теме — тёмный, color-scheme в theme.css) */
+@supports (appearance: base-select) {
+  .field__select select,
+  .field__select select::picker(select) {
+    appearance: base-select;
+  }
+
+  .field__select select::picker-icon {
+    display: none;
+  }
+
+  .field__select:has(select:open) .field__chevron svg {
+    rotate: 180deg;
+  }
+
+  .field__select select:open {
+    border-color: color-mix(in srgb, var(--chalk) 65%, var(--ash));
+  }
+
+  .field__select select::picker(select) {
+    margin-top: calc(var(--hairline) * -1);
+    padding: var(--space-2) 0;
+    border: var(--hairline) solid color-mix(in srgb, var(--chalk) 65%, var(--ash));
+    background: var(--soot);
+    color: var(--chalk);
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out),
+      overlay var(--dur-fast) allow-discrete,
+      display var(--dur-fast) allow-discrete;
+  }
+
+  @starting-style {
+    .field__select select:open::picker(select) {
+      opacity: 0;
+      transform: translateY(calc(var(--space-2) * -1));
+    }
+  }
+
+  .field__select option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: transparent;
+    color: var(--chalk);
+    font-family: var(--font-body);
+    font-size: var(--fs-field);
+    line-height: 1.5;
+    cursor: pointer;
+  }
+
+  .field__select option:hover,
+  .field__select option:focus-visible {
+    background: var(--graphite);
+    outline: none;
+  }
+
+  /* галочка выбранного — справа, мелом; у остальных место под неё не занято */
+  .field__select option::checkmark {
+    order: 1;
+    color: var(--chalk);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field__chevron svg,
+  .field__select select::picker(select) {
+    transition: none;
+  }
 }
 
 .field__error {
@@ -94,7 +187,7 @@
 }
 
 .field.is-invalid .field__input {
-  border-bottom-color: var(--chalk);
+  border-color: color-mix(in srgb, var(--chalk) 65%, var(--ash));
 }
 
 .check {
@@ -141,7 +234,7 @@
 }
 
 .check.is-invalid .check__input {
-  border-color: var(--chalk);
+  border-color: color-mix(in srgb, var(--chalk) 65%, var(--ash));
 }
 
 .check__label {

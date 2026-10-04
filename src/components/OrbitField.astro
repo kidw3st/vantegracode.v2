@@ -6,6 +6,10 @@
  *   и содержит логотип с охранным полем — с учётом покачивания и параллакса.
  * mode="block": центр колец — центр блока, кольца уходят за края.
  * Не больше 4 колец, линия 1,25 px, мел 4–20 %, под текстом, aria-hidden.
+ * planets — на каждом кольце планета мелом с коротким хвостом, как в карточках «О студии» (решение владельца
+ * 04.10.2026, первый экран): круг 16–46 с, внутренние быстрее, у каждой своя начальная точка; проявляются,
+ * когда кольцо дорисовалось. Движение — только stroke-dashoffset по кольцу (pathLength = 1); размер точки —
+ * в долях ширины логотипа, растёт вместе с ним. При reduced motion планеты стоят.
  */
 import { protectedBox, type LogoVariant } from '../lib/logo.ts';
 import { logoRings, ORBIT_ANGLE, ORBIT_RATIO, ringExtent, type Ring } from '../lib/orbit.ts';
@@ -26,6 +30,8 @@ interface Props {
   start?: number;
   /** CSS-длина одной единицы геометрии: ширина логотипа (logo) или 100cqmax (block) */
   unit?: string;
+  /** планеты на кольцах */
+  planets?: boolean;
   class?: string;
 }
 
@@ -39,6 +45,7 @@ const {
   minLogoPx = 160,
   start = 0.32,
   unit,
+  planets = false,
   class: className,
 } = Astro.props;
 
@@ -75,6 +82,9 @@ const TONES = {
 // у каждого кольца свой период покачивания (20–28 с) и своя фаза
 const PERIODS = [24, 20, 28, 22];
 const PHASES = [0, 0.37, 0.71, 0.18];
+// планеты: круг, с (внутренние быстрее), и начальная точка на кольце, доля круга
+const LAPS = [16, 24, 34, 46];
+const STARTS = [0.12, 0.58, 0.31, 0.83];
 
 const items = rings.map((ring, i) => {
   const e = ringExtent(ring, ORBIT_ANGLE);
@@ -93,6 +103,8 @@ const items = rings.map((ring, i) => {
       `--depth:${((i + 1) / count).toFixed(3)}`,
       `--sway-dur:${period / 2}s`,
       `--sway-delay:${(-(PHASES[i] ?? 0) * period).toFixed(2)}s`,
+      `--lap:${LAPS[i] ?? 24}s`,
+      `--start:${STARTS[i] ?? 0}`,
       `stroke:${TONES[tone][i]}`,
     ].join(';'),
   };
@@ -118,6 +130,12 @@ const items = rings.map((ring, i) => {
           ry={item.ring.ry.toFixed(4)}
           transform={`rotate(${ORBIT_ANGLE})`}
         />
+        {planets && (
+          <g class="orbit__body" transform={`rotate(${ORBIT_ANGLE})`}>
+            <ellipse class="orbit__trail" cx="0" cy="0" rx={item.ring.rx.toFixed(4)} ry={item.ring.ry.toFixed(4)} pathLength="1" />
+            <ellipse class="orbit__planet" cx="0" cy="0" rx={item.ring.rx.toFixed(4)} ry={item.ring.ry.toFixed(4)} pathLength="1" />
+          </g>
+        )}
       </svg>
     ))
   }
@@ -177,10 +195,72 @@ const items = rings.map((ring, i) => {
     animation-delay: calc(var(--n) * var(--stagger-orbit));
   }
 
+  /* ---------- Планеты: точка мелом и хвост по кольцу; ширины — в долях ширины логотипа ---------- */
+  .orbit__body {
+    fill: none;
+  }
+
+  .orbit__planet {
+    stroke: var(--chalk);
+    stroke-width: 0.022;
+    stroke-linecap: round;
+    stroke-dasharray: 0.001 0.999;
+    stroke-dashoffset: calc(var(--start) * -1px);
+    animation: orbit-planet var(--lap) linear infinite;
+    animation-delay: calc(var(--start) * var(--lap) * -1);
+  }
+
+  .orbit__trail {
+    stroke: var(--orbit-strong);
+    stroke-width: 0.005;
+    stroke-dasharray: 0.08 0.92;
+    stroke-dashoffset: calc(0.08px - var(--start) * 1px);
+    animation: orbit-trail var(--lap) linear infinite;
+    animation-delay: calc(var(--start) * var(--lap) * -1);
+  }
+
+  .orbits.is-paused .orbit__planet,
+  .orbits.is-paused .orbit__trail {
+    animation-play-state: paused;
+  }
+
+  /* проявляются, когда кольцо дорисовалось */
+  :global(.js) .orbits[data-draw='auto'] .orbit__body {
+    animation: fade 700ms var(--ease-out) backwards;
+    animation-delay: calc(var(--dur-draw) + var(--n) * var(--stagger-orbit));
+  }
+
+  /* в кадрах — числа без переменных: с var() внутри кадров браузер перескакивает, а не ведёт плавно */
+  @keyframes orbit-planet {
+    from {
+      stroke-dashoffset: 0px;
+    }
+
+    to {
+      stroke-dashoffset: -1px;
+    }
+  }
+
+  @keyframes orbit-trail {
+    from {
+      stroke-dashoffset: 0.08px;
+    }
+
+    to {
+      stroke-dashoffset: -0.92px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .orbit {
       animation: none;
       will-change: auto;
+    }
+
+    .orbit__planet,
+    .orbit__trail,
+    :global(.js) .orbits[data-draw='auto'] .orbit__body {
+      animation: none;
     }
 
     :global(.js) .orbits[data-draw] .orbit__line,

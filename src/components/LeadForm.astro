@@ -2,6 +2,9 @@
 /**
  * Форма заявки. Без JS — обычный POST на /api/lead.php с редиректом на /kontakty/spasibo/ или /oshibka/.
  * С JS — проверка при потере фокуса и при отправке, отправка JSON, успех с прорисовкой орбиты.
+ * Поля — в рамках (решение владельца 04.10.2026, forms.css): имя и контакт — в два столбца (с планшета),
+ * «Что нужно» — выпадающий список, по умолчанию «Сайт»; согласия — рядом (с планшета).
+ * Рамки у самой формы нет: её даёт место, где она стоит (на главной — карточка блока «Обсудим проект»).
  */
 import Button from './Button.astro';
 import Icon from './Icon.astro';
@@ -23,7 +26,7 @@ const f = ui.form;
 const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) => [key, t(value)]));
 ---
 
-<div class:list={['lead', className]} data-lead>
+<div class:list={['lead-wrap', className]} data-lead>
   <form
     id={id}
     class="lead-form"
@@ -75,20 +78,19 @@ const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) 
         <select class="field__input" id="lf-need" name="need" required>
           {f.needOptions.map((option, i) => <option value={option} selected={i === 0}>{t(option)}</option>)}
         </select>
-        <Icon name="chevron-down" size={16} class="field__chevron" />
+        <span class="field__chevron" aria-hidden="true"><Icon name="chevron-down" size={16} /></span>
       </div>
     </div>
 
     <div class="field" data-field="message">
-      <label class="field__label eyebrow" for="lf-message">
-        {f.message} <span class="field__optional">· {f.messageHint}</span>
-      </label>
+      <label class="field__label eyebrow" for="lf-message">{f.message}</label>
       <textarea
         class="field__input field__textarea"
         id="lf-message"
         name="message"
-        rows="2"
+        rows="3"
         maxlength="2000"
+        placeholder={t(f.messageHint)}
         aria-describedby="lf-message-error"
         data-autogrow></textarea>
       <p class="field__error" id="lf-message-error" data-error-for="message"></p>
@@ -156,22 +158,41 @@ const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) 
 </div>
 
 <style>
-  .lead {
+  .lead-wrap {
     position: relative;
+    container-type: inline-size;
   }
 
   .lead-form {
     display: grid;
-    gap: var(--space-7);
+    gap: var(--space-6);
+  }
+
+  /* имя и контакт — рядом, согласия — рядом, остальное — на всю ширину; по ширине самой формы:
+     в карточке на 1024–1279 px колонка формы узкая, подсказки в полях обрезались бы */
+  @container (min-width: 560px) {
+    .lead-form {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-5);
+    }
+
+    .lead-form > :not([data-field='name'], [data-field='contact']) {
+      grid-column: 1 / -1;
+    }
+
+    .lead-form__checks {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-5);
+    }
   }
 
   .lead-form__checks {
     display: grid;
     gap: var(--space-2);
+    min-width: 0;
     margin: 0;
     padding: 0;
     border: 0;
-    min-width: 0;
   }
 
   /* Ловушка для ботов: не видна людям и скринридерам */
@@ -189,6 +210,13 @@ const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) 
     justify-items: start;
   }
 
+  /* на телефоне кнопка — во всю ширину, под большой палец */
+  @media (max-width: 767px) {
+    .lead-form__submit {
+      justify-items: stretch;
+    }
+  }
+
   .lead-form__status:empty {
     display: none;
   }
@@ -202,6 +230,7 @@ const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) 
     font-size: var(--fs-small);
   }
 
+  /* Успех — на месте формы и той же высоты (её ставит form.ts): карточка и страница не прыгают */
   .lead-success {
     position: relative;
     display: grid;
@@ -216,6 +245,7 @@ const messages = Object.fromEntries(Object.entries(f.errors).map(([key, value]) 
     position: relative;
     z-index: var(--z-content);
     max-width: 18ch;
+    color: var(--chalk);
   }
 
   .lead-success:not([hidden]) {

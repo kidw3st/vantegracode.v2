@@ -4,7 +4,7 @@ import './menu.ts';
 import './header.ts';
 import './reveal.ts';
 import './orbits.ts';
-import './hero.ts';
+import './mark-3d.ts';
 import './hero-scroll.ts';
 import './disc.ts';
 import './brand.ts';

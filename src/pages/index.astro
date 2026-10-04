@@ -12,6 +12,7 @@ import ServiceCard from '../components/ServiceCard.astro';
 import ServiceIdea from '../components/ServiceIdea.astro';
 import ProcessScreen from '../components/ProcessScreen.astro';
 import Ribbon from '../components/Ribbon.astro';
+import RibbonControls from '../components/RibbonControls.astro';
 import WorkCard from '../components/WorkCard.astro';
 import Icon from '../components/Icon.astro';
 import { home, steps } from '../data/pages.ts';
@@ -33,9 +34,13 @@ const showWorks = homeWorks.length > 0;
 // Структура владельца: О студии → Процесс работы → Наши услуги → Избранные проекты → Цены → Контакты
 // («Работы» всегда, без кейсов — заглушки). Процесс сразу за фактами «О студии» показывает, как выполняются
 // их обещания; услуги, работы и цены — подряд, одним блоком предложения.
-// Подписи «01 — …» над блоками владелец убрал; номер по порядку остался только у блока с формой («06 — Контакт»)
-const order = ['about', 'process', 'services', 'works', 'prices', 'contact'];
-const num = (key: string) => order.indexOf(key) + 1;
+// Подписи «01 — …» над блоками владелец убрал — у всех, и у блока с формой (PLAN.md, п. 44)
+
+// Ряды карточек на телефоне — замкнутые ленты с кнопками, как цены (решение владельца, PLAN.md, п. 45);
+// шире — обычные сетки блоков. Работ на главной три: на планшете сетка 2 + 1 оставляла третью одну —
+// там тоже лента, по две карточки
+const phoneRibbon = '(max-width: 767px)';
+const tabletRibbon = '(max-width: 1023px)';
 
 // Все позиции прайса — по порядку из prices.yaml (решение владельца: на главной все карточки)
 const priceCards = prices.map((price) => ({
@@ -68,12 +73,12 @@ const secondary = showWorks
     <canvas class="hero__disc" aria-hidden="true" data-hero-disc data-rim={discRim.toFixed(4)}></canvas>
     <div class="hero__inner container">
       <div class="hero__logo">
-        <OrbitField mode="logo" logo="vertical" unit="var(--hero-logo)" rings={4} tone="normal" draw="auto" />
-        <div class="hero__art" data-hero-logo>
-          {/* Знак: модель из Blender (tools/hero-mark.py), вращается в реальном времени (scripts/hero.ts).
+        <OrbitField mode="logo" logo="vertical" unit="var(--hero-logo)" rings={4} tone="normal" draw="auto" planets />
+        <div class="hero__art" data-hero-logo data-mark-art>
+          {/* Знак: модель из Blender (tools/hero-mark.py), вращается в реальном времени (scripts/mark-3d.ts).
               До первого кадра и без WebGL — плоский SVG; в анфас они совпадают */}
           <Logo variant="mark" width={300} cssWidth="var(--hero-logo)" minWidth={160} class="hero__mark" fetchpriority="high" />
-          <canvas class="hero__canvas" width="720" height="560" aria-hidden="true" data-hero-canvas data-src="/media/hero-mark.bin"
+          <canvas class="hero__canvas" width="720" height="560" aria-hidden="true" data-mark-canvas="hero" data-src="/media/hero-mark.bin"
           ></canvas>
           <Logo
             variant="wordmark"
@@ -131,13 +136,18 @@ const secondary = showWorks
     <div class="container">
       {/* без подписи «01 — О студии» (решение владельца); у остальных блоков подписи пока остаются */}
       <SectionHeader id="about-title" title={home.about.title} text={home.about.note} neon />
-      <ul class="facts rail" role="list" data-reveal="stagger" data-facts>
-        {
-          home.about.facts.map((fact, i) => (
-            <FactCard index={i} total={home.about.facts.length} title={fact.label} text={fact.text} icon={fact.icon} />
-          ))
-        }
-      </ul>
+      <div class="ribbon" data-ribbon data-ribbon-media={phoneRibbon}>
+        <div class="ribbon__viewport">
+          <ul id="facts-list" class="facts rail ribbon__track" role="list" data-reveal="stagger" data-facts>
+            {
+              home.about.facts.map((fact, i) => (
+                <FactCard index={i} total={home.about.facts.length} title={fact.label} text={fact.text} icon={fact.icon} />
+              ))
+            }
+          </ul>
+        </div>
+        <RibbonControls id="facts-list" count={home.about.facts.length} />
+      </div>
     </div>
   </section>
 
@@ -151,15 +161,20 @@ const secondary = showWorks
   <section class="section" aria-labelledby="services-title">
     <div class="container">
       <SectionHeader id="services-title" title={home.services.title} text={home.services.note} />
-      <ul class="cards cards--3 rail" role="list" data-reveal="stagger">
-        {
-          services.map((service) => (
-            <li>
-              <ServiceCard service={service} />
-            </li>
-          ))
-        }
-      </ul>
+      <div class="ribbon" data-ribbon data-ribbon-media={phoneRibbon}>
+        <div class="ribbon__viewport">
+          <ul id="services-list" class="cards cards--3 rail ribbon__track" role="list" data-reveal="stagger">
+            {
+              services.map((service) => (
+                <li>
+                  <ServiceCard service={service} />
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <RibbonControls id="services-list" count={services.length} />
+      </div>
       <ServiceIdea {...home.services.idea} href="#cta-title" class="services-idea" />
       <!-- все услуги — кнопка-капсула под «Вашей идеей», по оси блока (решение владельца) -->
       <div class="block-more" data-reveal>
@@ -171,27 +186,32 @@ const secondary = showWorks
   <section class="section" aria-labelledby="works-title">
     <div class="container">
       <SectionHeader id="works-title" title={home.works.title} text={showWorks ? home.works.note : undefined} />
-      {
-        showWorks ? (
-          <div class="home-works rail" data-reveal="stagger">
-            {homeWorks.map((work) => (
-              <WorkCard work={work} />
-            ))}
-          </div>
-        ) : (
-          <ul class="home-works rail" role="list" data-reveal="stagger">
-            {Array.from({ length: home.works.placeholders }, (_, i) => (
-              <li class="work-stub">
-                <div class="work-stub__media">
-                  <Icon name="orbit" size={40} />
-                </div>
-                <p class="work-stub__meta eyebrow">{`${home.works.placeholder} ${String(i + 1).padStart(2, '0')}`}</p>
-                <h3 class="work-stub__title">{PLACEHOLDER}</h3>
-              </li>
-            ))}
-          </ul>
-        )
-      }
+      <div class="ribbon" data-ribbon data-ribbon-media={tabletRibbon}>
+        <div class="ribbon__viewport">
+          {
+            showWorks ? (
+              <div id="works-list" class="home-works rail ribbon__track" data-reveal="stagger">
+                {homeWorks.map((work) => (
+                  <WorkCard work={work} />
+                ))}
+              </div>
+            ) : (
+              <ul id="works-list" class="home-works rail ribbon__track" role="list" data-reveal="stagger">
+                {Array.from({ length: home.works.placeholders }, (_, i) => (
+                  <li class="work-stub">
+                    <div class="work-stub__media">
+                      <Icon name="orbit" size={40} />
+                    </div>
+                    <p class="work-stub__meta eyebrow">{`${home.works.placeholder} ${String(i + 1).padStart(2, '0')}`}</p>
+                    <h3 class="work-stub__title">{PLACEHOLDER}</h3>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </div>
+        <RibbonControls id="works-list" count={showWorks ? homeWorks.length : home.works.placeholders} />
+      </div>
       <!-- все работы — кнопка с заливкой под работами, по оси блока (как «Все услуги») -->
       <div class="block-more" data-reveal>
         <Button href="/raboty/" variant="secondary" fill label={home.works.link} />
@@ -227,7 +247,7 @@ const secondary = showWorks
     </div>
   </section>
 
-  <CtaSection num={num('contact')} />
+  <CtaSection eyebrow={false} />
 </BaseLayout>
 
 <style>
@@ -366,6 +386,45 @@ const secondary = showWorks
     }
   }
 
+  /* Телефон набок и низкое окно: столбиком логотип и текст не помещаются на экран —
+     логотип слева, текст справа, по левому краю; знак меньше, отступы плотнее */
+  @media (min-width: 640px) and (max-height: 600px) and (orientation: landscape) {
+    .hero {
+      --hero-logo: clamp(120px, 34svh, 200px);
+    }
+
+    .hero__inner {
+      grid-template-columns: auto minmax(0, 34rem);
+      justify-content: center;
+      justify-items: start;
+      align-items: center;
+      column-gap: clamp(var(--space-7), 7vw, var(--space-9));
+      text-align: start;
+    }
+
+    .hero__logo {
+      margin-bottom: 0;
+    }
+
+    .hero__copy {
+      justify-items: start;
+    }
+
+    .hero__title {
+      padding-inline-start: 0;
+      text-indent: 0;
+    }
+
+    .hero__lead {
+      margin-inline: 0;
+      text-wrap: pretty;
+    }
+
+    .hero__actions {
+      margin-top: var(--space-5);
+    }
+  }
+
   /* ---------- «О студии» ---------- */
 
   /* Сразу за надписью: без лишнего отступа сверху */
@@ -439,9 +498,14 @@ const secondary = showWorks
     }
   }
 
-  /* «Ваша идея» — под карточками услуг, с тем же шагом, что между карточками */
+  /* «Ваша идея» — под карточками услуг, с тем же шагом, что между карточками; на телефоне под лентой —
+     дальше, после кнопок «назад / вперёд» */
   :global(.services-idea) {
     margin-top: var(--space-3);
+  }
+
+  .ribbon:global(.is-ribbon) + :global(.services-idea) {
+    margin-top: var(--space-7);
   }
 
   /* под блоком — кнопка «Все …» по оси блока; у цен над ней приписка про вкладку «Цены» */

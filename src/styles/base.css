@@ -18,7 +18,57 @@ html {
   text-size-adjust: 100%;
   background: var(--soot);
   color: var(--chalk);
-  scrollbar-color: var(--graphite) var(--soot);
+  /* место под полосу прокрутки держится и при открытом меню (overflow: hidden) — страница не сдвигается */
+  scrollbar-gutter: stable;
+}
+
+/* ---------- Полоса прокрутки (решение владельца 04.10.2026) ----------
+   Рельс — волосная линия графитом во всю высоту, по нему едет тонкий ползунок пеплом;
+   под курсором ползунок шире и мелом. Стрелок нет. Обе темы — токенами (днём рельс --line-on-chalk,
+   ползунок --ash-on-chalk, под курсором сажа).
+   Chrome, Edge, Safari рисуют по ::-webkit-scrollbar. Стандартные scrollbar-color / scrollbar-width
+   в Chrome отключают эти псевдоэлементы, поэтому они — только там, где псевдоэлементов нет (Firefox):
+   там рельса нет, только тонкая полоса тех же цветов */
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-color: var(--ash) var(--soot);
+    scrollbar-width: thin;
+  }
+}
+
+/* 11 px: рельс 1 px ровно по центру (поля по 5 px), ползунок 3 px, под курсором 5 px */
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+  background: transparent;
+}
+
+html::-webkit-scrollbar {
+  background: var(--soot);
+}
+
+::-webkit-scrollbar-track {
+  border: 5px solid transparent;
+  background: var(--graphite) padding-box;
+}
+
+::-webkit-scrollbar-thumb {
+  min-width: 40px;
+  min-height: 40px;
+  border: 4px solid transparent;
+  border-radius: 999px;
+  background: var(--ash) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  border-width: 3px;
+  background-color: var(--chalk);
+}
+
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-corner {
+  display: none;
 }
 
 body {
@@ -40,8 +90,12 @@ body {
   overflow-x: clip;
 }
 
+/* overflow-x у body уходит на окно браузера и ширину документа не обрезает; у main обрезка настоящая:
+   линии «до краёв экрана» (100vw) не дают лишних пикселей ширины под полосой прокрутки.
+   clip — не контейнер прокрутки: sticky внутри работает */
 main {
   flex: 1 0 auto;
+  overflow-x: clip;
 }
 
 ::selection {

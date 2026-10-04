@@ -35,7 +35,8 @@ onPage(() => {
   const spec = stage.querySelector<HTMLElement>('[data-site-spec]');
   const body = stage.querySelector<HTMLElement>('.win__body');
   const urlText = url?.dataset.text ?? '';
-  const desktop = window.matchMedia('(min-width: 1024px)');
+  // окно рядом с этапами: десктоп и широкий низкий экран — то же условие, что в ProcessScreen.astro
+  const desktop = window.matchMedia('(min-width: 1024px), (min-width: 640px) and (max-height: 600px) and (orientation: landscape)');
   const reduced = prefersReducedMotion();
 
   let target = 0;

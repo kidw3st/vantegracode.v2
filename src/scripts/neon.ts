@@ -1,6 +1,8 @@
 /**
  * Неоновые импульсы на линии-разделителе под надписью VANTEGRA (SectionHeader neon, решение владельца,
- * по мотивам Neon Border). Рисуем на canvas в плотности пикселей экрана — без размытия CSS-фильтром,
+ * по мотивам Neon Border) и на верхней линии подвала — «конец листа» (решение владельца 04.10.2026).
+ * Холст — [data-neon], его линия — у ближайшего [data-neon-host]; если у хозяина есть появление
+ * при прокрутке ([data-reveal]), импульсы ждут его (.is-in), иначе едут сразу. Рисуем на canvas в плотности пикселей экрана — без размытия CSS-фильтром,
  * поэтому края чистые на любом экране.
  * Импульс: тонкая яркая сердцевина, горячая точка в центре и три эллиптических ореола со сложением света.
  * Два импульса скользят навстречу друг другу от края до края (разгон и торможение), сходятся в центре.
@@ -67,8 +69,9 @@ onPage(() => {
 
   for (const canvas of canvases) {
     const ctx = canvas.getContext('2d');
-    const header = canvas.closest<HTMLElement>('.sh');
-    if (!ctx || !header) continue;
+    const host = canvas.closest<HTMLElement>('[data-neon-host]');
+    if (!ctx || !host) continue;
+    const ready = () => !host.hasAttribute('data-reveal') || host.classList.contains('is-in');
 
     let width = 1;
     let height = 1;
@@ -91,7 +94,7 @@ onPage(() => {
       ctx.globalCompositeOperation = 'source-over';
       ctx.clearRect(0, 0, width, height);
       // импульсы проявляются, когда линия прорисовалась (класс .is-in у заголовка)
-      if (header.classList.contains('is-in')) {
+      if (ready()) {
         const light = isLight();
         ctx.globalCompositeOperation = light ? 'source-over' : 'lighter';
         const phase = now / 1000 / PERIOD;

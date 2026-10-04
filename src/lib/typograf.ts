@@ -54,6 +54,8 @@ export function t(text: string | null | undefined): string | null | undefined {
         .replace(/ /g, NBSP)
         // число и единица: «2,5 с», «350 000 ₽»
         .replace(/(\d) (?=[^\s\d—–-])/g, `$1${NBSP}`)
+        // название продукта не рвём: «Mini App», «Mini Apps»
+        .replace(/Mini App/g, `Mini${NBSP}App`)
     : core;
 
   const result = lead + out + trail;

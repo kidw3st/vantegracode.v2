@@ -200,7 +200,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
     color: var(--chalk);
   }
 
-  @media (min-width: 1024px) {
+  /* Окно рядом с этапами — на десктопе и на широком низком экране (телефон набок, маленькое окно браузера):
+     над этапами окно заняло бы весь экран и закрыло текст. То же условие — в scripts/process-screen.ts */
+  @media (min-width: 1024px), (min-width: 640px) and (max-height: 600px) and (orientation: landscape) {
     .pscreen {
       grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
       grid-template-areas: 'steps stage';
@@ -218,6 +220,12 @@ const pad = (n: number) => String(n).padStart(2, '0');
       top: var(--stage-top, 18vh);
     }
 
+    /* окно с прогрессом целиком помещается под шапкой (на низком экране — уже колонки, по центру) */
+    :global(.js) .pscreen__stage > * {
+      width: min(100%, (100svh - var(--header-h) - 130px) * 1.6);
+      margin-inline: auto;
+    }
+
     /* каждый этап занимает часть экрана — окно успевает собраться, пока его читают;
        после последнего — запас, чтобы собранное окно постояло на экране */
     :global(.js) .pscreen__step {
@@ -229,7 +237,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     }
   }
 
-  @media (max-width: 1023px) {
+  @media not ((min-width: 1024px) or ((min-width: 640px) and (max-height: 600px) and (orientation: landscape))) {
     :global(.js) .pscreen__stage {
       position: sticky;
       top: calc(var(--header-h) + var(--space-3));
@@ -247,6 +255,13 @@ const pad = (n: number) => String(n).padStart(2, '0');
       left: calc(var(--gutter) * -1);
       height: calc(var(--header-h) + var(--space-3));
       background: var(--soot);
+    }
+
+    /* прилипшее окно с прогрессом — не ниже 60 % экрана: под ним остаётся место читать этап.
+       Сам слой — во всю ширину: этапы уезжают под сажу, а не по бокам узкого окна */
+    :global(.js) .pscreen__stage > * {
+      width: min(100%, (60svh - var(--header-h) - 114px) * 1.6);
+      margin-inline: auto;
     }
 
     :global(.js) .pscreen__step {

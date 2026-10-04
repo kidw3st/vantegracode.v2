@@ -1,8 +1,13 @@
 ---
 /**
  * Контакты строками: подпись + значение Geologica 300.
- * md — 22–28 px (блок CTA), xl — 28–32 px и кнопки «Скопировать» (страница «Контакты»).
+ * md — 22–28 px (блок CTA), xl — 28–32 px (страница «Контакты»); copy — кнопки «Скопировать».
+ * pills — капсулами с заливкой от точки входа курсора, как «Все цены» (решение владельца 04.10.2026):
+ * над каждой — подпись (Telegram, Почта, Телефон), как у полей формы; иконка и значение крупно, капсулы
+ * одной ширины (по самой длинной), круглая «Скопировать» — у правого края колонки; без подчёркиваний
+ * и подчёркиваний, подпись — для чтения с экрана (карточка «Обсудим проект»).
  */
+import Button from './Button.astro';
 import Icon from './Icon.astro';
 import { site } from '../data/site.ts';
 import { ui } from '../data/ui.ts';
@@ -10,10 +15,13 @@ import { ui } from '../data/ui.ts';
 interface Props {
   size?: 'md' | 'xl';
   copy?: boolean;
+  pills?: boolean;
+  /** подписи над капсулами (Telegram, Почта, Телефон); в подвале их нет — там заголовок колонки */
+  labels?: boolean;
   class?: string;
 }
 
-const { size = 'md', copy = false, class: className } = Astro.props;
+const { size = 'md', copy = false, pills = false, labels = true, class: className } = Astro.props;
 
 const items = [
   { key: 'telegram', icon: 'telegram', label: ui.contacts.telegram, value: site.telegram.handle, href: site.telegram.url, external: true },
@@ -22,6 +30,38 @@ const items = [
 ] as const;
 ---
 
+{
+  pills ? (
+    <ul class:list={['contacts-pills', { 'contacts-pills--plain': !labels }, className]} role="list">
+      {items.map((item) => (
+        <li class="contacts-pills__row">
+          {labels && <span class="eyebrow contacts-pills__label" aria-hidden="true">{item.label}</span>}
+          <Button
+            href={item.href}
+            external={item.external}
+            variant="secondary"
+            fill
+            plain
+            icon={item.icon}
+            label={item.value}
+            aria-label={`${item.label}: ${item.value}`}
+          />
+          {copy && (
+            <button
+              class="contacts__copy"
+              type="button"
+              data-copy={item.value}
+              data-copied={ui.contacts.copied}
+              aria-label={`${ui.contacts.copy}: ${item.value}`}
+            >
+              <Icon name="copy" size={18} />
+              <span class="contacts__tip" data-copy-tip aria-live="polite" />
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+  ) : (
 <dl class:list={['contacts', `contacts--${size}`, className]}>
   {
     items.map((item) => (
@@ -55,8 +95,59 @@ const items = [
     ))
   }
 </dl>
+  )
+}
 
 <style>
+  /* ---------- pills: капсулы с заливкой ---------- */
+  /* две колонки на весь список: капсулы одной ширины слева, «Скопировать» — у правого края */
+  .contacts-pills {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
+    gap: var(--space-6) var(--space-4);
+  }
+
+  .contacts-pills__row {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: center;
+    row-gap: var(--space-2);
+  }
+
+  /* без подписей капсулы стоят плотнее */
+  .contacts-pills--plain {
+    row-gap: var(--space-3);
+  }
+
+  /* подпись над капсулой — как у полей формы; для чтения с экрана она уже в имени капсулы */
+  .contacts-pills__label {
+    grid-column: 1 / -1;
+  }
+
+  .contacts-pills .contacts__copy {
+    justify-self: end;
+  }
+
+  /* до 389 px капсула с почтой и «Скопировать» в одну строку: поля капсул уже;
+     до 359 px — ещё и без иконки */
+  @media (max-width: 389px) {
+    .contacts-pills :global(.btn) {
+      padding-inline: var(--space-4);
+    }
+  }
+
+  @media (max-width: 359px) {
+    .contacts-pills {
+      column-gap: var(--space-3);
+    }
+
+    .contacts-pills :global(.btn svg) {
+      display: none;
+    }
+  }
+
   .contacts {
     display: grid;
     gap: var(--space-6);

@@ -150,6 +150,8 @@ export const contactBlock = {
   label: 'Контакт',
   title: 'Обсудим проект',
   text: 'Расскажите о задаче — ответим {responseTime} и предложим, как её решить.',
+  // в карточке над контактами — первая фраза лида страницы «Контакты» из задания
+  fastest: 'Быстрее всего — в Telegram.',
 };
 
 export const services = {
