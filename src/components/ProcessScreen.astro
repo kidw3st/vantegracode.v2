@@ -260,8 +260,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
   /* ---------- Окно ---------- */
 
+  /* рамка окна и линия под адресной строкой — мелом, как рамки карточек «О студии»: окно читается в обеих темах;
+     вторичное (кружки, адрес, пустые квадраты брифа, пунктир, дорожка прогресса) — пеплом */
   .win {
-    border: var(--hairline) solid var(--graphite);
+    border: var(--hairline) solid var(--chalk);
     background: var(--soot);
   }
 
@@ -272,7 +274,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     gap: var(--space-4);
     height: 40px;
     padding: 0 14px;
-    border-bottom: var(--hairline) solid var(--graphite);
+    border-bottom: var(--hairline) solid var(--chalk);
   }
 
   .win__dots {
@@ -283,7 +285,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   .win__dots i {
     width: 8px;
     height: 8px;
-    border: var(--hairline) solid var(--graphite);
+    border: var(--hairline) solid var(--ash);
     border-radius: 50%;
   }
 
@@ -295,7 +297,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     width: min(100%, 300px);
     height: 24px;
     padding: 0 10px;
-    border: var(--hairline) solid var(--graphite);
+    border: var(--hairline) solid var(--ash);
     font-family: var(--font-tech);
     font-variation-settings: var(--tech-variation);
     font-weight: 400;
@@ -402,7 +404,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   /* пунктир до галочки прорисовывается, когда пункт отмечен */
   .win__leader {
     height: 0;
-    border-bottom: var(--hairline) dotted var(--graphite);
+    border-bottom: var(--hairline) dotted var(--ash);
     transform: scaleX(0.2);
     transform-origin: left;
     transition: transform 600ms var(--ease-out);
@@ -413,7 +415,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     place-items: center;
     width: clamp(16px, 3cqw, 22px);
     aspect-ratio: 1;
-    border: var(--hairline) solid var(--graphite);
+    border: var(--hairline) solid var(--ash);
     transition: border-color 300ms var(--ease-out);
   }
 
@@ -624,7 +626,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     position: relative;
     display: block;
     padding-top: var(--space-3);
-    border-top: var(--hairline) solid var(--graphite);
+    border-top: var(--hairline) solid var(--ash);
   }
 
   .pscreen__seg::before {
